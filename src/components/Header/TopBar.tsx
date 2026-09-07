@@ -41,7 +41,7 @@ export const TopBar: React.FC = () => {
             </div>
             <div className="topbar-text">
               <span className="topbar-label">Email</span>
-              <a href="mailto:phongkhamdalieu@gmail.com" className="topbar-value">phongkhamdalieu@gmail.com</a>
+              <a href="mailto:phongkhamdalieu@gmail.com" className="topbar-value">tronghoangafk123@gmail.com</a>
             </div>
           </div>
         </div>
