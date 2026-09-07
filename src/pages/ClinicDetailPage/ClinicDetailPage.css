@@ -1,0 +1,510 @@
+/* ==========================================================================
+   CLINIC DETAIL PAGE (PHÒNG KHÁM DA LIỄU - FIGMA DESIGN REPLICATION)
+   ========================================================================== */
+
+.clinic-detail-page {
+  min-height: 100vh;
+  background-color: #f8fafc;
+  color: #1e293b;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Breadcrumb Navigation */
+.clinic-breadcrumb-bar {
+  background-color: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 0.75rem 0;
+}
+
+.breadcrumb-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.88rem;
+}
+
+.breadcrumb-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: none;
+  border: none;
+  color: #64748b;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0.2rem 0.4rem;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.breadcrumb-btn:hover {
+  color: var(--primary, #1877f2);
+  background-color: #eff6ff;
+}
+
+.breadcrumb-separator {
+  color: #cbd5e1;
+}
+
+.breadcrumb-current {
+  color: var(--primary, #1877f2);
+  font-weight: 600;
+}
+
+/* 1. HERO BANNER */
+.clinic-hero-banner {
+  position: relative;
+  min-height: 280px;
+  background-image: url('https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&w=1600&q=80');
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  align-items: center;
+  padding: 3.5rem 0;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.clinic-hero-bg-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.94) 0%,
+    rgba(255, 255, 255, 0.88) 45%,
+    rgba(255, 255, 255, 0.4) 100%
+  );
+}
+
+.clinic-hero-content {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+}
+
+.clinic-hero-text {
+  max-width: 650px;
+}
+
+.clinic-hero-tag {
+  display: inline-block;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 0.5rem;
+  letter-spacing: -0.2px;
+}
+
+.clinic-hero-heading {
+  font-size: 2.25rem;
+  font-weight: 800;
+  color: #0b1f38;
+  line-height: 1.25;
+  letter-spacing: -0.5px;
+  margin-bottom: 1.5rem;
+}
+
+.clinic-hero-actions {
+  display: flex;
+  gap: 0.85rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.clinic-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.6rem;
+  background: var(--primary, #1877f2);
+  color: #ffffff;
+  border: none;
+  border-radius: 9999px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(24, 119, 242, 0.35);
+  transition: all 0.2s ease;
+}
+
+.clinic-btn-primary:hover {
+  background: var(--primary-hover, #166fe5);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(24, 119, 242, 0.45);
+}
+
+.clinic-btn-outline {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.75rem 1.4rem;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(8px);
+  color: #334155;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 9999px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.clinic-btn-outline:hover {
+  background: #ffffff;
+  border-color: #94a3b8;
+  color: #0f172a;
+}
+
+/* BODY WRAPPER */
+.clinic-detail-body {
+  padding-top: 2.5rem;
+  padding-bottom: 4rem;
+}
+
+/* GENERAL FIGMA SECTION STYLES */
+.figma-section {
+  background-color: #ffffff;
+  border-radius: 16px;
+  padding: 2.2rem 2.5rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.04);
+  border: 1px solid #f1f5f9;
+}
+
+.figma-section-title {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--primary, #1877f2);
+  margin-bottom: 1.5rem;
+  letter-spacing: -0.2px;
+}
+
+/* 2. GIỚI THIỆU VỀ PHÒNG KHÁM */
+.figma-about-grid {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 2.5rem;
+  align-items: center;
+}
+
+.figma-about-desc {
+  font-size: 0.9rem;
+  line-height: 1.65;
+  color: #475569;
+  margin-bottom: 1.8rem;
+}
+
+.figma-features-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+
+.figma-feature-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.figma-feature-icon {
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.2rem;
+}
+
+.figma-feature-title {
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: var(--primary, #1877f2);
+  line-height: 1.3;
+}
+
+.figma-feature-sub {
+  font-size: 0.78rem;
+  color: #64748b;
+  line-height: 1.4;
+}
+
+.figma-about-right {
+  width: 100%;
+}
+
+.figma-image-wrapper {
+  width: 100%;
+  height: 230px;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 8px 24px -4px rgba(15, 23, 42, 0.08);
+}
+
+.figma-team-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* 3. CƠ SỞ VẬT CHẤT */
+.figma-facilities-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.1rem;
+}
+
+.figma-facility-card {
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+  border: 1px solid #e2e8f0;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.figma-facility-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 24px rgba(24, 119, 242, 0.12);
+}
+
+.figma-facility-thumb-box {
+  width: 100%;
+  height: 145px;
+  background-color: #f1f5f9;
+}
+
+.figma-facility-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* 4. QUY TRÌNH KHÁM */
+.figma-process-timeline {
+  position: relative;
+  padding: 1rem 0 2rem 0;
+}
+
+.figma-process-track-line {
+  position: absolute;
+  top: 31px;
+  left: 6%;
+  right: 6%;
+  height: 2px;
+  background: #bfdbfe;
+  z-index: 1;
+}
+
+.figma-process-steps-grid {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+}
+
+.figma-process-step-col {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.figma-step-badge-wrap {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.9rem;
+}
+
+.figma-step-badge {
+  width: 44px;
+  height: 28px;
+  background: #60a5fa;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.88rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  box-shadow: 0 2px 8px rgba(96, 165, 250, 0.4);
+}
+
+.figma-step-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--primary, #1877f2);
+  margin-bottom: 0.35rem;
+}
+
+.figma-step-desc {
+  font-size: 0.8rem;
+  color: #64748b;
+  line-height: 1.45;
+}
+
+.figma-divider-line {
+  margin-top: 1.5rem;
+  border-top: 1px solid #f1f5f9;
+}
+
+/* 5. ĐỘI NGŨ BÁC SĨ */
+.figma-doctors-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.25rem;
+}
+
+.figma-doctor-card {
+  background: #ffffff;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.figma-doctor-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.09);
+  border-color: #cbd5e1;
+}
+
+.figma-doctor-img-wrap {
+  width: 100%;
+  height: 180px;
+  background: #0f2b48;
+  overflow: hidden;
+}
+
+.figma-doctor-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.figma-doctor-card:hover .figma-doctor-img {
+  transform: scale(1.03);
+}
+
+.figma-doctor-info {
+  padding: 0.9rem 1rem 1.1rem 1rem;
+}
+
+.figma-doctor-name {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 0.25rem;
+}
+
+.figma-doctor-spec {
+  font-size: 0.78rem;
+  color: #64748b;
+  margin-bottom: 0.15rem;
+}
+
+.figma-doctor-exp {
+  font-size: 0.78rem;
+  color: #64748b;
+}
+
+/* 6. CALL TO ACTION BOTTOM BANNER */
+.clinic-bottom-cta {
+  background: linear-gradient(135deg, #1877f2 0%, #0d5bbd 100%);
+  border-radius: 20px;
+  padding: 2.2rem 2.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2rem;
+  color: #ffffff;
+  box-shadow: 0 12px 32px rgba(24, 119, 242, 0.3);
+}
+
+.clinic-cta-title {
+  font-size: 1.4rem;
+  font-weight: 800;
+  margin-bottom: 0.4rem;
+  color: #ffffff;
+}
+
+.clinic-cta-desc {
+  font-size: 0.92rem;
+  color: rgba(255, 255, 255, 0.9);
+  max-width: 600px;
+}
+
+.clinic-btn-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.85rem 1.8rem;
+  background: #ffffff;
+  color: #1877f2;
+  border: none;
+  border-radius: 9999px;
+  font-weight: 700;
+  font-size: 0.98rem;
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+  transition: all 0.2s ease;
+}
+
+.clinic-btn-cta:hover {
+  background: #f8fafc;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+/* ==========================================================================
+   RESPONSIVE DESIGN
+   ========================================================================== */
+
+@media (max-width: 1024px) {
+  .figma-facilities-grid,
+  .figma-doctors-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+
+  .figma-process-steps-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+  }
+
+  .figma-process-track-line {
+    display: none;
+  }
+
+  .figma-about-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .clinic-hero-heading {
+    font-size: 1.7rem;
+  }
+
+  .figma-section {
+    padding: 1.5rem 1.25rem;
+  }
+
+  .figma-features-row {
+    grid-template-columns: 1fr;
+    gap: 0.85rem;
+  }
+
+  .figma-facilities-grid,
+  .figma-doctors-grid,
+  .figma-process-steps-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .clinic-bottom-cta {
+    flex-direction: column;
+    text-align: center;
+    padding: 1.8rem 1.4rem;
+  }
+}

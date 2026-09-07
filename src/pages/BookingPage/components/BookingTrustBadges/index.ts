@@ -1,0 +1,1 @@
+export { BookingTrustBadges } from './BookingTrustBadges';

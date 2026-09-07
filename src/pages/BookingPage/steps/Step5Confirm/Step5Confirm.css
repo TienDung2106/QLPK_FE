@@ -1,0 +1,446 @@
+/* ==========================================================================
+   STEP 5: XÁC NHẬN & THANH TOÁN — Match Screenshot Design
+   ========================================================================== */
+
+.step5-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
+}
+
+.step5-main-heading {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--primary, #1877f2);
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+/* Callout Banner */
+.step5-callout-banner {
+  background: #f0f7ff;
+  border-radius: 8px;
+  padding: 0.75rem 1.1rem;
+}
+
+.step5-callout-banner p {
+  font-size: 0.8rem;
+  color: #2563eb;
+  font-weight: 500;
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* Row with 2 cards */
+.step5-two-col-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.15rem;
+  align-items: stretch;
+}
+
+/* General Card */
+.step5-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1.35rem 1.45rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.step5-card-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+}
+
+/* Doctor Header in Card 1 */
+.step5-doc-header {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.step5-doc-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1.5px solid #f1f5f9;
+  flex-shrink: 0;
+}
+
+.step5-doc-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.step5-doc-name {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+}
+
+.step5-doc-spec {
+  font-size: 0.76rem;
+  color: #64748b;
+  margin: 0;
+}
+
+.step5-doc-rating {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.74rem;
+  color: #64748b;
+  margin-top: 0.1rem;
+}
+
+.star-gold {
+  color: #f59e0b;
+}
+
+.rating-num {
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.rating-count {
+  color: #94a3b8;
+}
+
+/* Info Table Rows */
+.step5-info-table {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.step5-info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  font-size: 0.8rem;
+}
+
+.info-row-label {
+  color: #64748b;
+  font-weight: 400;
+  flex-shrink: 0;
+}
+
+.info-row-val {
+  font-weight: 600;
+  color: #1e293b;
+  text-align: right;
+  line-height: 1.35;
+}
+
+.info-row-val.val-blue {
+  color: var(--primary, #1877f2);
+  font-weight: 700;
+}
+
+/* Payment & Promo Grid (Card 3) */
+.step5-payment-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 2rem;
+  align-items: flex-start;
+}
+
+.step5-payment-left {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.step5-payment-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  font-size: 0.82rem;
+}
+
+.step5-pay-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #64748b;
+}
+
+.pay-val {
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.discount-status {
+  color: #b45309;
+  font-weight: 600;
+}
+
+.step5-divider {
+  height: 1px;
+  background: #f1f5f9;
+}
+
+.step5-total-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.total-label {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.total-val-red {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #ef4444;
+}
+
+/* Promo Code Form */
+.step5-payment-right {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-top: 0.2rem;
+}
+
+.step5-input-label {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.step5-promo-form {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.step5-promo-input {
+  flex: 1;
+  padding: 0.55rem 0.85rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  color: #1e293b;
+  outline: none;
+  background: #f8fafc;
+}
+
+.step5-promo-input:focus {
+  border-color: var(--primary, #1877f2);
+  background: #ffffff;
+}
+
+.step5-btn-apply {
+  background: #e2e8f0;
+  border: none;
+  border-radius: 8px;
+  padding: 0 1.25rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.step5-btn-apply:hover {
+  background: #cbd5e1;
+  color: #1e293b;
+}
+
+.step5-promo-msg {
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  border-radius: 6px;
+  padding: 0.45rem 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.76rem;
+  color: #047857;
+  font-weight: 500;
+}
+
+.promo-info-dot {
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+/* Card 4: reCAPTCHA */
+.step5-recaptcha-box {
+  background: #f9fafb;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  padding: 0.75rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  user-select: none;
+  max-width: 280px;
+}
+
+.recaptcha-left {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.recaptcha-checkbox {
+  width: 24px;
+  height: 24px;
+  border: 2px solid #cbd5e1;
+  border-radius: 3px;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.recaptcha-checkbox.checked {
+  border-color: #10b981;
+  background: #ffffff;
+}
+
+.check-svg {
+  color: #10b981;
+}
+
+.recaptcha-text {
+  font-size: 0.82rem;
+  color: #1e293b;
+  font-weight: 500;
+}
+
+.recaptcha-right {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1rem;
+}
+
+.recaptcha-terms {
+  font-size: 0.6rem;
+  color: #64748b;
+  font-weight: 700;
+}
+
+.recaptcha-links {
+  font-size: 0.55rem;
+  color: #94a3b8;
+}
+
+/* Card 5: Terms Agreement */
+.step5-agree-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  font-size: 0.8rem;
+  color: #334155;
+  cursor: pointer;
+  line-height: 1.45;
+  user-select: none;
+}
+
+.step5-agree-checkbox {
+  width: 17px;
+  height: 17px;
+  accent-color: var(--primary, #1877f2);
+  margin-top: 2px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.link-terms {
+  color: var(--primary, #1877f2);
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+/* Bottom Actions */
+.step5-bottom-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 0.5rem;
+}
+
+.btn-back-step-alt {
+  background: #ffffff;
+  border: 1px solid var(--primary, #1877f2);
+  border-radius: 8px;
+  padding: 0.6rem 1.5rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--primary, #1877f2);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-back-step-alt:hover {
+  background: #f0f7ff;
+}
+
+.step5-confirm-btn-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.35rem;
+}
+
+.btn-confirm-booking {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: var(--primary, #1877f2);
+  border: none;
+  border-radius: 8px;
+  padding: 0.68rem 1.85rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #ffffff;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.btn-confirm-booking:hover:not(:disabled) {
+  background: #166fe5;
+}
+
+.btn-confirm-booking:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.step5-security-text {
+  font-size: 0.7rem;
+  color: #94a3b8;
+}
+
+@media (max-width: 768px) {
+  .step5-two-col-row {
+    grid-template-columns: 1fr;
+  }
+
+  .step5-payment-grid {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+}

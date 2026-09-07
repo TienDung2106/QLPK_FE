@@ -1,0 +1,179 @@
+/* ==========================================================================
+   BOOKING STEPPER BAR
+   ========================================================================== */
+
+.booking-stepper-bar {
+  background-color: #ffffff;
+  border-bottom: 1px solid #edf2f7;
+  padding: 1.1rem 0;
+  position: relative;
+  z-index: 50;
+}
+
+.stepper-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+
+/* Left: Title + Breadcrumb */
+.stepper-left {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 170px;
+}
+
+.stepper-page-title {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #1e293b;
+  line-height: 1.2;
+}
+
+.stepper-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  color: #94a3b8;
+}
+
+.breadcrumb-home-link {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: inherit;
+  color: #94a3b8;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.breadcrumb-home-link:hover {
+  color: var(--primary, #1877f2);
+}
+
+.breadcrumb-sep {
+  color: #cbd5e1;
+}
+
+.breadcrumb-current {
+  color: var(--primary, #1877f2);
+  font-weight: 600;
+}
+
+/* Steps Track */
+.stepper-steps-track {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  flex: 1;
+  justify-content: center;
+}
+
+.stepper-step {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: default;
+  flex-shrink: 0;
+}
+
+.stepper-step.step-done {
+  cursor: pointer;
+}
+
+.step-bubble {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1.5px solid #cbd5e1;
+  background-color: #ffffff;
+  color: #94a3b8;
+  font-size: 0.82rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.25s ease;
+  flex-shrink: 0;
+}
+
+.stepper-step.step-active .step-bubble {
+  background-color: var(--primary, #1877f2);
+  border-color: var(--primary, #1877f2);
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.stepper-step.step-done .step-bubble {
+  background-color: #eff6ff;
+  border-color: #bfdbfe;
+  color: var(--primary, #1877f2);
+}
+
+.step-label {
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: #64748b;
+  white-space: nowrap;
+}
+
+.stepper-step.step-active .step-label {
+  color: var(--primary, #1877f2);
+  font-weight: 700;
+}
+
+.stepper-step.step-done .step-label {
+  color: #334155;
+  font-weight: 600;
+}
+
+/* Connector Line */
+.stepper-connector {
+  flex: 1;
+  max-width: 55px;
+  height: 2px;
+  background-color: #e2e8f0;
+  margin: 0 0.6rem;
+  transition: background-color 0.3s ease;
+}
+
+.stepper-connector.connector-active {
+  background-color: var(--primary, #1877f2);
+}
+
+/* Right: Back Button */
+.stepper-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.stepper-back-btn:hover {
+  border-color: #cbd5e1;
+  color: #1e293b;
+  background-color: #f8fafc;
+}
+
+@media (max-width: 960px) {
+  .stepper-steps-track {
+    display: none;
+  }
+
+  .stepper-inner {
+    justify-content: space-between;
+  }
+}

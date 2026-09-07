@@ -1,0 +1,369 @@
+/* ==========================================================================
+   STEP 1: CHỌN BÁC SĨ — Match Screenshot Design
+   ========================================================================== */
+
+.step1-wrapper {
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+}
+
+/* ── Badge Header ── */
+.step1-badge-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.1rem 1.6rem;
+  background: #f0f7ff;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.step-number-badge {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--primary, #1877f2);
+  color: #ffffff;
+  font-size: 0.85rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.step1-heading {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--primary, #1877f2);
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+/* ── Body: Sidebar + List ── */
+.step1-body {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  min-height: 440px;
+}
+
+/* ── Filter Sidebar ── */
+.step1-filter-sidebar {
+  background: #ffffff;
+  border-right: 1px solid #f1f5f9;
+  padding: 1.35rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.35rem;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.filter-label {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+/* Dropdown */
+.select-wrapper {
+  position: relative;
+}
+
+.filter-select {
+  width: 100%;
+  appearance: none;
+  -webkit-appearance: none;
+  padding: 0.55rem 2rem 0.55rem 0.75rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: #1e293b;
+  background: #ffffff;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.filter-select:focus {
+  border-color: var(--primary, #1877f2);
+}
+
+.select-chevron {
+  position: absolute;
+  right: 0.6rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+  pointer-events: none;
+}
+
+/* Checkboxes */
+.filter-checkboxes {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: #334155;
+  cursor: pointer;
+  line-height: 1.4;
+}
+
+.filter-checkbox {
+  width: 16px;
+  height: 16px;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 4px;
+  accent-color: var(--primary, #1877f2);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* Guide Box */
+.filter-guide-box {
+  background: #eff6ff;
+  border: 1px solid #dbeafe;
+  border-radius: 8px;
+  padding: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-top: 0.25rem;
+}
+
+.guide-icon-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--primary, #1877f2);
+}
+
+.guide-icon {
+  color: var(--primary, #1877f2);
+  flex-shrink: 0;
+}
+
+.filter-guide-box p {
+  font-size: 0.74rem;
+  color: #475569;
+  line-height: 1.55;
+}
+
+/* ── Doctor List ── */
+.step1-doctor-list {
+  padding: 1.35rem 1.6rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.doctor-list-heading {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 1rem;
+}
+
+.no-doctors-msg {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 0.88rem;
+  padding: 2rem 0;
+}
+
+.doctor-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+/* ── Doctor Row Card ── */
+.doctor-row-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 1.15rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  background: #ffffff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.doctor-row-card:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.doctor-row-card.is-selected {
+  border: 1.5px solid var(--primary, #1877f2);
+  background: #ffffff;
+  box-shadow: 0 2px 10px rgba(24, 119, 242, 0.06);
+}
+
+/* Selected top-right blue check badge */
+.card-top-right-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--primary, #1877f2);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Avatar */
+.row-avatar-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.row-avatar {
+  width: 66px;
+  height: 66px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1.5px solid #f1f5f9;
+}
+
+/* Info */
+.row-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.row-doctor-name {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.row-specialty {
+  font-size: 0.78rem;
+  color: #64748b;
+  font-weight: 400;
+}
+
+.row-meta {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 0.25rem;
+}
+
+.row-rating,
+.row-exp {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.78rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.star-icon {
+  color: #f59e0b;
+}
+
+.rating-score {
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.review-count {
+  color: #94a3b8;
+}
+
+.exp-icon {
+  color: #64748b;
+}
+
+/* Choose button */
+.btn-choose-doctor {
+  flex-shrink: 0;
+  padding: 0.55rem 1.25rem;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: var(--primary, #1877f2);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.btn-choose-doctor:hover {
+  border-color: var(--primary, #1877f2);
+}
+
+.btn-choose-doctor.chosen {
+  background: var(--primary, #1877f2);
+  border-color: var(--primary, #1877f2);
+  color: #ffffff;
+}
+
+/* Next Row */
+.step1-next-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1.35rem;
+  padding-top: 1.1rem;
+  border-top: 1px solid #f1f5f9;
+}
+
+.step1-next-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.65rem 1.65rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  border-radius: 8px;
+  background: var(--primary, #1877f2);
+  color: #ffffff;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.step1-next-btn:hover {
+  background: #166fe5;
+}
+
+@media (max-width: 768px) {
+  .step1-body {
+    grid-template-columns: 1fr;
+  }
+
+  .step1-filter-sidebar {
+    border-right: none;
+    border-bottom: 1px solid #f1f5f9;
+  }
+}
