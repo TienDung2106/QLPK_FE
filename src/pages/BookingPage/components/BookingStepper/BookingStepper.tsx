@@ -77,7 +77,7 @@ export const BookingStepper: React.FC<BookingStepperProps> = ({
           onClick={onBackToHome}
         >
           <ArrowLeft size={14} />
-          <span>về trang chủ</span>
+          <span>Quay về trang chủ</span>
         </button>
       </div>
     </div>
