@@ -1,1 +1,1 @@
-export { Step1Doctor, ALL_DOCTORS } from './Step1Doctor';
+export { Step1Doctor } from './Step1Doctor';

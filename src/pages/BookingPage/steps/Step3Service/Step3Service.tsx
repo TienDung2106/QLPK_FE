@@ -1,126 +1,74 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
+  AlertCircle,
   Info,
   Clock,
   Stethoscope,
-  Scan,
-  Sparkles,
-  Shield,
-  Sun,
-  User,
+  Loader2,
   Tag,
-  ChevronDown,
   ArrowLeft,
   ArrowRight,
 } from 'lucide-react';
-import type { BookingDoctor } from '../../../../types/booking';
+import { apiGetServices } from '../../../../api/functions/services';
+import type { ClinicService } from '../../../../api/types';
+import { formatCurrency } from '../../bookingFormat';
 import './Step3Service.css';
 
-export interface ServiceOption {
-  id: string;
-  title: string;
-  badge?: string;
-  description: string;
-  duration: string;
-  price: number;
-  priceText?: string;
-  icon: React.ReactNode;
-}
-
 interface Step3ServiceProps {
-  selectedDoctor: BookingDoctor | null;
-  selectedService: string;
-  servicePrice: number;
+  selectedServiceId: number | null;
   discountCode: string;
-  discountAmount: number;
-  onSelectService: (service: ServiceOption) => void;
+  onSelectService: (service: ClinicService) => void;
   onApplyDiscount: (code: string) => void;
   onPrevStep: () => void;
   onNextStep: () => void;
 }
 
-const SERVICE_OPTIONS: ServiceOption[] = [
-  {
-    id: 'kham-co-ban',
-    title: 'Khám da liễu cơ bản',
-    badge: 'Phổ biến',
-    description: 'Khám tổng quát sức khỏe làn da, tư vấn phác đồ và kê đơn điều trị mụn, viêm da...',
-    duration: '30 phút',
-    price: 300000,
-    icon: <Stethoscope size={20} />,
-  },
-  {
-    id: 'soi-da',
-    title: 'Soi da chuyên sâu',
-    description: 'Phân tích tình trạng da bằng máy công nghệ cao, đánh giá sắc tố và độ ẩm...',
-    duration: '45 phút',
-    price: 500000,
-    icon: <Scan size={20} />,
-  },
-  {
-    id: 'dieu-tri-mun',
-    title: 'Điều trị mụn',
-    description: 'Tư vấn và điều trị mụn chuyên sâu theo phác đồ bác sĩ cá nhân hóa phù hợp từng loại da...',
-    duration: '60 phút',
-    price: 700000,
-    icon: <Sparkles size={20} />,
-  },
-  {
-    id: 'nam-tan-nhang',
-    title: 'Điều trị nám - tàn nhang',
-    description: 'Điều trị sắc tố da bằng phương pháp tiên tiến kết hợp công nghệ Laser hiện đại...',
-    duration: '60 phút',
-    price: 1200000,
-    icon: <Shield size={20} />,
-  },
-  {
-    id: 'tre-hoa-da',
-    title: 'Trẻ hóa da',
-    description: 'Cải thiện nếp nhăn, nâng cơ mặt tăng sinh collagen giúp da căng bóng, khỏe đẹp...',
-    duration: '90 phút',
-    price: 1500000,
-    icon: <Sun size={20} />,
-  },
-  {
-    id: 'khac',
-    title: 'Khác (theo yêu cầu)',
-    description: 'Dịch vụ da liễu khác theo chỉ định của bác sĩ hoặc mong muốn từ phía khách hàng...',
-    duration: 'Thời gian tùy chọn',
-    price: 0,
-    priceText: 'Liên hệ',
-    icon: <User size={20} />,
-  },
-];
-
-const formatVND = (price: number, text?: string) => {
-  if (text) return text;
-  return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
-};
-
 export const Step3Service: React.FC<Step3ServiceProps> = ({
-  selectedService,
+  selectedServiceId,
+  discountCode,
   onSelectService,
   onApplyDiscount,
   onPrevStep,
   onNextStep,
 }) => {
-  const [activeId, setActiveId] = useState<string>(selectedService || 'kham-co-ban');
-  const [promoInput, setPromoInput] = useState('');
-  const [showAll, setShowAll] = useState(false);
+  const [services, setServices] = useState<ClinicService[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [promoInput, setPromoInput] = useState(discountCode);
 
-  const handleCardClick = (service: ServiceOption) => {
-    setActiveId(service.id);
-    onSelectService(service);
-  };
+  useEffect(() => {
+    let cancelled = false;
 
-  const handleApply = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (promoInput.trim()) onApplyDiscount(promoInput.trim());
+    (async () => {
+      const result = await apiGetServices();
+
+      if (cancelled) {
+        return;
+      }
+
+      if (!result.ok || !result.data) {
+        setError(result.error);
+        setServices([]);
+      } else {
+        setServices(result.data.items);
+      }
+
+      setLoading(false);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const handleApply = (event: React.FormEvent) => {
+    event.preventDefault();
+    onApplyDiscount(promoInput.trim());
   };
 
   return (
     <div className="step3-container">
-      <h2 className="step3-main-heading">BƯỚC 3: CHỌN DỊCH VỤ & MÃ GIẢM GIÁ</h2>
+      <h2 className="step3-main-heading">BƯỚC 3: CHỌN DỊCH VỤ &amp; MÃ GIẢM GIÁ</h2>
 
       {/* Info callout */}
       <div className="step3-callout">
@@ -131,53 +79,64 @@ export const Step3Service: React.FC<Step3ServiceProps> = ({
       {/* Services grid */}
       <section className="step3-services-section">
         <h3 className="step3-section-title">Dịch vụ phòng khám</h3>
-        <div className="services-grid">
-          {SERVICE_OPTIONS.map((service) => {
-            const isSel = activeId === service.id;
-            return (
-              <div
-                key={service.id}
-                className={`service-card ${isSel ? 'is-selected' : ''}`}
-                onClick={() => handleCardClick(service)}
-              >
-                {/* Top row */}
-                <div className="card-top">
-                  <div className="card-left">
-                    <div className={`service-radio ${isSel ? 'checked' : ''}`}>
-                      <div className="radio-dot" />
+
+        {error && (
+          <div className="account-alert error" role="alert">
+            <AlertCircle size={16} />
+            <span>{error}</span>
+          </div>
+        )}
+
+        {loading ? (
+          <div className="full-page-loader">
+            <Loader2 className="full-page-loader-icon" size={28} />
+            <span>Đang tải danh mục dịch vụ...</span>
+          </div>
+        ) : services.length === 0 ? (
+          <div className="no-doctors-msg">
+            Phòng khám chưa công bố bảng dịch vụ. Vui lòng liên hệ hotline để được tư vấn.
+          </div>
+        ) : (
+          <div className="services-grid">
+            {services.map((service) => {
+              const isSel = selectedServiceId === service.service_id;
+
+              return (
+                <div
+                  key={service.service_id}
+                  className={`service-card ${isSel ? 'is-selected' : ''}`}
+                  onClick={() => onSelectService(service)}
+                >
+                  <div className="card-top">
+                    <div className="card-left">
+                      <div className={`service-radio ${isSel ? 'checked' : ''}`}>
+                        <div className="radio-dot" />
+                      </div>
+                      <h4 className="service-name">{service.service_name}</h4>
+                      {service.service_group && (
+                        <span className="service-badge">{service.service_group}</span>
+                      )}
                     </div>
-                    <h4 className="service-name">{service.title}</h4>
-                    {service.badge && (
-                      <span className="service-badge">{service.badge}</span>
-                    )}
+                    <div className="service-icon-box">
+                      <Stethoscope size={20} />
+                    </div>
                   </div>
-                  <div className="service-icon-box">{service.icon}</div>
-                </div>
 
-                {/* Description */}
-                <p className="service-desc">{service.description}</p>
+                  {service.description && <p className="service-desc">{service.description}</p>}
 
-                {/* Bottom row */}
-                <div className="card-bottom">
-                  <div className="service-duration">
-                    <Clock size={13} />
-                    <span>{service.duration}</span>
+                  <div className="card-bottom">
+                    <div className="service-duration">
+                      <Clock size={13} />
+                      <span>{service.duration_minutes} phút</span>
+                    </div>
+
+                    {/* Giá lấy thẳng từ API. Đây cũng chính là cột giá server đọc lại lúc
+                        chốt hoá đơn, nên con số hiện ở đây là con số sẽ bị tính. */}
+                    <span className="service-price">{formatCurrency(service.price)}</span>
                   </div>
-                  <span className="service-price">
-                    {formatVND(service.price, service.priceText)}
-                  </span>
                 </div>
-              </div>
-            );
-          })}
-        </div>
-
-        {!showAll && (
-          <div className="expand-btn-wrapper">
-            <button type="button" className="expand-btn" onClick={() => setShowAll(true)}>
-              <span>Xem thêm các dịch vụ</span>
-              <ChevronDown size={15} />
-            </button>
+              );
+            })}
           </div>
         )}
       </section>
@@ -192,7 +151,7 @@ export const Step3Service: React.FC<Step3ServiceProps> = ({
               className="promo-input"
               placeholder="Nhập mã giảm giá của bạn..."
               value={promoInput}
-              onChange={(e) => setPromoInput(e.target.value)}
+              onChange={(event) => setPromoInput(event.target.value)}
             />
             <button type="submit" className="btn btn-primary promo-apply-btn">
               Áp dụng
@@ -202,8 +161,14 @@ export const Step3Service: React.FC<Step3ServiceProps> = ({
           <div className="promo-info-box">
             <Tag size={16} className="tag-icon" />
             <div>
-              <strong>Chưa có mã giảm giá</strong>
-              <p>Bạn có thể bỏ qua bước này và áp dụng sau.</p>
+              <strong>{discountCode ? `Đã nhập mã: ${discountCode}` : 'Chưa có mã giảm giá'}</strong>
+              {/* Mức giảm do server quyết, không phải client — chỉ khi đặt lịch xong mới
+                  biết mã có hiệu lực hay không (TC-SEC-05). */}
+              <p>
+                {discountCode
+                  ? 'Mã sẽ được phòng khám kiểm tra khi xác nhận lịch hẹn.'
+                  : 'Bạn có thể bỏ qua bước này.'}
+              </p>
             </div>
           </div>
         </div>
@@ -215,7 +180,12 @@ export const Step3Service: React.FC<Step3ServiceProps> = ({
           <ArrowLeft size={16} />
           <span>Quay lại</span>
         </button>
-        <button type="button" className="btn btn-primary btn-next-step" onClick={onNextStep}>
+        <button
+          type="button"
+          className="btn btn-primary btn-next-step"
+          onClick={onNextStep}
+          disabled={selectedServiceId === null}
+        >
           <span>Tiếp tục</span>
           <ArrowRight size={18} />
         </button>

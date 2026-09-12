@@ -367,3 +367,24 @@
     border-bottom: 1px solid #f1f5f9;
   }
 }
+
+/* Phí khám lấy thẳng từ consultation_fee của API — chỗ trước đây là điểm đánh giá. */
+.row-fee {
+  margin: 0.4rem 0 0;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.step1-next-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Ô tìm kiếm dùng chung lớp .filter-select với dropdown, nhưng input không có mũi tên nên
+   cần bỏ khoảng trống dành cho nó. */
+input.filter-select {
+  padding-right: 0.95rem;
+}

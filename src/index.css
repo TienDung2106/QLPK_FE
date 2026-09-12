@@ -19,6 +19,16 @@
   --bg-subtle: #f8fafc;
   --bg-card: #ffffff;
 
+  /* Trạng thái lỗi. DESIGN.md ghi "Error/Disabled: Not yet established" — đây là lần đầu
+     định nghĩa. Đỏ là ngoại lệ đã cân nhắc với One Accent Rule, ngang hàng với việc xanh lá
+     chỉ dành cho trạng thái thành công: một thông báo lỗi tô xanh thương hiệu thì không còn
+     đọc ra là lỗi nữa. Chỉ dùng cho lỗi xác thực biểu mẫu và thông báo hỏng việc. */
+  --danger: #dc2626;
+  --danger-soft: #fef2f2;
+  --danger-border: #fecaca;
+  /* Bản sáng hơn, cho chữ đỏ đặt trên nền xanh đậm của các trang tài khoản. */
+  --danger-on-dark: #fecdd3;
+
   --border-light: #e2e8f0;
   --border-subtle: #f1f5f9;
 
@@ -1768,4 +1778,243 @@ img {
   .form-row {
     grid-template-columns: 1fr;
   }
+}
+
+/* ============================================================
+   MÀN CHỜ TOÀN TRANG
+   Dùng khi chưa biết người dùng là ai (AuthGuard) hoặc khi một
+   trang đang tải lượt dữ liệu đầu tiên.
+   ============================================================ */
+
+.full-page-loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.85rem;
+  min-height: 60vh;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.full-page-loader-icon {
+  color: var(--primary);
+  animation: full-page-loader-spin 0.9s linear infinite;
+}
+
+@keyframes full-page-loader-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ============================================================
+   KHU TÀI KHOẢN
+   Vỏ dùng chung cho "Lịch hẹn của tôi" và "Hồ sơ của tôi":
+   header quen thuộc, một dải nội dung trên nền xám nhạt, footer.
+   ============================================================ */
+
+.account-page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: var(--bg-subtle);
+}
+
+.account-main {
+  flex: 1;
+  padding-top: 2.5rem;
+  padding-bottom: 4rem;
+}
+
+.account-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.75rem;
+}
+
+.account-title {
+  margin: 0 0 0.35rem;
+  font-size: 1.9rem;
+  font-weight: 800;
+  letter-spacing: -0.3px;
+  color: var(--text-heading);
+}
+
+.account-subtitle {
+  margin: 0;
+  font-size: 0.92rem;
+  color: var(--text-muted);
+}
+
+.account-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  margin-bottom: 1.25rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  font-size: 0.88rem;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.account-alert svg {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.account-alert.error {
+  border-color: var(--danger-border);
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+.account-alert.success {
+  border-color: #a7f3d0;
+  background: #ecfdf5;
+  color: #047857;
+}
+
+/* Vòng quay dùng chung cho mọi nút đang chờ phản hồi. */
+.spin {
+  animation: full-page-loader-spin 0.9s linear infinite;
+}
+
+/* ============================================================
+   MENU TÀI KHOẢN TRÊN NAVBAR
+   ============================================================ */
+
+.btn-login {
+  padding: 0.6rem 1.15rem;
+  font-size: 0.88rem;
+  text-decoration: none;
+}
+
+.account-menu {
+  position: relative;
+}
+
+.account-menu-trigger {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.4rem 0.75rem 0.4rem 0.4rem;
+  border: 1.5px solid var(--border-light);
+  border-radius: var(--radius-pill);
+  background: var(--bg-main);
+  font-family: inherit;
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: #334155;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.account-menu-trigger:hover {
+  border-color: var(--primary-subtle);
+  background: var(--primary-light);
+}
+
+.account-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-pill);
+  background: var(--primary);
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--text-white);
+}
+
+/* Tên bị cắt thay vì cho đẩy giãn navbar: họ tên tiếng Việt có thể rất dài. */
+.account-menu-name {
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.account-dropdown {
+  position: absolute;
+  top: calc(100% + 0.6rem);
+  right: 0;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  min-width: 210px;
+  padding: 0.4rem;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  background: var(--bg-main);
+  box-shadow: var(--shadow-float);
+}
+
+.account-dropdown a,
+.account-dropdown button {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.65rem 0.8rem;
+  border: none;
+  border-radius: var(--radius-md);
+  background: none;
+  font-family: inherit;
+  font-size: 0.87rem;
+  font-weight: 600;
+  color: #334155;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.account-dropdown a:hover,
+.account-dropdown button:hover {
+  background: var(--primary-light);
+  color: var(--primary);
+}
+
+.account-dropdown button:last-child {
+  margin-top: 0.25rem;
+  border-top: 1px solid var(--border-subtle);
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  color: var(--danger);
+}
+
+.account-dropdown button:last-child:hover {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+/* Dưới 992px navbar thu lại sau nút hamburger; khi đó các mục tài khoản đã có trong
+   menu mobile nên hai nút này chỉ làm chật chỗ. */
+@media (max-width: 992px) {
+  .btn-login,
+  .account-menu {
+    display: none;
+  }
+}
+
+.mobile-menu-dropdown button.mobile-nav-link {
+  width: 100%;
+  border: none;
+  background: none;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+/* Ô kiểm tra chống bot cùng thông báo khi chính nó hỏng. */
+.captcha-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
 }

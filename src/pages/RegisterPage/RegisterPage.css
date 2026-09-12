@@ -1,0 +1,18 @@
+.register-terms {
+  margin-top: 0.15rem;
+}
+
+/* Nút phụ dưới nút chính: căn giữa và tách ra, để không bị đọc nhầm là hành động chính. */
+.register-resend {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  margin-top: 0.15rem;
+}
+
+.register-resend:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  text-decoration: none;
+}

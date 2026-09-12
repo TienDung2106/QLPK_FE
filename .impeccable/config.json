@@ -1,0 +1,14 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "overused-font",
+        "value": "plus jakarta sans",
+        "createdAt": "2026-09-12T10:41:18.549Z",
+        "reason": "Pre-existing project decision, not this session's: DESIGN.md codifies it as 'The Single-Family Rule' (Plus Jakarta Sans at every text role), index.html already loads it from Google Fonts, and this session's scope was wiring the FE to the API plus auth screens that match the existing design system - not a typeface change across the whole site."
+      }
+    ]
+  }
+}

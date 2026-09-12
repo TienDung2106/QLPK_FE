@@ -444,3 +444,18 @@
     gap: 1.25rem;
   }
 }
+
+.step5-total-note {
+  margin: 0.6rem 0 0;
+  font-size: 0.76rem;
+  line-height: 1.5;
+  color: var(--text-light);
+}
+
+.btn-confirm-booking:disabled,
+.btn-back-step-alt:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}

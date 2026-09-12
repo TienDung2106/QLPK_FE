@@ -409,3 +409,16 @@
     grid-template-columns: 1fr;
   }
 }
+
+.cal-day.current-month:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  background: transparent;
+}
+
+.btn-next-step:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}

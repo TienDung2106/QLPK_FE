@@ -11,7 +11,6 @@ interface BookingSummaryProps {
   servicePrice?: number;
   discountAmount?: number;
   currentStep?: number;
-  onEditStep?: (step: number) => void;
 }
 
 const formatVND = (num: number) =>
@@ -19,21 +18,23 @@ const formatVND = (num: number) =>
 
 export const BookingSummary: React.FC<BookingSummaryProps> = ({
   selectedDoctor,
-  selectedDate = '25/05/2026 (Thứ 2)',
-  selectedTime = '09:00',
-  selectedService = 'Khám da liễu cơ bản',
-  servicePrice = 300000,
+  selectedDate = '',
+  selectedTime = '',
+  selectedService = '',
+  servicePrice = 0,
   discountAmount = 0,
   currentStep = 1,
-  onEditStep: _onEditStep,
 }) => {
   const totalPrice = Math.max(0, servicePrice - discountAmount);
 
-  const displayDate = currentStep >= 2 ? (selectedDate || '25/05/2026 (Thứ 2)') : 'Chưa chọn';
-  const displayTime = currentStep >= 2 ? (selectedTime || '09:00') : 'Chưa chọn';
-  const displayService = currentStep >= 3 ? (selectedService || 'Khám da liễu cơ bản') : 'Chưa chọn';
-  const displayPrice = currentStep >= 3 && servicePrice > 0 ? formatVND(servicePrice) : (currentStep === 1 ? '0đ' : '--');
-  const displayTotal = currentStep >= 3 && totalPrice > 0 ? formatVND(totalPrice) : (currentStep === 1 ? '0đ' : '--');
+  // Chưa chọn thì nói là chưa chọn. Trước đây các giá trị này rơi về một lịch hẹn mẫu
+  // ('25/05/2026', '09:00', 300.000đ), nên thanh tóm tắt hiện ra một lựa chọn mà người
+  // dùng chưa hề thực hiện.
+  const displayDate = selectedDate || 'Chưa chọn';
+  const displayTime = selectedTime || 'Chưa chọn';
+  const displayService = selectedService || 'Chưa chọn';
+  const displayPrice = servicePrice > 0 ? formatVND(servicePrice) : '--';
+  const displayTotal = servicePrice > 0 ? formatVND(totalPrice) : '--';
 
   if (currentStep === 5) {
     return (
@@ -98,7 +99,7 @@ export const BookingSummary: React.FC<BookingSummaryProps> = ({
         <h3 className="summary-card-heading">THÔNG TIN LỊCH KHÁM</h3>
 
         {/* Doctor field */}
-        {currentStep >= 2 && selectedDoctor ? (
+        {selectedDoctor ? (
           <div className="summary-doc-section">
             {currentStep < 4 && <span className="summary-doc-field-label">Bác sĩ</span>}
             <div className="summary-doc-mini-card">
@@ -113,11 +114,7 @@ export const BookingSummary: React.FC<BookingSummaryProps> = ({
               />
               <div className="mini-doc-info">
                 <strong className="mini-doc-name">{selectedDoctor.name}</strong>
-                <span className="mini-doc-spec">
-                  {currentStep === 4
-                    ? 'Da liễu tổng quát • Thẩm mỹ da'
-                    : `Chuyên khoa: ${selectedDoctor.specialty}`}
-                </span>
+                <span className="mini-doc-spec">Chuyên khoa: {selectedDoctor.specialty}</span>
               </div>
             </div>
           </div>

@@ -1,0 +1,359 @@
+/* ============================================================
+   AUTH SHELL — nền + thẻ kính mờ dùng chung cho đăng nhập,
+   đăng ký và quên mật khẩu.
+   ============================================================ */
+
+.auth-page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: var(--bg-subtle);
+}
+
+.auth-backdrop {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 1.5rem;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+/* Lớp phủ xanh thương hiệu: vừa kéo ảnh về đúng tông của hệ thống, vừa đủ tương phản để
+   chữ trắng trên thẻ đọc được dù ảnh nền sáng hay tối. */
+.auth-backdrop-veil {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    140deg,
+    rgba(24, 119, 242, 0.72),
+    rgba(15, 76, 156, 0.62)
+  );
+}
+
+.auth-card {
+  position: relative;
+  width: 100%;
+  max-width: 440px;
+  padding: 2.5rem 2.25rem;
+  border-radius: var(--radius-xl);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  box-shadow: 0 24px 60px -18px rgba(15, 23, 42, 0.45);
+}
+
+.auth-card-title {
+  margin: 0 0 0.5rem;
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.4px;
+  text-align: center;
+
+  /* Ngoại lệ có chủ ý với "Blue Heading Rule": tiêu đề nằm trên nền xanh đậm, nên chữ
+     xanh sẽ biến mất. Trắng ở đây chính là màu tương phản cao nhất với nền thương hiệu. */
+  color: var(--text-white);
+}
+
+.auth-card-subtitle {
+  margin: 0 0 1.5rem;
+  font-size: 0.9rem;
+  line-height: 1.55;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* ---------- Tab bệnh nhân / nhân viên ---------- */
+
+.auth-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.25rem;
+  margin-bottom: 1.5rem;
+  padding: 0.25rem;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.auth-tab {
+  padding: 0.6rem 0.5rem;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  font-family: inherit;
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.82);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.auth-tab:hover:not(.active) {
+  color: var(--text-white);
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.auth-tab.active {
+  background: var(--bg-main);
+  color: var(--primary);
+  box-shadow: var(--shadow-sm);
+}
+
+/* ---------- Trường nhập ---------- */
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.auth-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+/* Nhãn chỉ dành cho trình đọc màn hình: bản thiết kế dùng placeholder thay nhãn, nhưng một
+   ô nhập không có nhãn thì người dùng trình đọc màn hình không biết đang điền gì. */
+.auth-label-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.auth-input {
+  width: 100%;
+  padding: 0.85rem 1.15rem;
+  border: 1.5px solid rgba(255, 255, 255, 0.35);
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.82);
+  font-family: inherit;
+  font-size: 0.92rem;
+  color: var(--text-main);
+  outline: none;
+  transition: var(--transition);
+}
+
+.auth-input::placeholder {
+  color: var(--text-muted);
+}
+
+.auth-input:focus {
+  border-color: var(--bg-main);
+  background: var(--bg-main);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.35);
+}
+
+.auth-input:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.auth-input.has-error {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.2);
+}
+
+.auth-field-error {
+  padding-left: 1.15rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--danger-on-dark);
+}
+
+/* Ô mã xác thực: các chữ số cách nhau để dễ đối chiếu với mã trong e-mail. */
+.auth-input.auth-code-input {
+  text-align: center;
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: 0.5em;
+  text-indent: 0.5em;
+}
+
+/* ---------- Hàng phụ trợ ---------- */
+
+.auth-inline-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 0.15rem 0 0.35rem;
+}
+
+.auth-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  cursor: pointer;
+}
+
+.auth-checkbox input {
+  width: 15px;
+  height: 15px;
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+
+.auth-link {
+  border: none;
+  padding: 0;
+  background: none;
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-white);
+  text-decoration: none;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.auth-link:hover {
+  text-decoration: underline;
+}
+
+/* ---------- Nút chính ---------- */
+
+.auth-submit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  margin-top: 0.35rem;
+  padding: 0.9rem 1.5rem;
+  border: none;
+  border-radius: var(--radius-pill);
+  background-color: var(--primary);
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-white);
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(15, 76, 156, 0.35);
+  transition: var(--transition);
+}
+
+.auth-submit:hover:not(:disabled) {
+  background-color: var(--primary-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(15, 76, 156, 0.45);
+}
+
+.auth-submit:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.auth-submit .spin {
+  animation: auth-spin 0.9s linear infinite;
+}
+
+@keyframes auth-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ---------- Thông báo ---------- */
+
+.auth-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 0.75rem 0.9rem;
+  border-radius: var(--radius-md);
+  font-size: 0.84rem;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.auth-alert svg {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* Nền trắng đục thay vì đỏ nhạt: thẻ đã trong suốt trên nền xanh, một khối đỏ nhạt ở đây
+   sẽ đục ngầu. Màu chữ mang toàn bộ tín hiệu lỗi. */
+.auth-alert.error {
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--danger);
+}
+
+.auth-alert.success {
+  background: rgba(255, 255, 255, 0.92);
+  color: #047857;
+}
+
+.auth-alert.info {
+  background: rgba(255, 255, 255, 0.2);
+  color: var(--text-white);
+}
+
+/* ---------- Chân thẻ ---------- */
+
+.auth-card-footer {
+  margin-top: 1.35rem;
+  font-size: 0.84rem;
+  font-weight: 600;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.auth-card-footer a,
+.auth-card-footer button {
+  margin-left: 0.35rem;
+  border: none;
+  padding: 0;
+  background: none;
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: 800;
+  color: var(--text-white);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.captcha-widget {
+  display: flex;
+  justify-content: center;
+  min-height: 65px;
+}
+
+.auth-otp-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+@media (max-width: 480px) {
+  .auth-backdrop {
+    padding: 2.5rem 1rem;
+  }
+
+  .auth-card {
+    padding: 2rem 1.4rem;
+  }
+
+  .auth-card-title {
+    font-size: 1.7rem;
+  }
+}
