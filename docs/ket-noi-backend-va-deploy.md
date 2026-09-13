@@ -131,8 +131,15 @@ az staticwebapp create --name swa-qlpk-hoangqlpk97 \
 
 ### Tự động deploy bằng GitHub Actions
 
-Workflow ở `.github/workflows/azure-swa-deploy.yml`, chạy khi push vào `main` hoặc `Hoang`
-(sửa mục `on.push.branches` nếu dùng nhánh khác), và bấm chạy tay được từ tab Actions.
+Workflow ở `.github/workflows/azure-swa-deploy.yml`, chạy trên repo nhóm
+**`TienDung2106/QLPK_FE`** khi push vào `main` hoặc `Hoang` (sửa mục `on.push.branches` nếu
+dùng nhánh khác), và bấm chạy tay được từ tab Actions.
+
+- **`Hoang`** là nhánh đang deploy.
+- **`main`** hiện chưa chứa file workflow, nên push lên `main` chưa deploy gì. Khi merge
+  `Hoang` vào `main`, push lên `main` cũng sẽ deploy — vào **cùng** Static Web App này, tức
+  là bản trên `main` và bản trên `Hoang` sẽ ghi đè lẫn nhau. Muốn chỉ một nhánh deploy thì
+  bỏ nhánh kia khỏi `on.push.branches`.
 
 Cần đúng **một** secret. Lấy giá trị:
 
@@ -141,8 +148,15 @@ az staticwebapp secrets list --name swa-qlpk-hoangqlpk97 \
   --resource-group rg-qlpk --query properties.apiKey -o tsv
 ```
 
-rồi thêm vào repo `stayhome3977/QLPK_FE` ở **Settings → Secrets and variables → Actions**
-với tên `AZURE_STATIC_WEB_APPS_API_TOKEN`.
+rồi thêm vào repo `TienDung2106/QLPK_FE` ở **Settings → Secrets and variables → Actions**
+với tên `AZURE_STATIC_WEB_APPS_API_TOKEN`. Việc này cần quyền admin trên repo. Thiếu secret
+thì workflow dừng ngay ở bước *Check the repository secret is set* và nói rõ lý do, không
+build gì cả.
+
+> **GitHub Pages cũ vẫn đang bật** trên repo nhóm (`pages-build-deployment`, từ nhánh
+> `gh-pages`). Từ khi đổi `base` trong `vite.config.ts` sang `'/'`, `npm run deploy` (gh-pages)
+> sẽ build ra bản vỡ đường dẫn asset dưới `/QLPK_FE/`. Nên tắt Pages, hoặc đừng chạy
+> `npm run deploy` nữa.
 
 ### Deploy tay (không cần GitHub)
 
