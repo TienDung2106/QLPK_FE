@@ -55,17 +55,28 @@ jobs:
         with:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
           action: upload
-          # `dist` đã build sẵn ở bước trên, nên Oryx không cần build lại trên runner.
-          app_location: "/"
-          output_location: "dist"
+          # `dist` đã build sẵn ở bước trên nên bỏ qua bước build của Oryx. Khi
+          # skip_app_build bật, action BỎ QUA output_location và upload nguyên app_location —
+          # vì thế app_location phải là chính thư mục đã build. Để "/" thì nó đẩy mã nguồn
+          # thô lên, index.html trỏ vào /src/main.tsx và trang trắng.
+          app_location: "dist"
           skip_app_build: true
           skip_api_build: true
 
-      # Không có bước này thì workflow vẫn xanh kể cả khi site không phục vụ được gì.
+      # Chỉ kiểm tra HTTP 200 là chưa đủ: bản mã nguồn thô cũng trả 200. Phải chắc trang
+      # phục vụ đúng bản đã build (có /assets/index-*.js), và đường dẫn con vẫn rơi về
+      # index.html nhờ staticwebapp.config.json (Vite copy nó từ public/ vào dist/).
       - name: Check the site answers
         run: |
+          site="https://wonderful-plant-05c95c300.6.azurestaticapps.net"
           sleep 20
-          curl --fail --silent --show-error --location \
-            --retry 5 --retry-delay 10 --retry-all-errors \
-            "https://wonderful-plant-05c95c300.6.azurestaticapps.net/" > /dev/null
+          for path in / /dang-ky; do
+            html=$(curl --fail --silent --show-error --location \
+              --retry 5 --retry-delay 10 --retry-all-errors "$site$path")
+            if ! printf '%s' "$html" | grep -q '/assets/index-'; then
+              echo "::error::$site$path không trả về bản đã build (thiếu /assets/index-*.js)."
+              exit 1
+            fi
+            echo "OK $path"
+          done
           echo "Deployed ${{ github.sha }}"

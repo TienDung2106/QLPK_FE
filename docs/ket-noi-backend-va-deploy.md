@@ -170,6 +170,9 @@ npx @azure/static-web-apps-cli deploy ./dist \
 
 ### `staticwebapp.config.json`
 
+Nằm ở **`public/staticwebapp.config.json`**, để Vite tự copy vào `dist/` lúc build — nhờ vậy
+cả GitHub Actions lẫn deploy tay đều mang nó theo mà không cần bước copy riêng.
+
 Bắt buộc với BrowserRouter: `navigationFallback` trả `/index.html` cho mọi đường dẫn không
 phải file tĩnh. Thiếu nó thì mở thẳng `/lich-hen-cua-toi` sẽ ra 404 — trang chủ vẫn chạy,
 nên lỗi này rất dễ lọt.
@@ -182,8 +185,14 @@ Nhớ rằng `http://localhost:5173` và `http://127.0.0.1:5173` là hai origin 
 **Đổi `.env` mà không thấy tác dụng.** Vite nhúng biến lúc khởi động; phải tắt và chạy lại
 `npm run dev`.
 
-**Mở thẳng một đường dẫn con thì ra 404.** Thiếu `staticwebapp.config.json`, hoặc file đó
-không được deploy kèm (nó phải nằm ở thư mục `output_location`, hoặc ở gốc repo).
+**Mở thẳng một đường dẫn con thì ra 404.** Thiếu `staticwebapp.config.json` trong `dist/`.
+Nó phải nằm ở `public/`; đặt ở gốc repo thì Vite không copy và CI deploy thiếu nó.
+
+**Deploy xanh mà trang trắng, `index.html` trỏ tới `/src/main.tsx`.** Action
+`Azure/static-web-apps-deploy` đã upload mã nguồn thô thay vì bản build. Khi
+`skip_app_build: true`, action bỏ qua `output_location` và upload nguyên `app_location`, nên
+`app_location` phải là `dist`. Bước *Check the site answers* trong workflow giờ bắt đúng lỗi
+này (đòi trang có `/assets/index-*.js`), không chỉ kiểm tra HTTP 200.
 
 **Đường dẫn asset bị 404 sau khi deploy.** `base` trong `vite.config.ts` phải là `'/'`.
 Trước đây là `'/QLPK_FE/'` để đẩy lên GitHub Pages; giữ giá trị cũ thì mọi file JS/CSS sẽ
