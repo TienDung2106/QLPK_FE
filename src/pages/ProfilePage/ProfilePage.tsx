@@ -194,8 +194,9 @@ export const ProfilePage = () => {
               <div className="profile-identity">
                 <span className="profile-code">{selected.patient_code}</span>
                 <span className="profile-contact">
-                  {selected.account_phone_number}
-                  {selected.account_email ? ` · ${selected.account_email}` : ''}
+                  {[selected.account_email, selected.account_phone_number]
+                    .filter(Boolean)
+                    .join(' · ')}
                 </span>
               </div>
 

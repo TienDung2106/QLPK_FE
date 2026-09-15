@@ -29,7 +29,7 @@ const RELATIONSHIP_LABEL: Record<string, string> = {
 function toPatientInfo(profile: PatientProfile): PatientInfo {
   return {
     fullName: profile.full_name,
-    phone: profile.account_phone_number,
+    phone: profile.account_phone_number ?? '',
     email: profile.account_email ?? '',
     gender: (profile.gender as PatientInfo['gender']) ?? 'other',
     birthDate: profile.date_of_birth ?? '',

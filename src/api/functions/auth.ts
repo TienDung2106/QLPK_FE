@@ -4,15 +4,16 @@ import type { AuthTokens, AuthenticatedAccount } from '../session';
 import type { OtpChallengeResponse } from '../types';
 
 export interface LoginPayload {
-  /** Số điện thoại hoặc email — backend nhận cả hai (LoginRequest.Login). */
+  /** Email của tài khoản — tên đăng nhập duy nhất (LoginRequest.Login). */
   login: string;
   password: string;
   device_info?: string;
 }
 
 export interface RegisterPayload {
-  phone_number: string;
   email: string;
+  /** Không bắt buộc; chỉ là thông tin liên hệ, không dùng để đăng nhập. */
+  phone_number?: string | null;
   password: string;
   full_name: string;
   date_of_birth?: string | null;

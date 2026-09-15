@@ -178,14 +178,14 @@ export const LoginPage = () => {
 
         <div className="auth-field">
           <label className="auth-label-sr" htmlFor="login-identifier">
-            Số điện thoại hoặc email
+            Email
           </label>
           <input
             id="login-identifier"
             className="auth-input"
-            type="text"
+            type="email"
             autoComplete="username"
-            placeholder="Số điện thoại hoặc email"
+            placeholder="Email"
             value={identifier}
             onChange={(event) => setIdentifier(event.target.value)}
             disabled={submitting}

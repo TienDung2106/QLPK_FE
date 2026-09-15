@@ -96,7 +96,7 @@ export interface PatientProfile {
   emergency_contact_name: string | null;
   emergency_contact_phone: string | null;
   allergy_notes: string | null;
-  account_phone_number: string;
+  account_phone_number: string | null;
   account_email: string | null;
   created_at: string;
 }

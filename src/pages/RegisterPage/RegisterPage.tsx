@@ -14,16 +14,16 @@ import './RegisterPage.css';
 
 interface FormValues {
   fullName: string;
-  phoneNumber: string;
   email: string;
+  phoneNumber: string;
   password: string;
   confirmPassword: string;
 }
 
 const EMPTY_FORM: FormValues = {
   fullName: '',
-  phoneNumber: '',
   email: '',
+  phoneNumber: '',
   password: '',
   confirmPassword: '',
 };
@@ -46,13 +46,16 @@ function validate(values: FormValues): Partial<Record<keyof FormValues, string>>
     errors.fullName = 'Vui lòng nhập họ tên.';
   }
 
-  // Khớp RegularExpression của RegisterRequest.PhoneNumber: chỉ chữ số, cho phép dẫn đầu '+'.
-  if (!/^\+?[0-9]{8,15}$/.test(values.phoneNumber.trim())) {
-    errors.phoneNumber = 'Số điện thoại chỉ gồm chữ số, 8–15 chữ số.';
-  }
-
+  // Email là tên đăng nhập và là nơi nhận mã xác thực.
   if (!/^\S+@\S+\.\S+$/.test(values.email.trim())) {
     errors.email = 'Email không hợp lệ.';
+  }
+
+  // Số điện thoại không bắt buộc. Nếu nhập thì khớp RegularExpression của RegisterRequest.PhoneNumber:
+  // chỉ chữ số, cho phép dẫn đầu '+'.
+  const phone = values.phoneNumber.trim();
+  if (phone && !/^\+?[0-9]{8,15}$/.test(phone)) {
+    errors.phoneNumber = 'Số điện thoại chỉ gồm chữ số, 8–15 chữ số.';
   }
 
   const passwordError = validatePassword(values.password);
@@ -119,8 +122,8 @@ export const RegisterPage = () => {
       const result = await apiRegister(
         {
           full_name: values.fullName.trim(),
-          phone_number: values.phoneNumber.trim(),
           email: values.email.trim(),
+          phone_number: values.phoneNumber.trim() || null,
           password: values.password,
         },
         exchanged.token,
@@ -302,25 +305,6 @@ export const RegisterPage = () => {
         </div>
 
         <div className="auth-field">
-          <label className="auth-label-sr" htmlFor="register-phone">
-            Số điện thoại
-          </label>
-          <input
-            id="register-phone"
-            className={`auth-input ${fieldErrors.phoneNumber ? 'has-error' : ''}`}
-            type="tel"
-            autoComplete="tel"
-            placeholder="Số điện thoại"
-            value={values.phoneNumber}
-            onChange={(event) => setValue('phoneNumber', event.target.value)}
-            disabled={submitting}
-          />
-          {fieldErrors.phoneNumber && (
-            <span className="auth-field-error">{fieldErrors.phoneNumber}</span>
-          )}
-        </div>
-
-        <div className="auth-field">
           <label className="auth-label-sr" htmlFor="register-email">
             Email
           </label>
@@ -329,12 +313,31 @@ export const RegisterPage = () => {
             className={`auth-input ${fieldErrors.email ? 'has-error' : ''}`}
             type="email"
             autoComplete="email"
-            placeholder="Email"
+            placeholder="Email (dùng để đăng nhập)"
             value={values.email}
             onChange={(event) => setValue('email', event.target.value)}
             disabled={submitting}
           />
           {fieldErrors.email && <span className="auth-field-error">{fieldErrors.email}</span>}
+        </div>
+
+        <div className="auth-field">
+          <label className="auth-label-sr" htmlFor="register-phone">
+            Số điện thoại (không bắt buộc)
+          </label>
+          <input
+            id="register-phone"
+            className={`auth-input ${fieldErrors.phoneNumber ? 'has-error' : ''}`}
+            type="tel"
+            autoComplete="tel"
+            placeholder="Số điện thoại (không bắt buộc)"
+            value={values.phoneNumber}
+            onChange={(event) => setValue('phoneNumber', event.target.value)}
+            disabled={submitting}
+          />
+          {fieldErrors.phoneNumber && (
+            <span className="auth-field-error">{fieldErrors.phoneNumber}</span>
+          )}
         </div>
 
         <div className="auth-field">

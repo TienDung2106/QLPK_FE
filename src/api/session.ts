@@ -5,7 +5,8 @@ import { localStorageService, sessionStorageService } from '../services/localSto
 export interface AuthenticatedAccount {
   account_id: number;
   full_name: string;
-  phone_number: string;
+  email: string | null;
+  phone_number: string | null;
   role_code: string;
   role_name: string;
   permissions: string[];
