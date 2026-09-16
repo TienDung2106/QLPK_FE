@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { CalendarPlus, Save } from 'lucide-react';
-import { apiGetDeskPatient, apiUpdateDeskPatient } from '../../api/functions/desk';
+import { CalendarPlus, Link2, Save } from 'lucide-react';
+import { apiGetDeskPatient, apiLinkPatientAccount, apiUpdateDeskPatient } from '../../api/functions/desk';
 import { useAction, useApiQuery } from '../hooks';
 import { formatDate, formatDateTime, formatTime } from '../format';
-import { APPOINTMENT_STATUS, labelOf, PATIENT_CREATED_VIA_LABEL, textOf } from '../labels';
+import { APPOINTMENT_STATUS, labelOf, PATIENT_CREATED_VIA_LABEL, PATIENT_RELATIONSHIP_LABEL, textOf } from '../labels';
 import { useToast } from '../components/toastContext';
-import { Alert, Badge, Button, EmptyState, PageHeader, Panel, StatusBadge } from '../components/ui';
+import { Alert, Badge, Button, EmptyState, Field, PageHeader, Panel, Sheet, StatusBadge } from '../components/ui';
 import { PatientFields } from './PatientFields';
 import { emptyPatientForm, patientPayload, patientToForm } from './patientFormValue';
 import type { PatientFormValue } from './patientFormValue';
@@ -21,6 +21,10 @@ const PatientDetailPage = () => {
   const [form, setForm] = useState<PatientFormValue>(emptyPatientForm);
   const [dirty, setDirty] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [linkOpen, setLinkOpen] = useState(false);
+  const [linkEmail, setLinkEmail] = useState('');
+  const [linkRelationship, setLinkRelationship] = useState('self');
+  const [linkError, setLinkError] = useState<string | null>(null);
 
   // Hồ sơ mới về (lần đầu hoặc sau khi lưu) thì nạp lại form, ngay trong lượt render.
   const [formSource, setFormSource] = useState<typeof patient>(null);
@@ -58,6 +62,23 @@ const PatientDetailPage = () => {
     );
   }
 
+  const linkAccount = async () => {
+    if (!linkEmail.trim()) {
+      setLinkError('Nhập email tài khoản bệnh nhân đã đăng ký.');
+      return;
+    }
+    const result = await run('link', () =>
+      apiLinkPatientAccount(patientId, { account_email: linkEmail.trim(), relationship_to_account: linkRelationship }),
+    );
+    if (!result.ok || !result.data) {
+      setLinkError(result.error);
+      return;
+    }
+    setLinkOpen(false);
+    query.setData(result.data);
+    toast.success(`Đã chuyển hồ sơ sang tài khoản ${linkEmail.trim()}.`);
+  };
+
   return (
     <>
       <PageHeader
@@ -72,6 +93,19 @@ const PatientDetailPage = () => {
         }
         actions={
           <>
+            {!patient.account_claimed && (
+              <Button
+                icon={<Link2 size={16} />}
+                onClick={() => {
+                  setLinkEmail('');
+                  setLinkRelationship('self');
+                  setLinkError(null);
+                  setLinkOpen(true);
+                }}
+              >
+                Liên kết tài khoản
+              </Button>
+            )}
             <Button icon={<CalendarPlus size={16} />} onClick={() => navigate('/thu-ngan/dat-lich')}>
               Đặt lịch
             </Button>
@@ -140,6 +174,43 @@ const PatientDetailPage = () => {
           </Panel>
         </div>
       </div>
+      <Sheet
+        open={linkOpen}
+        title="Liên kết với tài khoản bệnh nhân"
+        subtitle="Chuyển hồ sơ tạo tại quầy sang tài khoản bệnh nhân đã tự đăng ký, để lịch sử khám không bị tách đôi."
+        onClose={() => setLinkOpen(false)}
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setLinkOpen(false)}>
+              Huỷ
+            </Button>
+            <Button variant="primary" loading={isPending('link')} onClick={linkAccount}>
+              Liên kết
+            </Button>
+          </>
+        }
+      >
+        {linkError && <Alert tone="danger" className="st-alert-gap">{linkError}</Alert>}
+        <Alert tone="info" className="st-alert-gap">
+          Chỉ liên kết được hồ sơ chưa từng đăng nhập. Tài khoản đích đã có hồ sơ “Bản thân” thì chọn quan hệ khác.
+        </Alert>
+        <div className="st-form-grid">
+          <Field label="Email tài khoản bệnh nhân" required className="st-span-2">
+            {(id) => <input id={id} type="email" className="st-input" value={linkEmail} onChange={(e) => setLinkEmail(e.target.value)} />}
+          </Field>
+          <Field label="Hồ sơ này là của" required className="st-span-2">
+            {(id) => (
+              <select id={id} className="st-select" value={linkRelationship} onChange={(e) => setLinkRelationship(e.target.value)}>
+                {Object.entries(PATIENT_RELATIONSHIP_LABEL).map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label} của chủ tài khoản
+                  </option>
+                ))}
+              </select>
+            )}
+          </Field>
+        </div>
+      </Sheet>
     </>
   );
 };

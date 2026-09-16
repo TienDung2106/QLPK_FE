@@ -1,15 +1,15 @@
 import { useState } from 'react';
 import { CalendarOff } from 'lucide-react';
-import { apiGetDoctorTimeOff, apiRecordDoctorTimeOff } from '../../api/functions/desk';
+import { apiGetDoctorTimeOff, apiRecordDoctorTimeOff, apiWithdrawDoctorTimeOff } from '../../api/functions/desk';
 import type { TimeOff } from '../../api/staffTypes';
 import { useAction, useApiQuery } from '../hooks';
-import { todayIso } from '../format';
+import { formatDate, todayIso } from '../format';
 import { useToast } from '../components/toastContext';
 import { DoctorSelect } from '../components/pickers';
 import { TimeOffForm, TimeOffList } from '../components/timeOff';
 import { emptyTimeOff, timeOffPayload } from '../components/timeOffForm';
 import type { TimeOffFormValue } from '../components/timeOffForm';
-import { Alert, Button, EmptyState, PageHeader, Panel, Sheet } from '../components/ui';
+import { Alert, Button, ConfirmDialog, EmptyState, PageHeader, Panel, Sheet } from '../components/ui';
 
 /** Quầy ghi nhận bác sĩ nghỉ thay bác sĩ, rồi dời các lịch hẹn bị ảnh hưởng. */
 const DoctorTimeOffDeskPage = () => {
@@ -20,6 +20,7 @@ const DoctorTimeOffDeskPage = () => {
   const [form, setForm] = useState<TimeOffFormValue>(emptyTimeOff);
   const [error, setError] = useState<string | null>(null);
   const [recorded, setRecorded] = useState<TimeOff | null>(null);
+  const [withdrawing, setWithdrawing] = useState<TimeOff | null>(null);
 
   const query = useApiQuery(
     () => apiGetDoctorTimeOff(doctorId!, { from_date: todayIso(-30), to_date: todayIso(180) }),
@@ -42,6 +43,20 @@ const DoctorTimeOffDeskPage = () => {
     setForm(emptyTimeOff);
     setRecorded(result.data);
     toast.success('Đã ghi nhận lịch nghỉ.');
+    query.reload();
+  };
+
+  const withdraw = async () => {
+    if (!withdrawing || !doctorId) {
+      return;
+    }
+    const result = await run('withdraw', () => apiWithdrawDoctorTimeOff(doctorId, withdrawing.doctor_time_off_id));
+    setWithdrawing(null);
+    if (!result.ok) {
+      toast.error(result.error);
+      return;
+    }
+    toast.success('Đã rút lại lịch nghỉ. Khung giờ mở nhận lịch trở lại.');
     query.reload();
   };
 
@@ -76,7 +91,7 @@ const DoctorTimeOffDeskPage = () => {
       )}
 
       {doctorId ? (
-        <TimeOffList query={query} appointmentLinkBase="/thu-ngan/lich-hen" emptyText="Bác sĩ chưa có ngày nghỉ nào từ 30 ngày trước đến 6 tháng tới." />
+        <TimeOffList query={query} onWithdraw={setWithdrawing} appointmentLinkBase="/thu-ngan/lich-hen" emptyText="Bác sĩ chưa có ngày nghỉ nào từ 30 ngày trước đến 6 tháng tới." />
       ) : (
         <Panel>
           <EmptyState title="Chọn một bác sĩ" text="Chọn bác sĩ ở trên để xem và ghi nhận lịch nghỉ." />
@@ -101,6 +116,15 @@ const DoctorTimeOffDeskPage = () => {
         {error && <Alert tone="danger" className="st-alert-gap">{error}</Alert>}
         <TimeOffForm value={form} onChange={setForm} />
       </Sheet>
+      <ConfirmDialog
+        open={withdrawing !== null}
+        title="Rút lại lịch nghỉ?"
+        text={withdrawing ? `Ngày ${formatDate(withdrawing.off_date)} sẽ mở nhận đặt lịch trở lại.` : undefined}
+        confirmLabel="Rút lại"
+        loading={isPending('withdraw')}
+        onConfirm={withdraw}
+        onClose={() => setWithdrawing(null)}
+      />
     </>
   );
 };

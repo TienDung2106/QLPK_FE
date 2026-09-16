@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { BadgePercent, CalendarClock, CheckCheck, DoorOpen, Receipt, UserX, Wallet, XCircle } from 'lucide-react';
+import { BadgePercent, CalendarClock, Check, CheckCheck, DoorOpen, Receipt, UserX, Wallet, X, XCircle } from 'lucide-react';
 import useAuth from '../../hooks/useAuth';
 import {
   apiAcceptReschedule,
@@ -11,6 +11,9 @@ import {
   apiConfirmAppointmentPayment,
   apiGetStaffAppointment,
   apiMarkNoShow,
+  apiSearchStaffPromotions,
+  apiStaffConfirmAppointment,
+  apiStaffDeclineAppointment,
   apiPostponeAppointment,
   apiStaffCancelAppointment,
   apiStaffCheckIn,
@@ -19,16 +22,17 @@ import type { ApiResult } from '../../api/helpers';
 import type { StaffAppointment } from '../../api/staffTypes';
 import { PERMISSION } from '../permissions';
 import { useAction, useApiQuery } from '../hooks';
-import { formatDate, formatDateTime, formatMoney, formatPercent, formatTime, todayIso } from '../format';
+import { formatDate, formatDateTime, formatMoney, formatNumber, formatPercent, formatTime, todayIso } from '../format';
 import { APPOINTMENT_STATUS, BOOKING_SOURCE_LABEL, CONSULTATION_MODE_LABEL, labelOf, textOf } from '../labels';
 import { useToast } from '../components/toastContext';
 import { PaymentMethodFields, SlotPicker } from '../components/pickers';
+import { DoctorMonthCalendar } from '../components/DoctorMonthCalendar';
 import { emptyPayment, paymentInvalid, paymentPayload } from '../components/payment';
 import type { PaymentFormValue } from '../components/payment';
 import { Alert, Button, ConfirmDialog, Field, PageHeader, Panel, Sheet, StatusBadge } from '../components/ui';
 
 type SheetKind = 'pay' | 'discount' | 'postpone' | 'choose-slot' | null;
-type ConfirmKind = 'cancel' | 'no-show' | 'accept' | null;
+type ConfirmKind = 'cancel' | 'no-show' | 'accept' | 'confirm' | 'decline' | null;
 
 const PREPAYABLE = ['pending', 'pending_approval', 'confirmed'];
 const POSTPONABLE = ['pending', 'pending_approval', 'confirmed', 'checked_in'];
@@ -44,6 +48,10 @@ const DeskAppointmentDetailPage = () => {
   const appointment = query.data;
 
   const [sheet, setSheet] = useState<SheetKind>(null);
+  // Mã khuyến mãi dùng được hôm nay, chỉ tải khi mở form giảm giá.
+  const promotions = useApiQuery(() => apiSearchStaffPromotions({ page_size: 50 }), [], {
+    enabled: sheet === 'discount' && hasPermission(PERMISSION.DiscountApplyWithinThreshold),
+  });
   const [confirm, setConfirm] = useState<ConfirmKind>(null);
   const [error, setError] = useState<string | null>(null);
   const [payment, setPayment] = useState<PaymentFormValue>(emptyPayment);
@@ -180,6 +188,16 @@ const DeskAppointmentDetailPage = () => {
         description={`${formatDate(appointment.appointment_date)} lúc ${formatTime(appointment.appointment_time)} · Bác sĩ: ${appointment.doctor_full_name} · Lịch hẹn #${appointment.appointment_id}`}
         actions={
           <>
+            {status === 'pending' && (
+              <>
+                <Button icon={<X size={16} />} disabled={Boolean(pending)} onClick={() => setConfirm('decline')}>
+                  Từ chối
+                </Button>
+                <Button variant="primary" icon={<Check size={16} />} disabled={Boolean(pending)} onClick={() => setConfirm('confirm')}>
+                  Xác nhận lịch
+                </Button>
+              </>
+            )}
             {status === 'confirmed' && appointment.check_in_code && (
               <Button variant="primary" icon={<DoorOpen size={16} />} loading={isPending('checkin')} onClick={checkIn}>
                 Nhận phòng
@@ -211,6 +229,11 @@ const DeskAppointmentDetailPage = () => {
               Chọn giờ khác
             </Button>
           </span>
+        </Alert>
+      )}
+      {status === 'pending' && (
+        <Alert tone="warning" className="st-alert-gap">
+          Bệnh nhân tự đặt lịch này và chưa ai xác nhận. Bệnh nhân chỉ nhận phòng được sau khi lịch được xác nhận.
         </Alert>
       )}
       {status === 'pending_approval' && appointment.discount_approval_required && (
@@ -397,11 +420,46 @@ const DeskAppointmentDetailPage = () => {
         </div>
         <div className="st-form-grid">
           {discount.mode === 'code' ? (
-            <Field label="Mã khuyến mãi" required className="st-span-2">
-              {(id) => (
-                <input id={id} className="st-input st-mono" maxLength={50} value={discount.promotion_code} onChange={(e) => setDiscount({ ...discount, promotion_code: e.target.value.toUpperCase() })} />
+            <>
+              <Field label="Mã khuyến mãi" required className="st-span-2">
+                {(id) => (
+                  <input id={id} className="st-input st-mono" maxLength={50} value={discount.promotion_code} onChange={(e) => setDiscount({ ...discount, promotion_code: e.target.value.toUpperCase() })} />
+                )}
+              </Field>
+              {(promotions.data?.items.length ?? 0) > 0 && (
+                <div className="st-span-2">
+                  <div className="st-label" style={{ marginBottom: 6 }}>
+                    Mã đang áp dụng được hôm nay
+                  </div>
+                  <div className="st-stack" style={{ gap: '0.35rem' }}>
+                    {promotions.data!.items.map((promotion) => (
+                      <button
+                        key={promotion.promotion_id}
+                        type="button"
+                        className={`st-picker-option st-panel ${discount.promotion_code === promotion.promotion_code ? 'active' : ''}`}
+                        style={{ margin: 0, borderColor: discount.promotion_code === promotion.promotion_code ? 'var(--primary)' : undefined }}
+                        onClick={() => setDiscount({ ...discount, promotion_code: promotion.promotion_code })}
+                      >
+                        <span>
+                          <span className="st-cell-main st-mono">{promotion.promotion_code}</span>
+                          <br />
+                          <span className="st-cell-sub">
+                            {promotion.description ?? '—'}
+                            {promotion.min_booking_amount > 0 ? ` · đơn từ ${formatMoney(promotion.min_booking_amount)}` : ''}
+                            {promotion.valid_until ? ` · hết hạn ${formatDateTime(promotion.valid_until)}` : ''}
+                          </span>
+                        </span>
+                        <span className="st-strong st-nowrap">
+                          {promotion.discount_type === 'percent'
+                            ? `−${formatNumber(promotion.discount_value, 2)}%`
+                            : `−${formatMoney(promotion.discount_value)}`}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
               )}
-            </Field>
+            </>
           ) : (
             <Field label="Phần trăm giảm" required className="st-span-2" hint="Vượt ngưỡng trong cài đặt thì lịch hẹn chuyển sang chờ duyệt.">
               {(id) => (
@@ -443,21 +501,19 @@ const DeskAppointmentDetailPage = () => {
       >
         {error && <Alert tone="danger" className="st-alert-gap">{error}</Alert>}
         <div className="st-form-grid">
-          <Field label="Ngày mới" required className="st-span-2">
-            {(id) => (
-              <input
-                id={id}
-                type="date"
-                min={todayIso()}
-                className="st-input"
-                value={slotDate}
-                onChange={(e) => {
-                  setSlotDate(e.target.value);
-                  setSlotTime(null);
-                }}
-              />
-            )}
-          </Field>
+          <div className="st-span-2">
+            <div className="st-label" style={{ marginBottom: 6 }}>
+              Ngày mới
+            </div>
+            <DoctorMonthCalendar
+              doctorId={appointment.doctor_id}
+              value={slotDate}
+              onChange={(date) => {
+                setSlotDate(date);
+                setSlotTime(null);
+              }}
+            />
+          </div>
           <div className="st-span-2">
             <div className="st-label" style={{ marginBottom: 6 }}>
               Khung giờ trống
@@ -481,6 +537,30 @@ const DeskAppointmentDetailPage = () => {
         tone="danger-solid"
         loading={isPending('cancel')}
         onConfirm={(reason) => act('cancel', () => apiStaffCancelAppointment(appointmentId, reason), 'Đã huỷ lịch hẹn.')}
+        onClose={() => setConfirm(null)}
+      />
+      <ConfirmDialog
+        open={confirm === 'confirm'}
+        title="Xác nhận lịch hẹn?"
+        text="Bệnh nhân nhận được mã nhận phòng. Lịch đang chờ duyệt giảm giá phải được duyệt trước."
+        confirmLabel="Xác nhận"
+        loading={isPending('confirm')}
+        onConfirm={() => act('confirm', () => apiStaffConfirmAppointment(appointmentId), 'Đã xác nhận lịch hẹn.')}
+        onClose={() => setConfirm(null)}
+      />
+      <ConfirmDialog
+        open={confirm === 'decline'}
+        title="Từ chối lịch hẹn?"
+        text="Khung giờ được mở lại. Khác với huỷ muộn, tiền trả trước (nếu có) được hoàn đủ."
+        reasonLabel="Lý do (bệnh nhân sẽ thấy)"
+        confirmLabel="Từ chối lịch"
+        tone="danger-solid"
+        loading={isPending('decline')}
+        onConfirm={(reason) =>
+          reason.length < 3
+            ? toast.error('Lý do từ chối cần ít nhất 3 ký tự.')
+            : act('decline', () => apiStaffDeclineAppointment(appointmentId, reason), 'Đã từ chối lịch hẹn.')
+        }
         onClose={() => setConfirm(null)}
       />
       <ConfirmDialog

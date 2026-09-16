@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Printer, RefreshCcw, Undo2, Wallet } from 'lucide-react';
-import { apiBuildSettlementInvoice, apiCollectPayment, apiGetInvoice, apiRefundInvoice } from '../../api/functions/desk';
+import { apiBuildSettlementInvoice, apiCollectPayment, apiGetInvoice, apiGetInvoicePdf, apiRefundInvoice } from '../../api/functions/desk';
 import { useAction, useApiQuery } from '../hooks';
 import { formatDate, formatDateTime, formatMoney, formatPercent } from '../format';
 import {
@@ -14,6 +14,7 @@ import {
   TRANSACTION_STATUS,
   TRANSACTION_TYPE,
 } from '../labels';
+import { openFile } from '../../api/helpers';
 import { useToast } from '../components/toastContext';
 import { PaymentMethodFields } from '../components/pickers';
 import { emptyPayment, paymentInvalid, paymentPayload } from '../components/payment';
@@ -92,8 +93,19 @@ const InvoiceDetailPage = () => {
         description={`${invoice.patient_full_name} (${invoice.patient_code}) · Bác sĩ: ${invoice.doctor_full_name} · khám ${formatDate(invoice.appointment_date)}`}
         actions={
           <span className="st-actions st-no-print">
-            <Button icon={<Printer size={16} />} onClick={() => window.print()}>
-              In
+            <Button
+              icon={<Printer size={16} />}
+              loading={isPending('pdf')}
+              onClick={async () => {
+                const result = await run('pdf', () => apiGetInvoicePdf(invoiceId));
+                if (result.ok && result.data) {
+                  openFile(result.data, `hoa-don-${invoice.invoice_number}.pdf`);
+                } else {
+                  toast.error(result.error);
+                }
+              }}
+            >
+              In / Tải PDF
             </Button>
             <Button icon={<RefreshCcw size={16} />} loading={isPending('rebuild')} onClick={rebuild} title="Tính lại theo lượt khám, khi đơn thuốc hoặc dịch vụ vừa thay đổi">
               Lập lại hoá đơn

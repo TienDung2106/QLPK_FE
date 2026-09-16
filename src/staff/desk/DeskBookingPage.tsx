@@ -9,6 +9,7 @@ import { formatMoney, todayIso } from '../format';
 import { CONSULTATION_MODE_LABEL, VISIT_TYPE_LABEL } from '../labels';
 import { useToast } from '../components/toastContext';
 import { DoctorSelect, PatientPicker, SlotPicker } from '../components/pickers';
+import { DoctorMonthCalendar } from '../components/DoctorMonthCalendar';
 import { Alert, Button, EmptyState, Field, FilterTabs, PageHeader, Panel } from '../components/ui';
 
 type Mode = 'booking' | 'walk-in';
@@ -154,6 +155,18 @@ const DeskBookingPage = () => {
                 </Field>
               ) : (
                 <Field label="Ngày khám">{(id) => <input id={id} className="st-input" value="Hôm nay" disabled />}</Field>
+              )}
+              {mode === 'booking' && doctorId && (
+                <div className="st-span-2">
+                  <DoctorMonthCalendar
+                    doctorId={doctorId}
+                    value={date}
+                    onChange={(value) => {
+                      setDate(value);
+                      setTime(null);
+                    }}
+                  />
+                </div>
               )}
               <div className="st-span-2">
                 <div className="st-label" style={{ marginBottom: 6 }}>
