@@ -1,4 +1,4 @@
-import { GetData, PostData, PutData } from '../helpers';
+import { DeleteData, GetBlob, GetData, PatchData, PostData, PutData } from '../helpers';
 import url from '../url';
 import type { AppointmentListItem, CheckInResult, DoctorAvailability, PagedResponse } from '../types';
 import type {
@@ -8,12 +8,16 @@ import type {
   BookOnBehalfPayload,
   ConfirmPaymentResult,
   DeskPatient,
+  DoctorCalendar,
+  LinkPatientAccountPayload,
+  StaffPromotion,
   DeskPatientPayload,
   DeskPatientQuery,
   Invoice,
   InvoiceListItem,
   InvoiceQuery,
   NewSlotPayload,
+  PageQuery,
   PaymentPayload,
   PostponePayload,
   RegisterDeskPatientPayload,
@@ -47,6 +51,14 @@ export const apiStaffCheckIn = (checkInCode: string) =>
 export const apiStaffCancelAppointment = (appointmentId: number, reason: string) =>
   PostData<StaffAppointment>(url.staffAppointmentAction(appointmentId, 'cancel'), { reason });
 
+/** Xác nhận lịch bệnh nhân tự đặt để có thể nhận phòng. */
+export const apiStaffConfirmAppointment = (appointmentId: number) =>
+  PostData<StaffAppointment>(url.staffAppointmentAction(appointmentId, 'confirm'));
+
+/** Từ chối lịch đang chờ và hoàn toàn bộ tiền trả trước. */
+export const apiStaffDeclineAppointment = (appointmentId: number, reason: string) =>
+  PostData<StaffAppointment>(url.staffAppointmentAction(appointmentId, 'decline'), { reason });
+
 export const apiMarkNoShow = (appointmentId: number) =>
   PostData<StaffAppointment>(url.staffAppointmentAction(appointmentId, 'no-show'));
 
@@ -74,11 +86,22 @@ export const apiConfirmAppointmentPayment = (appointmentId: number, payload: Pay
 export const apiGetStaffDoctorSlots = (doctorId: number, date: string) =>
   GetData<DoctorAvailability>(url.staffDoctorSlots(doctorId), { date });
 
+/** Cả tháng chứa `month` ('yyyy-MM-dd' bất kỳ trong tháng), mỗi ngày một trạng thái. */
+export const apiGetStaffDoctorCalendar = (doctorId: number, month: string) =>
+  GetData<DoctorCalendar>(url.staffDoctorCalendar(doctorId), { month });
+
 export const apiGetDoctorTimeOff = (doctorId: number, query: TimeOffQuery = {}) =>
   GetData<TimeOff[]>(url.staffDoctorTimeOff(doctorId), query);
 
 export const apiRecordDoctorTimeOff = (doctorId: number, payload: TimeOffPayload) =>
   PostData<TimeOff>(url.staffDoctorTimeOff(doctorId), payload);
+
+export const apiWithdrawDoctorTimeOff = (doctorId: number, timeOffId: number) =>
+  DeleteData<void>(url.staffDoctorTimeOffById(doctorId, timeOffId));
+
+/** Mã khuyến mãi đang áp dụng được hôm nay — discount.apply_within_threshold. */
+export const apiSearchStaffPromotions = (query: { search?: string } & PageQuery = {}) =>
+  GetData<PagedResponse<StaffPromotion>>(url.staffPromotions, query);
 
 /* Bệnh nhân — patients.manage */
 
@@ -92,6 +115,10 @@ export const apiRegisterDeskPatient = (payload: RegisterDeskPatientPayload) =>
 
 export const apiUpdateDeskPatient = (patientId: number, payload: DeskPatientPayload) =>
   PutData<DeskPatient>(url.staffPatientById(patientId), payload);
+
+/** Chuyển hồ sơ tạo tại quầy sang tài khoản bệnh nhân tự đăng ký sau này. */
+export const apiLinkPatientAccount = (patientId: number, payload: LinkPatientAccountPayload) =>
+  PatchData<DeskPatient>(url.staffPatientLinkAccount(patientId), payload);
 
 /* Thanh toán — payments.manage */
 
@@ -114,3 +141,6 @@ export const apiCollectPayment = (invoiceId: number, payload: PaymentPayload) =>
 /** Không gửi số tiền: backend hoàn đúng phần thu dư. */
 export const apiRefundInvoice = (invoiceId: number, payload: PaymentPayload) =>
   PostData<Invoice>(url.staffInvoiceRefunds(invoiceId), payload);
+
+/** Hoá đơn PDF có đầu trang là hồ sơ phòng khám. */
+export const apiGetInvoicePdf = (invoiceId: number) => GetBlob(url.staffInvoicePdf(invoiceId));

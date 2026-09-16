@@ -169,3 +169,80 @@ export const PATIENT_CREATED_VIA_LABEL: Record<string, string> = {
   self_registered: 'Tự đăng ký',
   admin_created: 'Tạo tại quầy',
 };
+
+/** doctor_schedules.day_of_week: 1 = Thứ Hai … 7 = Chủ nhật (ISO-8601). */
+export const DAY_OF_WEEK_LABEL: Record<number, string> = {
+  1: 'Thứ Hai',
+  2: 'Thứ Ba',
+  3: 'Thứ Tư',
+  4: 'Thứ Năm',
+  5: 'Thứ Sáu',
+  6: 'Thứ Bảy',
+  7: 'Chủ nhật',
+};
+
+/** Ngày 'yyyy-MM-dd' → thứ theo ISO (1..7), không lệch múi giờ. */
+export function isoDayOfWeek(date: string): number {
+  const [year, month, day] = date.split('-').map(Number);
+  const weekday = new Date(Date.UTC(year, month - 1, day)).getUTCDay();
+  return weekday === 0 ? 7 : weekday;
+}
+
+export const CONTRACT_STATUS: LabelMap = {
+  active: { label: 'Đang hiệu lực', tone: 'success' },
+  expired: { label: 'Đã hết hạn', tone: 'neutral' },
+  terminated: { label: 'Đã chấm dứt', tone: 'danger' },
+};
+
+export const CONTRACT_TYPE_LABEL: Record<string, string> = {
+  fixed_term: 'Có thời hạn',
+  indefinite: 'Không thời hạn',
+  probation: 'Thử việc',
+  seasonal: 'Thời vụ',
+};
+
+export const CALENDAR_DAY_STATUS: LabelMap = {
+  available: { label: 'Còn chỗ', tone: 'success' },
+  full: { label: 'Kín lịch', tone: 'warning' },
+  off: { label: 'Không làm', tone: 'neutral' },
+  holiday: { label: 'Nghỉ lễ', tone: 'danger' },
+  past: { label: 'Đã qua', tone: 'neutral' },
+};
+
+export const JOB_RUN_STATUS: LabelMap = {
+  running: { label: 'Đang chạy', tone: 'progress' },
+  success: { label: 'Thành công', tone: 'success' },
+  failed: { label: 'Thất bại', tone: 'danger' },
+};
+
+export const JOB_NAME_LABEL: Record<string, string> = {
+  recompute_medicine_velocity: 'Tính lại tốc độ bán thuốc',
+};
+
+export const INVENTORY_ACTION: LabelMap = {
+  reserve: { label: 'Giữ cho đơn', tone: 'info' },
+  release_manual: { label: 'Nhả giữ chỗ', tone: 'neutral' },
+  consume: { label: 'Giao theo đơn', tone: 'progress' },
+  adjustment: { label: 'Kiểm kê', tone: 'warning' },
+  batch_import: { label: 'Nhập lô', tone: 'success' },
+  stock_in: { label: 'Nhập kho', tone: 'success' },
+  stock_out: { label: 'Xuất ngoài đơn', tone: 'progress' },
+  expired: { label: 'Huỷ hết hạn/hỏng', tone: 'danger' },
+  return_to_supplier: { label: 'Trả nhà cung cấp', tone: 'warning' },
+};
+
+export const PATIENT_RELATIONSHIP_LABEL: Record<string, string> = {
+  self: 'Bản thân',
+  child: 'Con',
+  parent: 'Bố / mẹ',
+  spouse: 'Vợ / chồng',
+  other: 'Khác',
+};
+
+export const NOTIFICATION_TYPE_LABEL: Record<string, string> = {
+  appointment: 'Lịch hẹn',
+  prescription: 'Đơn thuốc',
+  invoice: 'Hoá đơn',
+  system: 'Hệ thống',
+  reminder: 'Nhắc nhở',
+};

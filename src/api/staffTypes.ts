@@ -714,3 +714,319 @@ export interface RevenueReport {
   by_payment_method: RevenueByPaymentMethod[];
   by_doctor: RevenueByDoctor[];
 }
+
+/* ---------------------------------------------------------------- Notifications (mọi tài khoản) */
+
+export interface Notification {
+  notification_id: number;
+  title: string;
+  content: string;
+  notification_type: string;
+  is_read: boolean;
+  action_url: string | null;
+  created_at: string;
+}
+
+export interface NotificationQuery extends PageQuery {
+  unread_only?: boolean;
+}
+
+export interface UnreadNotificationCount {
+  unread_count: number;
+}
+
+/* ---------------------------------------------------------------- Dashboards & reports */
+
+export interface DoctorDashboard {
+  date: string;
+  appointments_today: number;
+  awaiting_confirmation: number;
+  awaiting_discount_approval: number;
+  waiting_to_be_seen: number;
+  in_progress: number;
+  completed_today: number;
+  next_appointment: AppointmentListItem | null;
+  unread_notifications: number;
+}
+
+export interface ClinicDashboard {
+  date: string;
+  appointments_today: number;
+  awaiting_confirmation: number;
+  awaiting_discount_approval: number;
+  waiting_to_be_seen: number;
+  in_progress: number;
+  completed_today: number;
+  net_revenue_today: number;
+  awaiting_settlement: number;
+  medicines_below_threshold: number;
+  active_doctors: number;
+}
+
+export interface AppointmentReportByDoctor {
+  doctor_id: number;
+  doctor_full_name: string;
+  total_appointments: number;
+  completed: number;
+  cancelled: number;
+  no_show: number;
+}
+
+export interface AppointmentReport {
+  from_date: string;
+  to_date: string;
+  total_appointments: number;
+  by_status: Record<string, number>;
+  completed: number;
+  cancelled: number;
+  no_show: number;
+  attrition_percent: number;
+  by_doctor: AppointmentReportByDoctor[];
+}
+
+export interface InventoryReport {
+  as_of: string;
+  medicine_count: number;
+  below_threshold_count: number;
+  expiring_batch_count: number;
+  expiring_within_days: number;
+  below_threshold: MedicineStock[];
+  expiring_batches: MedicineBatch[];
+}
+
+/* ---------------------------------------------------------------- Working hours */
+
+export interface DoctorSchedule {
+  doctor_schedule_id: number;
+  doctor_id: number;
+  /** 1 = Thứ Hai … 7 = Chủ nhật (ISO-8601). */
+  day_of_week: number;
+  consultation_mode: string;
+  start_time: string;
+  end_time: string;
+  slot_duration_minutes: number;
+  max_patients: number;
+  slot_count: number;
+  is_active: boolean;
+  managed_by: number;
+  created_at: string;
+  updated_at: string;
+  affected_appointments: AppointmentListItem[];
+}
+
+export interface DoctorSchedulePayload {
+  day_of_week: number;
+  consultation_mode?: string | null;
+  start_time: string;
+  end_time: string;
+  slot_duration_minutes: number;
+  max_patients: number;
+  is_active: boolean;
+}
+
+export interface DoctorScheduleQuery {
+  include_inactive?: boolean;
+}
+
+export interface DoctorCalendarDay {
+  date: string;
+  /** available | full | off | holiday | past */
+  status: string;
+  available_slots: number;
+  total_slots: number;
+}
+
+export interface DoctorCalendar {
+  doctor_id: number;
+  doctor_full_name: string;
+  specialty_name: string;
+  from_date: string;
+  to_date: string;
+  days: DoctorCalendarDay[];
+}
+
+/* ---------------------------------------------------------------- Appointment review / follow-up */
+
+export interface FollowUpPayload {
+  appointment_date: string;
+  appointment_time: string;
+  consultation_mode?: string | null;
+  reason_for_visit?: string | null;
+  services: AppointmentServicePayload[];
+  primary_service_id?: number | null;
+  session_number?: number | null;
+}
+
+/* ---------------------------------------------------------------- Admin: contracts, clinic */
+
+export interface StaffContract {
+  staff_contract_id: number;
+  account_id: number;
+  staff_full_name: string;
+  role_code: string;
+  contract_number: string;
+  contract_type: string;
+  start_date: string;
+  end_date: string | null;
+  base_salary: number;
+  status: string;
+  /** Âm khi đã quá hạn; null với hợp đồng không thời hạn. */
+  days_until_expiry: number | null;
+  notes: string | null;
+  created_by: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface StaffContractPayload {
+  account_id: number;
+  contract_number: string;
+  contract_type: string;
+  start_date: string;
+  end_date?: string | null;
+  base_salary: number;
+  status?: string | null;
+  notes?: string | null;
+}
+
+export interface StaffContractQuery extends PageQuery {
+  account_id?: number;
+  status?: string;
+  expiring_within_days?: number;
+}
+
+export interface ClinicProfile {
+  clinic_name: string;
+  tax_code: string | null;
+  address: string;
+  phone_number: string;
+  email: string | null;
+  logo_url: string | null;
+  business_hours_note: string | null;
+  invoice_footer_note: string | null;
+  updated_by: number | null;
+  updated_at: string;
+}
+
+export type ClinicProfilePayload = Omit<ClinicProfile, 'updated_by' | 'updated_at'>;
+
+export interface ClinicHoliday {
+  clinic_holiday_id: number;
+  holiday_date: string;
+  holiday_name: string;
+  is_active: boolean;
+}
+
+export interface ClinicHolidayPayload {
+  holiday_date: string;
+  holiday_name: string;
+  is_active: boolean;
+}
+
+export interface ClinicHolidayQuery {
+  from_date?: string;
+  to_date?: string;
+  include_inactive?: boolean;
+}
+
+export interface Specialty {
+  specialty_id: number;
+  specialty_code: string;
+  specialty_name: string;
+  doctor_count: number;
+}
+
+export interface SpecialtyPayload {
+  specialty_code: string;
+  specialty_name: string;
+}
+
+export interface JobRun {
+  job_run_log_id: number;
+  job_name: string;
+  started_at: string;
+  finished_at: string | null;
+  status: string;
+  duration_seconds: number | null;
+  affected_count: number;
+  error_message: string | null;
+}
+
+export interface JobRunQuery extends PageQuery {
+  job_name?: string;
+  status?: string;
+}
+
+/* ---------------------------------------------------------------- Desk extras */
+
+export interface StaffPromotion {
+  promotion_id: number;
+  promotion_code: string;
+  description: string | null;
+  discount_type: string;
+  discount_value: number;
+  max_discount_amount: number | null;
+  min_booking_amount: number;
+  usage_limit_per_patient: number;
+  valid_from: string;
+  valid_until: string | null;
+}
+
+export interface LinkPatientAccountPayload {
+  account_email: string;
+  relationship_to_account?: string | null;
+}
+
+/* ---------------------------------------------------------------- Pharmacy extras */
+
+export interface MedicinePayload {
+  medicine_name: string;
+  active_ingredient?: string | null;
+  medicine_group?: string | null;
+  unit_of_measure: string;
+  unit_price: number;
+  manufacturer?: string | null;
+  storage_condition?: string | null;
+  description?: string | null;
+}
+
+export interface AdjustBatchPayload {
+  counted_quantity: number;
+  notes: string;
+}
+
+export interface RemoveStockPayload {
+  /** Bỏ trống ở write-off = huỷ toàn bộ phần còn lại. */
+  quantity?: number | null;
+  notes: string;
+}
+
+export interface ExpiringBatchQuery extends PageQuery {
+  within_days?: number;
+}
+
+export interface StockMovement {
+  inventory_log_id: number;
+  medicine_id: number;
+  medicine_name: string;
+  medicine_batch_id: number | null;
+  batch_number: string | null;
+  account_id: number | null;
+  account_name: string | null;
+  action: string;
+  quantity_changed: number;
+  quantity_before: number;
+  quantity_after: number;
+  reference_type: string | null;
+  reference_id: number | null;
+  notes: string | null;
+  created_at: string;
+}
+
+export interface StockMovementQuery extends PageQuery {
+  medicine_id?: number;
+  medicine_batch_id?: number;
+  action?: string;
+  from_date?: string;
+  to_date?: string;
+}

@@ -10,6 +10,8 @@ const root = API_ROOT;
 
 export { API_ROOT };
 
+export type BatchAction = 'adjustments' | 'write-off' | 'return-to-supplier' | 'stock-out';
+
 const url = {
   // Auth (chương 10.4)
   login: `${root}/auth/login`,
@@ -39,6 +41,12 @@ const url = {
   cancelAppointment: (appointmentId: number) => `${root}/patient/appointments/${appointmentId}/cancel`,
   checkIn: `${root}/patient/appointments/check-in`,
 
+  // Thông báo — mọi tài khoản đã đăng nhập, kể cả nhân viên, dù nằm dưới /patient.
+  notifications: `${root}/patient/notifications`,
+  notificationsUnreadCount: `${root}/patient/notifications/unread-count`,
+  notificationRead: (notificationId: number) => `${root}/patient/notifications/${notificationId}/read`,
+  notificationsReadAll: `${root}/patient/notifications/read-all`,
+
   // ---- Khu nhân viên --------------------------------------------------------------
 
   // Quản trị (admin)
@@ -52,10 +60,33 @@ const url = {
   adminPromotionById: (promotionId: number) => `${root}/admin/promotions/${promotionId}`,
   adminPromotionStatus: (promotionId: number) => `${root}/admin/promotions/${promotionId}/status`,
   adminSettingByKey: (settingKey: string) => `${root}/admin/settings/${encodeURIComponent(settingKey)}`,
+  adminStaffAccountResetPassword: (accountId: number) => `${root}/admin/staff-accounts/${accountId}/reset-password`,
   adminRevenueReport: `${root}/admin/reports/revenue`,
+  adminAppointmentReport: `${root}/admin/reports/appointments`,
+  adminDashboard: `${root}/admin/reports/dashboard`,
+  adminDoctorSchedules: (doctorId: number) => `${root}/admin/doctors/${doctorId}/schedules`,
+  adminDoctorScheduleById: (doctorId: number, scheduleId: number) => `${root}/admin/doctors/${doctorId}/schedules/${scheduleId}`,
+  adminDoctorScheduleStatus: (doctorId: number, scheduleId: number) =>
+    `${root}/admin/doctors/${doctorId}/schedules/${scheduleId}/status`,
+  adminContracts: `${root}/admin/contracts`,
+  adminContractById: (contractId: number) => `${root}/admin/contracts/${contractId}`,
+  adminClinicProfile: `${root}/admin/clinic/profile`,
+  adminClinicHolidays: `${root}/admin/clinic/holidays`,
+  adminClinicHolidayById: (holidayId: number) => `${root}/admin/clinic/holidays/${holidayId}`,
+  adminClinicSettings: `${root}/admin/clinic/settings`,
+  adminJobRuns: `${root}/admin/clinic/job-runs`,
+  adminSpecialties: `${root}/admin/specialties`,
+  adminSpecialtyById: (specialtyId: number) => `${root}/admin/specialties/${specialtyId}`,
 
   // Bác sĩ
   doctorAppointments: `${root}/doctor/appointments`,
+  doctorDashboard: `${root}/doctor/dashboard`,
+  doctorAppointmentAction: (appointmentId: number, action: 'confirm' | 'decline' | 'follow-up') =>
+    `${root}/doctor/appointments/${appointmentId}/${action}`,
+  doctorWorkingHours: `${root}/doctor/working-hours`,
+  doctorWorkingHoursById: (scheduleId: number) => `${root}/doctor/working-hours/${scheduleId}`,
+  doctorWorkingHoursStatus: (scheduleId: number) => `${root}/doctor/working-hours/${scheduleId}/status`,
+  doctorTimeOffById: (timeOffId: number) => `${root}/doctor/time-off/${timeOffId}`,
   doctorStartExamination: (appointmentId: number) => `${root}/doctor/appointments/${appointmentId}/start`,
   doctorMedicalRecord: (appointmentId: number) => `${root}/doctor/appointments/${appointmentId}/medical-record`,
   doctorPrescription: (appointmentId: number) => `${root}/doctor/appointments/${appointmentId}/prescription`,
@@ -72,7 +103,12 @@ const url = {
   staffWalkIns: `${root}/staff/walk-ins`,
   staffCheckIn: `${root}/staff/appointments/check-in`,
   staffDoctorTimeOff: (doctorId: number) => `${root}/staff/doctors/${doctorId}/time-off`,
+  staffDoctorTimeOffById: (doctorId: number, timeOffId: number) => `${root}/staff/doctors/${doctorId}/time-off/${timeOffId}`,
   staffDoctorSlots: (doctorId: number) => `${root}/staff/doctors/${doctorId}/available-slots`,
+  staffDoctorCalendar: (doctorId: number) => `${root}/staff/doctors/${doctorId}/calendar-availability`,
+  staffPromotions: `${root}/staff/promotions`,
+  staffPatientLinkAccount: (patientId: number) => `${root}/staff/patients/${patientId}/link-account`,
+  staffInvoicePdf: (invoiceId: number) => `${root}/staff/invoices/${invoiceId}/pdf`,
   staffPatients: `${root}/staff/patients`,
   staffPatientById: (patientId: number) => `${root}/staff/patients/${patientId}`,
   staffDispenseRequests: `${root}/staff/dispense-requests`,
@@ -88,6 +124,13 @@ const url = {
   pharmacyMedicineBatches: (medicineId: number) => `${root}/pharmacist/inventory/medicines/${medicineId}/batches`,
   pharmacyMedicineClassification: (medicineId: number) =>
     `${root}/pharmacist/inventory/medicines/${medicineId}/classification`,
+  pharmacyMedicineCatalog: `${root}/pharmacist/medicines`,
+  pharmacyMedicineCatalogById: (medicineId: number) => `${root}/pharmacist/medicines/${medicineId}`,
+  pharmacyMedicineCatalogStatus: (medicineId: number) => `${root}/pharmacist/medicines/${medicineId}/status`,
+  pharmacyExpiringBatches: `${root}/pharmacist/inventory/expiring-batches`,
+  pharmacyStockLogs: `${root}/pharmacist/inventory/logs`,
+  pharmacyInventoryReport: `${root}/pharmacist/inventory/report`,
+  pharmacyBatchAction: (batchId: number, action: BatchAction) => `${root}/pharmacist/inventory/batches/${batchId}/${action}`,
   pharmacyPrescriptions: `${root}/pharmacist/prescriptions`,
   pharmacyPrescriptionById: (prescriptionId: number) => `${root}/pharmacist/prescriptions/${prescriptionId}`,
   pharmacyPrescriptionAction: (prescriptionId: number, action: 'prepare' | 'cancel-preparation' | 'deliver') =>

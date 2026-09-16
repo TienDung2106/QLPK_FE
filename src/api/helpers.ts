@@ -221,6 +221,49 @@ export async function DeleteData<T>(
   }
 }
 
+export interface FileDownload {
+  blob: Blob;
+  fileName: string | null;
+}
+
+/**
+ * GET một tệp (PDF…). Lỗi vẫn đi dưới dạng ProblemDetails JSON, nhưng axios đã đọc nó
+ * thành Blob, nên phải đọc lại thành JSON trước khi đưa cho `toFailure`.
+ */
+export async function GetBlob(endpoint: string, params?: unknown): Promise<ApiResult<FileDownload>> {
+  try {
+    const response = await httpClient.get<Blob>(endpoint, { params: toQueryParams(params), responseType: 'blob' });
+    const disposition = String(response.headers?.['content-disposition'] ?? '');
+    const match = /filename\*=UTF-8''([^;]+)|filename="?([^";]+)"?/i.exec(disposition);
+    const fileName = match ? decodeURIComponent(match[1] ?? match[2]) : null;
+    return toSuccess(response.status, { blob: response.data, fileName });
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response?.data instanceof Blob) {
+      try {
+        error.response.data = JSON.parse(await error.response.data.text());
+      } catch {
+        error.response.data = undefined;
+      }
+    }
+    return toFailure<FileDownload>(error);
+  }
+}
+
+/** Mở tệp vừa tải ở tab mới (PDF xem/in được ngay); trình duyệt chặn popup thì tải xuống. */
+export function openFile(file: FileDownload, fallbackName: string) {
+  const objectUrl = URL.createObjectURL(file.blob);
+  const opened = window.open(objectUrl, '_blank');
+  if (!opened) {
+    const link = document.createElement('a');
+    link.href = objectUrl;
+    link.download = file.fileName ?? fallbackName;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  }
+  window.setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
+}
+
 /** POST không gắn Authorization: đăng nhập, đăng ký, quên mật khẩu. */
 export function PostNonToken<T>(endpoint: string, body?: unknown): Promise<ApiResult<T>> {
   return PostData<T>(endpoint, body, { skipAuth: true });

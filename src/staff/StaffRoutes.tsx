@@ -12,6 +12,7 @@ import { PERMISSION as P } from './permissions';
  */
 
 const StaffLayout = lazy(() => import('./layout/StaffLayout'));
+const NotificationsPage = lazy(() => import('./common/NotificationsPage'));
 
 // Quản trị
 const RevenuePage = lazy(() => import('./admin/RevenuePage'));
@@ -69,6 +70,16 @@ export function staffRoutes() {
         </AuthGuard>
       }
     >
+      {/* Mọi tài khoản nhân viên đều có thông báo: không cần quyền riêng. */}
+      <Route
+        path="/thong-bao"
+        element={
+          <Suspense fallback={<PageLoading />}>
+            <NotificationsPage />
+          </Suspense>
+        }
+      />
+
       <Route path="/quan-tri" element={guard([P.ReportsViewRevenue], <RevenuePage />)} />
       <Route path="/quan-tri/tai-khoan" element={guard([P.AccountsManageStaff], <StaffAccountsPage />)} />
       <Route path="/quan-tri/dich-vu" element={guard([P.ServicesManage], <ServicesAdminPage />)} />

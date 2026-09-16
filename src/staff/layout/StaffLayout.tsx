@@ -7,6 +7,7 @@ import { API_ROOT, API_TARGET, API_TARGET_LABEL } from '../../api/apiTarget';
 import { ROLE_LABEL } from '../labels';
 import { initials } from '../format';
 import { ToastProvider } from '../components/ToastProvider';
+import { NotificationBell } from '../components/NotificationBell';
 import { NAV_SECTIONS } from './navConfig';
 import '../staff.css';
 
@@ -113,6 +114,8 @@ export const StaffLayout = () => {
                 <span className="st-api-badge-text">API:</span> {API_TARGET_LABEL}
               </span>
             )}
+
+            <NotificationBell />
 
             <div className="st-user" ref={menuRef}>
               <button

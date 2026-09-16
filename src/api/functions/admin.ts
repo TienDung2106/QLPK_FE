@@ -1,10 +1,27 @@
-import { GetData, PatchData, PostData, PutData } from '../helpers';
+import { DeleteData, GetData, PatchData, PostData, PutData } from '../helpers';
 import url from '../url';
 import type { PagedResponse } from '../types';
 import type {
   AdminService,
   AdminServicePayload,
   AdminServiceQuery,
+  AppointmentReport,
+  ClinicDashboard,
+  ClinicHoliday,
+  ClinicHolidayPayload,
+  ClinicHolidayQuery,
+  ClinicProfile,
+  ClinicProfilePayload,
+  DoctorSchedule,
+  DoctorSchedulePayload,
+  DoctorScheduleQuery,
+  JobRun,
+  JobRunQuery,
+  Specialty,
+  SpecialtyPayload,
+  StaffContract,
+  StaffContractPayload,
+  StaffContractQuery,
   CreateStaffAccountPayload,
   Promotion,
   PromotionPayload,
@@ -32,6 +49,10 @@ export const apiCreateStaffAccount = (payload: CreateStaffAccountPayload) =>
 
 export const apiUpdateStaffAccount = (accountId: number, payload: UpdateStaffAccountPayload) =>
   PutData<StaffAccount>(url.adminStaffAccountById(accountId), payload);
+
+/** Buộc đổi mật khẩu ở lần đăng nhập tới và đăng xuất mọi phiên. Không dùng cho chính mình. */
+export const apiResetStaffPassword = (accountId: number, temporaryPassword: string) =>
+  PostData<StaffAccount>(url.adminStaffAccountResetPassword(accountId), { temporary_password: temporaryPassword });
 
 export const apiSetStaffAccountStatus = (accountId: number, isActive: boolean) =>
   PatchData<StaffAccount>(url.adminStaffAccountStatus(accountId), { is_active: isActive });
@@ -64,7 +85,9 @@ export const apiUpdatePromotion = (promotionId: number, payload: PromotionPayloa
 export const apiSetPromotionStatus = (promotionId: number, isActive: boolean) =>
   PatchData<Promotion>(url.adminPromotionStatus(promotionId), { is_active: isActive });
 
-/* Cài đặt — settings.manage. Backend không có API liệt kê: đọc theo từng khoá. */
+/* Cài đặt — settings.manage. Liệt kê qua /admin/clinic/settings, ghi từng khoá. */
+
+export const apiListSettings = () => GetData<SystemSetting[]>(url.adminClinicSettings);
 
 export const apiGetSetting = (settingKey: string) => GetData<SystemSetting>(url.adminSettingByKey(settingKey));
 
@@ -75,3 +98,68 @@ export const apiUpdateSetting = (settingKey: string, payload: UpdateSettingPaylo
 
 export const apiGetRevenueReport = (fromDate: string, toDate: string) =>
   GetData<RevenueReport>(url.adminRevenueReport, { from_date: fromDate, to_date: toDate });
+
+export const apiGetAppointmentReport = (fromDate: string, toDate: string) =>
+  GetData<AppointmentReport>(url.adminAppointmentReport, { from_date: fromDate, to_date: toDate });
+
+/** Bỏ trống ngày = hôm nay. */
+export const apiGetClinicDashboard = (date?: string) => GetData<ClinicDashboard>(url.adminDashboard, { date });
+
+/* Giờ làm việc của bác sĩ — doctor_schedules.manage */
+
+export const apiGetDoctorSchedules = (doctorId: number, query: DoctorScheduleQuery = {}) =>
+  GetData<DoctorSchedule[]>(url.adminDoctorSchedules(doctorId), query);
+
+export const apiCreateDoctorSchedule = (doctorId: number, payload: DoctorSchedulePayload) =>
+  PostData<DoctorSchedule>(url.adminDoctorSchedules(doctorId), payload);
+
+export const apiUpdateDoctorSchedule = (doctorId: number, scheduleId: number, payload: DoctorSchedulePayload) =>
+  PutData<DoctorSchedule>(url.adminDoctorScheduleById(doctorId, scheduleId), payload);
+
+export const apiSetDoctorScheduleStatus = (doctorId: number, scheduleId: number, isActive: boolean) =>
+  PatchData<DoctorSchedule>(url.adminDoctorScheduleStatus(doctorId, scheduleId), { is_active: isActive });
+
+/* Hợp đồng — contracts.manage */
+
+export const apiSearchContracts = (query: StaffContractQuery = {}) =>
+  GetData<PagedResponse<StaffContract>>(url.adminContracts, query);
+
+export const apiCreateContract = (payload: StaffContractPayload) => PostData<StaffContract>(url.adminContracts, payload);
+
+export const apiUpdateContract = (contractId: number, payload: StaffContractPayload) =>
+  PutData<StaffContract>(url.adminContractById(contractId), payload);
+
+/** Chỉ cho hợp đồng nhập nhầm; hợp đồng đã chạy thì đổi trạng thái. */
+export const apiDeleteContract = (contractId: number) => DeleteData<void>(url.adminContractById(contractId));
+
+/* Phòng khám — settings.manage */
+
+export const apiGetClinicProfile = () => GetData<ClinicProfile>(url.adminClinicProfile);
+
+export const apiUpdateClinicProfile = (payload: ClinicProfilePayload) =>
+  PutData<ClinicProfile>(url.adminClinicProfile, payload);
+
+export const apiSearchHolidays = (query: ClinicHolidayQuery = {}) =>
+  GetData<ClinicHoliday[]>(url.adminClinicHolidays, query);
+
+export const apiCreateHoliday = (payload: ClinicHolidayPayload) => PostData<ClinicHoliday>(url.adminClinicHolidays, payload);
+
+export const apiUpdateHoliday = (holidayId: number, payload: ClinicHolidayPayload) =>
+  PutData<ClinicHoliday>(url.adminClinicHolidayById(holidayId), payload);
+
+/** Mở cửa lại ngày đó; bản ghi được giữ với is_active = false. */
+export const apiWithdrawHoliday = (holidayId: number) => DeleteData<ClinicHoliday>(url.adminClinicHolidayById(holidayId));
+
+export const apiSearchJobRuns = (query: JobRunQuery = {}) => GetData<PagedResponse<JobRun>>(url.adminJobRuns, query);
+
+/* Chuyên khoa — services.manage */
+
+export const apiListSpecialties = () => GetData<Specialty[]>(url.adminSpecialties);
+
+export const apiCreateSpecialty = (payload: SpecialtyPayload) => PostData<Specialty>(url.adminSpecialties, payload);
+
+export const apiUpdateSpecialty = (specialtyId: number, payload: SpecialtyPayload) =>
+  PutData<Specialty>(url.adminSpecialtyById(specialtyId), payload);
+
+/** Bị từ chối (409) khi còn bác sĩ thuộc chuyên khoa. */
+export const apiDeleteSpecialty = (specialtyId: number) => DeleteData<void>(url.adminSpecialtyById(specialtyId));
