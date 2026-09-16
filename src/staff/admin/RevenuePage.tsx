@@ -1,32 +1,15 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { apiGetRevenueReport } from '../../api/functions/admin';
 import { useApiQuery } from '../hooks';
-import { formatDate, formatMoney, formatNumber, todayIso } from '../format';
+import { formatDate, formatMoney, formatNumber } from '../format';
 import { PAYMENT_METHOD, textOf } from '../labels';
-import { Alert, EmptyState, Field, FilterTabs, PageHeader, Panel } from '../components/ui';
-
-const PRESETS = [
-  { value: '7', label: '7 ngày' },
-  { value: '30', label: '30 ngày' },
-  { value: 'month', label: 'Tháng này' },
-  { value: '90', label: '90 ngày' },
-  { value: 'custom', label: 'Tuỳ chọn' },
-];
-
-function presetRange(preset: string): [string, string] {
-  const today = todayIso();
-  if (preset === 'month') {
-    return [`${today.slice(0, 8)}01`, today];
-  }
-  const days = Number(preset) || 30;
-  return [todayIso(-(days - 1)), today];
-}
+import { Alert, EmptyState, PageHeader, Panel } from '../components/ui';
+import { DateRangeFilter } from '../components/DateRangeFilter';
+import { useDateRange } from '../components/dateRange';
 
 const RevenuePage = () => {
-  const [preset, setPreset] = useState('30');
-  const [range, setRange] = useState<[string, string]>(presetRange('30'));
-  const [fromDate, toDate] = range;
-  const valid = Boolean(fromDate && toDate && fromDate <= toDate);
+  const range = useDateRange();
+  const { fromDate, toDate, valid } = range;
 
   const query = useApiQuery(() => apiGetRevenueReport(fromDate, toDate), [fromDate, toDate], { enabled: valid });
   const report = query.data;
@@ -38,31 +21,7 @@ const RevenuePage = () => {
     <>
       <PageHeader title="Doanh thu" description="Tiền thực thu trừ tiền hoàn, theo ngày giờ phòng khám." />
 
-      <div className="st-panel" style={{ marginBottom: '1rem' }}>
-        <div className="st-toolbar" style={{ borderBottom: 'none' }}>
-          <FilterTabs
-            label="Khoảng thời gian"
-            options={PRESETS}
-            value={preset}
-            onChange={(value) => {
-              setPreset(value);
-              if (value !== 'custom') {
-                setRange(presetRange(value));
-              }
-            }}
-          />
-          {preset === 'custom' && (
-            <>
-              <Field label="Từ ngày">
-                {(id) => <input id={id} type="date" className="st-input" value={fromDate} max={toDate} onChange={(e) => setRange([e.target.value, toDate])} />}
-              </Field>
-              <Field label="Đến ngày">
-                {(id) => <input id={id} type="date" className="st-input" value={toDate} min={fromDate} onChange={(e) => setRange([fromDate, e.target.value])} />}
-              </Field>
-            </>
-          )}
-        </div>
-      </div>
+      <DateRangeFilter state={range} />
 
       {!valid && <Alert tone="warning">Chọn ngày bắt đầu không muộn hơn ngày kết thúc.</Alert>}
       {query.error && <Alert tone="danger">{query.error}</Alert>}

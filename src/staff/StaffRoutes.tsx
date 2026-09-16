@@ -15,7 +15,14 @@ const StaffLayout = lazy(() => import('./layout/StaffLayout'));
 const NotificationsPage = lazy(() => import('./common/NotificationsPage'));
 
 // Quản trị
+const AdminDashboardPage = lazy(() => import('./admin/AdminDashboardPage'));
 const RevenuePage = lazy(() => import('./admin/RevenuePage'));
+const AppointmentReportPage = lazy(() => import('./admin/AppointmentReportPage'));
+const ContractsPage = lazy(() => import('./admin/ContractsPage'));
+const DoctorSchedulesAdminPage = lazy(() => import('./admin/DoctorSchedulesAdminPage'));
+const SpecialtiesPage = lazy(() => import('./admin/SpecialtiesPage'));
+const ClinicPage = lazy(() => import('./admin/ClinicPage'));
+const JobRunsPage = lazy(() => import('./admin/JobRunsPage'));
 const StaffAccountsPage = lazy(() => import('./admin/StaffAccountsPage'));
 const ServicesAdminPage = lazy(() => import('./admin/ServicesAdminPage'));
 const PromotionsPage = lazy(() => import('./admin/PromotionsPage'));
@@ -81,7 +88,14 @@ export function staffRoutes() {
         }
       />
 
-      <Route path="/quan-tri" element={guard([P.ReportsViewRevenue], <RevenuePage />)} />
+      <Route path="/quan-tri" element={guard([P.ReportsViewRevenue], <AdminDashboardPage />)} />
+      <Route path="/quan-tri/doanh-thu" element={guard([P.ReportsViewRevenue], <RevenuePage />)} />
+      <Route path="/quan-tri/bao-cao-lich-hen" element={guard([P.ReportsViewRevenue], <AppointmentReportPage />)} />
+      <Route path="/quan-tri/hop-dong" element={guard([P.ContractsManage], <ContractsPage />)} />
+      <Route path="/quan-tri/lich-lam-viec" element={guard([P.DoctorSchedulesManage], <DoctorSchedulesAdminPage />)} />
+      <Route path="/quan-tri/chuyen-khoa" element={guard([P.ServicesManage], <SpecialtiesPage />)} />
+      <Route path="/quan-tri/phong-kham" element={guard([P.SettingsManage], <ClinicPage />)} />
+      <Route path="/quan-tri/tac-vu" element={guard([P.SettingsManage], <JobRunsPage />)} />
       <Route path="/quan-tri/tai-khoan" element={guard([P.AccountsManageStaff], <StaffAccountsPage />)} />
       <Route path="/quan-tri/dich-vu" element={guard([P.ServicesManage], <ServicesAdminPage />)} />
       <Route path="/quan-tri/khuyen-mai" element={guard([P.PromotionsManage], <PromotionsPage />)} />

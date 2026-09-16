@@ -1,9 +1,12 @@
 import { useState } from 'react';
-import { Lock, LockOpen, UserPlus } from 'lucide-react';
+import { FileText, KeyRound, Lock, LockOpen, UserPlus } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import useAuth from '../../hooks/useAuth';
 import {
   apiCreateStaffAccount,
   apiGetStaffAccount,
+  apiListSpecialties,
+  apiResetStaffPassword,
   apiSearchStaffAccounts,
   apiSetStaffAccountStatus,
   apiUpdateStaffAccount,
@@ -12,6 +15,7 @@ import type { StaffAccount, StaffAccountListItem, StaffDoctorPayload, StaffProfi
 import { useAction, useApiQuery, useDebounced } from '../hooks';
 import { formatDate, formatMoney, nullIfBlank, todayIso } from '../format';
 import { EMPLOYMENT_TYPE_LABEL, GENDER_LABEL, ROLE_LABEL, SPECIALTIES, STAFF_ROLE_CODES, textOf } from '../labels';
+import { PERMISSION } from '../permissions';
 import { useToast } from '../components/toastContext';
 import {
   Alert,
@@ -154,7 +158,16 @@ const PASSWORD_RULE = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
 
 const StaffAccountsPage = () => {
   const toast = useToast();
-  const { account: me } = useAuth();
+  const { account: me, hasPermission } = useAuth();
+  const canContracts = hasPermission(PERMISSION.ContractsManage);
+  const [resetting, setResetting] = useState<StaffAccountListItem | null>(null);
+  const [tempPassword, setTempPassword] = useState('');
+  const [resetError, setResetError] = useState<string | null>(null);
+  // Chuyên khoa lấy từ API; lỗi thì dùng danh sách mặc định đã seed.
+  const specialtiesQuery = useApiQuery(apiListSpecialties, [], { enabled: hasPermission(PERMISSION.ServicesManage) });
+  const specialties = specialtiesQuery.data?.length
+    ? specialtiesQuery.data.map((item) => ({ id: item.specialty_id, name: item.specialty_name }))
+    : SPECIALTIES;
   const { run, isPending } = useAction();
   const [role, setRole] = useState('');
   const [search, setSearch] = useState('');
@@ -244,6 +257,25 @@ const StaffAccountsPage = () => {
     }
   };
 
+  const resetPassword = async () => {
+    if (!resetting) {
+      return;
+    }
+    if (!PASSWORD_RULE.test(tempPassword)) {
+      setResetError('Mật khẩu tạm phải có ít nhất 8 ký tự, gồm chữ hoa, chữ thường và chữ số.');
+      return;
+    }
+    const target = resetting;
+    const result = await run('reset', () => apiResetStaffPassword(target.account_id, tempPassword));
+    if (!result.ok) {
+      setResetError(result.error);
+      return;
+    }
+    setResetting(null);
+    toast.success(`Đã đặt lại mật khẩu cho ${target.full_name}. Mọi phiên đăng nhập cũ đã bị đăng xuất.`);
+    query.reload();
+  };
+
   const isNew = editing === 'new';
   const isDoctor = form.role_code === 'doctor';
 
@@ -328,7 +360,26 @@ const StaffAccountsPage = () => {
                       {item.must_change_password && <Badge tone="warning">Chưa đổi mật khẩu</Badge>}
                     </div>
                   </td>
-                  <td className="st-num" onClick={(event) => event.stopPropagation()}>
+                  <td className="st-num st-nowrap" onClick={(event) => event.stopPropagation()}>
+                    {canContracts && (
+                      <Link to={`/quan-tri/hop-dong?account=${item.account_id}`} className="st-btn st-btn-ghost st-btn-sm" title="Hợp đồng">
+                        <FileText size={14} /> Hợp đồng
+                      </Link>
+                    )}
+                    {item.account_id !== me?.account_id && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        icon={<KeyRound size={14} />}
+                        onClick={() => {
+                          setTempPassword('');
+                          setResetError(null);
+                          setResetting(item);
+                        }}
+                      >
+                        Đặt lại mật khẩu
+                      </Button>
+                    )}
                     {item.account_id !== me?.account_id && (
                       <Button
                         size="sm"
@@ -468,7 +519,7 @@ const StaffAccountsPage = () => {
                       })
                     }
                   >
-                    {SPECIALTIES.map((specialty) => (
+                    {specialties.map((specialty) => (
                       <option key={specialty.id} value={specialty.id}>
                         {specialty.name}
                       </option>
@@ -479,7 +530,7 @@ const StaffAccountsPage = () => {
               <div className="st-field st-span-2">
                 <span className="st-label">Chuyên khoa phụ</span>
                 <div className="st-chip-row" style={{ minHeight: 36, alignItems: 'center' }}>
-                  {SPECIALTIES.filter((s) => String(s.id) !== form.doctor.specialty_id).map((specialty) => (
+                  {specialties.filter((s) => String(s.id) !== form.doctor.specialty_id).map((specialty) => (
                     <label key={specialty.id} className="st-check">
                       <input
                         type="checkbox"
@@ -535,6 +586,37 @@ const StaffAccountsPage = () => {
           </div>
         )}
       </Sheet>
+
+      <ConfirmDialog
+        open={resetting !== null}
+        title={`Đặt lại mật khẩu cho ${resetting?.full_name ?? ''}?`}
+        text="Nhân viên bị đăng xuất khỏi mọi thiết bị và phải đổi mật khẩu tạm này ở lần đăng nhập tới. Giao mật khẩu trực tiếp cho người đó."
+        confirmLabel="Đặt lại mật khẩu"
+        tone="danger-solid"
+        loading={isPending('reset')}
+        onConfirm={resetPassword}
+        onClose={() => setResetting(null)}
+      >
+        <div style={{ marginTop: '0.9rem' }}>
+          {resetError && <Alert tone="danger" className="st-alert-gap">{resetError}</Alert>}
+          <Field label="Mật khẩu tạm" required hint="≥ 8 ký tự, có chữ hoa, chữ thường và chữ số.">
+            {(id) => (
+              <input
+                id={id}
+                type="text"
+                autoComplete="new-password"
+                className="st-input st-mono"
+                value={tempPassword}
+                maxLength={100}
+                onChange={(e) => {
+                  setTempPassword(e.target.value);
+                  setResetError(null);
+                }}
+              />
+            )}
+          </Field>
+        </div>
+      </ConfirmDialog>
 
       <ConfirmDialog
         open={toggling !== null}

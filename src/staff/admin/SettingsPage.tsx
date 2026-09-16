@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Check, RotateCcw } from 'lucide-react';
-import { apiGetSetting, apiUpdateSetting } from '../../api/functions/admin';
+import { apiListSettings, apiUpdateSetting } from '../../api/functions/admin';
 import type { SystemSetting } from '../../api/staffTypes';
 import { formatDateTime } from '../format';
 import { useToast } from '../components/toastContext';
-import { Alert, Button, PageHeader, Panel } from '../components/ui';
+import { useApiQuery } from '../hooks';
+import { Alert, Button, PageHeader, Panel, TableSkeleton } from '../components/ui';
 
 interface SettingDef {
   key: string;
@@ -13,8 +14,8 @@ interface SettingDef {
 }
 
 /**
- * Backend không có API liệt kê cài đặt, nên danh sách khoá lấy từ
- * QLPK.DataBaseAccess/Constants/SystemSettingKeys.cs, nhóm theo nghiệp vụ.
+ * Nhãn tiếng Việt và cách nhóm cho các khoá đã biết (SystemSettingKeys.cs). Danh sách thật
+ * lấy từ API; khoá backend thêm sau mà chưa có ở đây vẫn hiện trong nhóm "Khác".
  */
 const GROUPS: { title: string; description: string; settings: SettingDef[] }[] = [
   {
@@ -86,29 +87,9 @@ interface RowState {
   saving: boolean;
 }
 
-const SettingRow = ({ def }: { def: SettingDef }) => {
+const SettingRow = ({ def, initial }: { def: SettingDef; initial: SystemSetting }) => {
   const toast = useToast();
-  const [row, setRow] = useState<RowState>({ setting: null, draft: '', error: null, saving: false });
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    let alive = true;
-    apiGetSetting(def.key).then((result) => {
-      if (!alive) {
-        return;
-      }
-      setLoading(false);
-      setRow((current) =>
-        result.ok && result.data
-          ? { ...current, setting: result.data, draft: result.data.setting_value }
-          : { ...current, error: result.status === 404 ? 'Chưa có trong cơ sở dữ liệu' : result.error },
-      );
-    });
-    return () => {
-      alive = false;
-    };
-  }, [def.key]);
-
+  const [row, setRow] = useState<RowState>({ setting: initial, draft: initial.setting_value, error: null, saving: false });
   const numeric = row.setting?.value_type === 'integer' || row.setting?.value_type === 'decimal';
   const dirty = row.setting !== null && row.draft !== row.setting.setting_value;
 
@@ -144,9 +125,7 @@ const SettingRow = ({ def }: { def: SettingDef }) => {
         </div>
       </td>
       <td>
-        {loading ? (
-          <span className="st-skel" style={{ width: 120 }} />
-        ) : row.setting ? (
+        {row.setting ? (
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
             <input
               className="st-input"
@@ -184,31 +163,58 @@ const SettingRow = ({ def }: { def: SettingDef }) => {
   );
 };
 
-const SettingsPage = () => (
-  <>
-    <PageHeader
-      title="Cài đặt hệ thống"
-      description="Thay đổi có hiệu lực ngay cho mọi thao tác mới. Sửa giá trị rồi bấm dấu ✓ hoặc Enter để lưu từng dòng."
-    />
-    <Alert tone="warning" className="st-alert-gap">
-      Các cài đặt bảo mật ảnh hưởng tới mọi tài khoản. Chỉ đổi khi đã hiểu tác động.
-    </Alert>
-    <div className="st-stack">
-      {GROUPS.map((group) => (
-        <Panel key={group.title} title={group.title} subtitle={group.description} bodyless>
-          <div className="st-table-wrap">
-            <table className="st-table">
-              <tbody>
-                {group.settings.map((def) => (
-                  <SettingRow key={def.key} def={def} />
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </Panel>
-      ))}
-    </div>
-  </>
-);
+const KNOWN_KEYS = new Set(GROUPS.flatMap((group) => group.settings.map((setting) => setting.key)));
+
+const SettingsPage = () => {
+  const query = useApiQuery(apiListSettings, []);
+  const byKey = new Map((query.data ?? []).map((setting) => [setting.setting_key, setting]));
+  const others = (query.data ?? [])
+    .filter((setting) => !KNOWN_KEYS.has(setting.setting_key))
+    .map((setting) => ({ key: setting.setting_key, label: setting.description ?? setting.setting_key }));
+  const groups = [
+    ...GROUPS,
+    ...(others.length > 0 ? [{ title: 'Khác', description: 'Cài đặt chưa được phân nhóm.', settings: others }] : []),
+  ];
+
+  return (
+    <>
+      <PageHeader
+        title="Cài đặt hệ thống"
+        description="Thay đổi có hiệu lực ngay cho mọi thao tác mới. Sửa giá trị rồi bấm dấu ✓ hoặc Enter để lưu từng dòng."
+      />
+      <Alert tone="warning" className="st-alert-gap">
+        Các cài đặt bảo mật ảnh hưởng tới mọi tài khoản. Chỉ đổi khi đã hiểu tác động.
+      </Alert>
+      {query.error && (
+        <Alert tone="danger" className="st-alert-gap">
+          {query.error}
+        </Alert>
+      )}
+      <div className="st-stack">
+        {groups.map((group) => {
+          const rows = group.settings.filter((def) => byKey.has(def.key));
+          if (query.data && rows.length === 0) {
+            return null;
+          }
+          return (
+            <Panel key={group.title} title={group.title} subtitle={group.description} bodyless>
+              <div className="st-table-wrap">
+                <table className="st-table">
+                  <tbody>
+                    {!query.data && query.loading ? (
+                      <TableSkeleton columns={2} rows={Math.min(group.settings.length, 4)} />
+                    ) : (
+                      rows.map((def) => <SettingRow key={def.key} def={def} initial={byKey.get(def.key)!} />)
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </Panel>
+          );
+        })}
+      </div>
+    </>
+  );
+};
 
 export default SettingsPage;
