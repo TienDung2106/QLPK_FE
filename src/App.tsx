@@ -1,6 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
-import { AuthGuard, GuestGuard } from './auth/AuthGuard';
+import { AuthGuard, GuestGuard, PublicSiteGuard } from './auth/AuthGuard';
 import { HomePage } from './pages/HomePage';
 import { BookingPage } from './pages/BookingPage/BookingPage';
 import { ClinicDetailPage } from './pages/ClinicDetailPage/ClinicDetailPage';
@@ -53,8 +53,24 @@ function App() {
       <AuthProvider>
         <div className="app-container">
           <Routes>
-            <Route path="/" element={<HomeRoute />} />
-            <Route path="/clinic-detail" element={<ClinicDetailRoute />} />
+            {/* Khu công khai + khu bệnh nhân: nhân viên đã đăng nhập bị PublicSiteGuard
+                đưa về khu làm việc, kể cả khi tự gõ URL. */}
+            <Route
+              path="/"
+              element={
+                <PublicSiteGuard>
+                  <HomeRoute />
+                </PublicSiteGuard>
+              }
+            />
+            <Route
+              path="/clinic-detail"
+              element={
+                <PublicSiteGuard>
+                  <ClinicDetailRoute />
+                </PublicSiteGuard>
+              }
+            />
 
             <Route
               path="/login"
@@ -87,7 +103,9 @@ function App() {
               path="/booking"
               element={
                 <AuthGuard>
-                  <BookingRoute />
+                  <PublicSiteGuard>
+                    <BookingRoute />
+                  </PublicSiteGuard>
                 </AuthGuard>
               }
             />
@@ -95,7 +113,9 @@ function App() {
               path="/lich-hen-cua-toi"
               element={
                 <AuthGuard>
-                  <MyAppointmentsPage />
+                  <PublicSiteGuard>
+                    <MyAppointmentsPage />
+                  </PublicSiteGuard>
                 </AuthGuard>
               }
             />
@@ -103,7 +123,9 @@ function App() {
               path="/ho-so"
               element={
                 <AuthGuard>
-                  <ProfilePage />
+                  <PublicSiteGuard>
+                    <ProfilePage />
+                  </PublicSiteGuard>
                 </AuthGuard>
               }
             />

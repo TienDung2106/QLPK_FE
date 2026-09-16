@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { Building2, ChevronDown, Home, KeyRound, LogOut, Menu } from 'lucide-react';
+import { Building2, ChevronDown, KeyRound, LogOut, Menu } from 'lucide-react';
 import useAuth from '../../hooks/useAuth';
+import { resolveLandingPath } from '../../auth/landing';
 import { API_ROOT, API_TARGET, API_TARGET_LABEL } from '../../api/apiTarget';
 import { ROLE_LABEL } from '../labels';
 import { initials } from '../format';
@@ -59,7 +60,7 @@ export const StaffLayout = () => {
       <ToastProvider>
         {railOpen && <div className="st-rail-scrim" onClick={() => setRailOpen(false)} />}
         <aside className={`st-rail ${railOpen ? 'open' : ''}`} aria-label="Điều hướng khu nhân viên">
-          <Link to="/" className="st-rail-brand">
+          <Link to={resolveLandingPath(account)} className="st-rail-brand">
             <span className="st-rail-brand-mark">
               <Building2 size={20} />
             </span>
@@ -88,10 +89,6 @@ export const StaffLayout = () => {
               </div>
             ))}
           </nav>
-
-          <div className="st-rail-foot">
-            <Link to="/">← Về trang phòng khám</Link>
-          </div>
         </aside>
 
         <div className="st-main">
@@ -135,9 +132,6 @@ export const StaffLayout = () => {
               </button>
               {menuOpen && (
                 <div className="st-menu" role="menu">
-                  <Link to="/" role="menuitem">
-                    <Home size={15} /> Trang phòng khám
-                  </Link>
                   <Link to="/doi-mat-khau" role="menuitem">
                     <KeyRound size={15} /> Đổi mật khẩu
                   </Link>

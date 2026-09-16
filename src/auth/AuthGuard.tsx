@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import useAuth from '../hooks/useAuth';
+import { ROLE } from '../api/types';
 import { resolveLandingPath } from './landing';
 import { FullPageLoader } from '../components/FullPageLoader/FullPageLoader';
 
@@ -62,6 +63,34 @@ export const PermissionGuard = ({ anyOf, children }: { anyOf: string[]; children
         </div>
       </div>
     );
+  }
+
+  return <>{children}</>;
+};
+
+/**
+ * Khu công khai của phòng khám chỉ dành cho khách chưa đăng nhập và bệnh nhân. Nhân viên
+ * đã đăng nhập bị đưa thẳng về khu làm việc, kể cả khi tự gõ URL.
+ *
+ * Vẫn phải chờ `isInitialised`: chặn ở đây mà quyết định sớm thì nhân viên tải lại trang sẽ
+ * thấy trang chủ nháy lên một nhịp. Khách chưa đăng nhập không phải chờ lâu vì
+ * `AuthProvider` báo INIT ngay khi không có access token, không đợi /api/auth/me.
+ */
+export const PublicSiteGuard = ({ children }: { children: ReactNode }) => {
+  const { isInitialised, isAuthenticated, account } = useAuth();
+
+  if (!isInitialised) {
+    return <FullPageLoader />;
+  }
+
+  if (isAuthenticated && account && account.role_code !== ROLE.Patient) {
+    const landing = resolveLandingPath(account);
+
+    // Vai trò lạ (chưa có trong LANDING_BY_ROLE) cũng nhận về '/' — chuyển hướng tiếp là lặp
+    // vô tận, nên để họ ở lại trang công khai.
+    if (landing !== '/') {
+      return <Navigate to={landing} replace />;
+    }
   }
 
   return <>{children}</>;

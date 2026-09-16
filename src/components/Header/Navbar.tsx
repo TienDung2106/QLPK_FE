@@ -90,7 +90,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenBooking }) => {
     <nav className="navbar">
       <div className="container navbar-inner">
         {/* Logo */}
-        <Link to="/" className="navbar-logo">
+        <Link to={isStaff ? resolveLandingPath(account) : '/'} className="navbar-logo">
           <div className="logo-icon-wrapper">
             <Building2 className="logo-icon" size={26} />
           </div>
@@ -102,16 +102,17 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenBooking }) => {
 
         {/* Desktop Nav Links */}
         <div className="navbar-menu">
-          {navItems.map((item) => (
-            <a
-              key={item.id}
-              href={item.href}
-              className={`nav-link ${activeTab === item.id ? 'active' : ''}`}
-              onClick={(event) => handleNavClick(event, item)}
-            >
-              {item.label}
-            </a>
-          ))}
+          {!isStaff &&
+            navItems.map((item) => (
+              <a
+                key={item.id}
+                href={item.href}
+                className={`nav-link ${activeTab === item.id ? 'active' : ''}`}
+                onClick={(event) => handleNavClick(event, item)}
+              >
+                {item.label}
+              </a>
+            ))}
         </div>
 
         {/* CTA + tài khoản */}
@@ -176,10 +177,12 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenBooking }) => {
             </Link>
           )}
 
-          <button type="button" className="btn btn-primary btn-booking" onClick={handleBooking}>
-            <Calendar size={18} />
-            <span>Đặt lịch ngay</span>
-          </button>
+          {!isStaff && (
+            <button type="button" className="btn btn-primary btn-booking" onClick={handleBooking}>
+              <Calendar size={18} />
+              <span>Đặt lịch ngay</span>
+            </button>
+          )}
 
           {/* Mobile Menu Toggle */}
           <button
@@ -196,33 +199,46 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenBooking }) => {
       {/* Mobile Menu Dropdown */}
       {mobileMenuOpen && (
         <div className="mobile-menu-dropdown">
-          {navItems.map((item) => (
-            <a
-              key={item.id}
-              href={item.href}
-              className={`mobile-nav-link ${activeTab === item.id ? 'active' : ''}`}
-              onClick={(event) => handleNavClick(event, item)}
-            >
-              {item.label}
-            </a>
-          ))}
+          {!isStaff &&
+            navItems.map((item) => (
+              <a
+                key={item.id}
+                href={item.href}
+                className={`mobile-nav-link ${activeTab === item.id ? 'active' : ''}`}
+                onClick={(event) => handleNavClick(event, item)}
+              >
+                {item.label}
+              </a>
+            ))}
 
           {isAuthenticated ? (
             <>
-              <Link
-                to="/lich-hen-cua-toi"
-                className="mobile-nav-link"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Lịch hẹn của tôi
-              </Link>
-              <Link
-                to="/ho-so"
-                className="mobile-nav-link"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Hồ sơ của tôi
-              </Link>
+              {isStaff ? (
+                <Link
+                  to={resolveLandingPath(account)}
+                  className="mobile-nav-link"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Khu làm việc
+                </Link>
+              ) : (
+                <>
+                  <Link
+                    to="/lich-hen-cua-toi"
+                    className="mobile-nav-link"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Lịch hẹn của tôi
+                  </Link>
+                  <Link
+                    to="/ho-so"
+                    className="mobile-nav-link"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Hồ sơ của tôi
+                  </Link>
+                </>
+              )}
               <Link
                 to="/doi-mat-khau"
                 className="mobile-nav-link"
@@ -244,14 +260,16 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenBooking }) => {
             </Link>
           )}
 
-          <button
-            type="button"
-            className="btn btn-primary btn-booking mobile-btn-booking"
-            onClick={handleBooking}
-          >
-            <Calendar size={18} />
-            <span>Đặt lịch ngay</span>
-          </button>
+          {!isStaff && (
+            <button
+              type="button"
+              className="btn btn-primary btn-booking mobile-btn-booking"
+              onClick={handleBooking}
+            >
+              <Calendar size={18} />
+              <span>Đặt lịch ngay</span>
+            </button>
+          )}
         </div>
       )}
     </nav>

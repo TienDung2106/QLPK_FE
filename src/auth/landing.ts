@@ -3,7 +3,9 @@ import { ROLE } from '../api/types';
 
 /** Nơi mỗi vai trò được đưa tới sau khi đăng nhập. */
 const LANDING_BY_ROLE: Record<string, string> = {
-  [ROLE.Patient]: '/lich-hen-cua-toi',
+  // Bệnh nhân là vai trò duy nhất còn dùng trang chủ công khai; mọi vai trò khác vào
+  // thẳng khu làm việc và bị `PublicSiteGuard` giữ ở đó.
+  [ROLE.Patient]: '/',
   [ROLE.Doctor]: '/bac-si',
   [ROLE.Receptionist]: '/thu-ngan',
   [ROLE.Pharmacist]: '/nha-thuoc',
