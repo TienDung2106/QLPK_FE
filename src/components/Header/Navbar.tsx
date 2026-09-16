@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   Calendar,
+  ClipboardList,
   Building2,
   ChevronDown,
   KeyRound,
@@ -9,6 +10,7 @@ import {
   LogIn,
   LogOut,
   Menu,
+  Receipt,
   User,
   X,
 } from 'lucide-react';
@@ -16,6 +18,7 @@ import type { NavItem } from '../../types';
 import useAuth from '../../hooks/useAuth';
 import { ROLE } from '../../api/types';
 import { resolveLandingPath } from '../../auth/landing';
+import { PatientNotificationBell } from './PatientNotificationBell';
 
 interface NavbarProps {
   onOpenBooking?: () => void;
@@ -117,6 +120,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenBooking }) => {
 
         {/* CTA + tài khoản */}
         <div className="navbar-actions">
+          {isAuthenticated && !isStaff && <PatientNotificationBell />}
           {isAuthenticated ? (
             <div className="account-menu" ref={accountMenuRef}>
               <button
@@ -151,6 +155,12 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenBooking }) => {
                         onClick={() => setAccountMenuOpen(false)}
                       >
                         <Calendar size={16} /> Lịch hẹn của tôi
+                      </Link>
+                      <Link to="/hoa-don-cua-toi" role="menuitem" onClick={() => setAccountMenuOpen(false)}>
+                        <Receipt size={16} /> Hoá đơn của tôi
+                      </Link>
+                      <Link to="/benh-an-cua-toi" role="menuitem" onClick={() => setAccountMenuOpen(false)}>
+                        <ClipboardList size={16} /> Bệnh án của tôi
                       </Link>
                       <Link to="/ho-so" role="menuitem" onClick={() => setAccountMenuOpen(false)}>
                         <User size={16} /> Hồ sơ của tôi
@@ -229,6 +239,20 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenBooking }) => {
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     Lịch hẹn của tôi
+                  </Link>
+                  <Link
+                    to="/hoa-don-cua-toi"
+                    className="mobile-nav-link"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Hoá đơn của tôi
+                  </Link>
+                  <Link
+                    to="/benh-an-cua-toi"
+                    className="mobile-nav-link"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Bệnh án của tôi
                   </Link>
                   <Link
                     to="/ho-so"

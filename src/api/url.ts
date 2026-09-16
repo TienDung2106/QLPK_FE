@@ -31,6 +31,7 @@ const url = {
   // Danh mục
   doctors: `${root}/doctors`,
   doctorAvailableSlots: (doctorId: number) => `${root}/doctors/${doctorId}/available-slots`,
+  doctorCalendar: (doctorId: number) => `${root}/doctors/${doctorId}/calendar-availability`,
   services: `${root}/services`,
 
   // Khu tự phục vụ của bệnh nhân
@@ -39,6 +40,13 @@ const url = {
   patientAppointments: `${root}/patient/appointments`,
   patientAppointmentById: (appointmentId: number) => `${root}/patient/appointments/${appointmentId}`,
   cancelAppointment: (appointmentId: number) => `${root}/patient/appointments/${appointmentId}/cancel`,
+  patientAppointmentAction: (appointmentId: number, action: 'accept-reschedule' | 'choose-slot') =>
+    `${root}/patient/appointments/${appointmentId}/${action}`,
+  patientInvoices: `${root}/patient/invoices`,
+  patientInvoiceById: (invoiceId: number) => `${root}/patient/invoices/${invoiceId}`,
+  patientInvoicePdf: (invoiceId: number) => `${root}/patient/invoices/${invoiceId}/pdf`,
+  patientMedicalRecords: `${root}/patient/medical-records`,
+  patientMedicalRecordById: (medicalRecordId: number) => `${root}/patient/medical-records/${medicalRecordId}`,
   checkIn: `${root}/patient/appointments/check-in`,
 
   // Thông báo — mọi tài khoản đã đăng nhập, kể cả nhân viên, dù nằm dưới /patient.

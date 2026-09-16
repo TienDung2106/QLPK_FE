@@ -1,0 +1,129 @@
+.pt-bell {
+  position: relative;
+}
+
+.pt-bell-trigger {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 1.5px solid var(--border-light);
+  border-radius: var(--radius-pill);
+  background: var(--bg-main);
+  color: #334155;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.pt-bell-trigger:hover {
+  border-color: var(--primary-subtle);
+  background: var(--primary-light);
+  color: var(--primary);
+}
+
+.pt-bell-count {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: var(--radius-pill);
+  background: var(--danger);
+  color: var(--text-white);
+  font-size: 0.68rem;
+  font-weight: 800;
+  line-height: 18px;
+  text-align: center;
+}
+
+.pt-bell-panel {
+  position: absolute;
+  top: calc(100% + 0.6rem);
+  right: 0;
+  z-index: 60;
+  width: min(360px, calc(100vw - 2rem));
+  max-height: min(480px, 70vh);
+  overflow-y: auto;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  background: var(--bg-main);
+  box-shadow: var(--shadow-float);
+}
+
+.pt-bell-head {
+  position: sticky;
+  top: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.8rem 1rem;
+  border-bottom: 1px solid var(--border-light);
+  background: var(--bg-main);
+  font-size: 0.92rem;
+  color: #1e293b;
+}
+
+.pt-bell-head button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  border: none;
+  background: none;
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--primary);
+  cursor: pointer;
+}
+
+.pt-bell-item {
+  display: grid;
+  gap: 0.15rem;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: none;
+  border-bottom: 1px solid var(--border-subtle);
+  background: none;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.pt-bell-item:hover {
+  background: var(--bg-subtle);
+}
+
+.pt-bell-item.unread {
+  background: var(--primary-light);
+}
+
+.pt-bell-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.pt-bell-text {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.pt-bell-time {
+  font-size: 0.74rem;
+  color: var(--text-light);
+}
+
+.pt-bell-empty {
+  display: flex;
+  justify-content: center;
+  padding: 1.25rem 1rem;
+  font-size: 0.86rem;
+  color: var(--text-muted);
+}

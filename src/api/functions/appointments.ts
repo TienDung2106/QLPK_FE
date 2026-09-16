@@ -43,6 +43,14 @@ export const apiBookAppointment = (payload: BookAppointmentPayload, captchaToken
 export const apiCancelAppointment = (appointmentId: number, reason: string) =>
   PostData<Appointment>(url.cancelAppointment(appointmentId), { reason });
 
+/** Đồng ý giờ mới phòng khám đã dời sang. */
+export const apiAcceptReschedule = (appointmentId: number) =>
+  PostData<Appointment>(url.patientAppointmentAction(appointmentId, 'accept-reschedule'));
+
+/** Không hợp giờ phòng khám đề xuất: tự chọn một khung giờ trống khác, cùng bác sĩ. */
+export const apiChooseRescheduleSlot = (appointmentId: number, newDate: string, newTime: string) =>
+  PostData<Appointment>(url.patientAppointmentAction(appointmentId, 'choose-slot'), { new_date: newDate, new_time: newTime });
+
 /** Tự nhận phòng bằng mã check-in, trả về số thứ tự hàng đợi (FR-BOOK-14). */
 export const apiCheckIn = (checkInCode: string) =>
   PostData<CheckInResult>(url.checkIn, { check_in_code: checkInCode });

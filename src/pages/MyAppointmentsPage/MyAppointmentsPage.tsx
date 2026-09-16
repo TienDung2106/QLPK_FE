@@ -5,6 +5,8 @@ import {
   CalendarDays,
   CalendarPlus,
   CheckCircle2,
+  ChevronDown,
+  ChevronUp,
   Clock,
   Loader2,
   QrCode,
@@ -20,6 +22,7 @@ import {
 } from '../../api/functions/appointments';
 import type { AppointmentListItem, CheckInResult } from '../../api/types';
 import { APPOINTMENT_STATUS, APPOINTMENT_STATUS_LABEL } from '../../api/types';
+import { AppointmentDetail } from './AppointmentDetail';
 import './MyAppointmentsPage.css';
 
 /** Trạng thái mà bệnh nhân còn huỷ được. Sau khi đã vào khám thì không còn là việc của họ. */
@@ -31,6 +34,7 @@ const CANCELLABLE = new Set<string>([
 
 const FILTERS: { value: string; label: string }[] = [
   { value: '', label: 'Tất cả' },
+  { value: APPOINTMENT_STATUS.Pending, label: 'Chờ xác nhận' },
   { value: APPOINTMENT_STATUS.Confirmed, label: 'Đã xác nhận' },
   { value: APPOINTMENT_STATUS.Completed, label: 'Đã hoàn thành' },
   { value: APPOINTMENT_STATUS.Cancelled, label: 'Đã huỷ' },
@@ -55,6 +59,7 @@ export const MyAppointmentsPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<number | null>(null);
+  const [openId, setOpenId] = useState<number | null>(null);
 
   // Lịch hẹn đang được hỏi lý do huỷ, và lý do đang gõ dở.
   const [cancelTargetId, setCancelTargetId] = useState<number | null>(null);
@@ -286,6 +291,16 @@ export const MyAppointmentsPage = () => {
                       <> · Số thứ tự: <strong>{appointment.queue_number}</strong></>
                     )}
                   </p>
+
+                  <button
+                    type="button"
+                    className="appointment-detail-toggle"
+                    aria-expanded={openId === appointment.appointment_id}
+                    onClick={() => setOpenId(openId === appointment.appointment_id ? null : appointment.appointment_id)}
+                  >
+                    {openId === appointment.appointment_id ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
+                    {openId === appointment.appointment_id ? 'Ẩn chi tiết' : 'Chi tiết, mã nhận phòng & dời lịch'}
+                  </button>
                 </div>
 
                 {CANCELLABLE.has(appointment.status) &&
@@ -337,6 +352,17 @@ export const MyAppointmentsPage = () => {
                       <span>Huỷ lịch</span>
                     </button>
                   ))}
+
+                {openId === appointment.appointment_id && (
+                  <AppointmentDetail
+                    appointmentId={appointment.appointment_id}
+                    onChanged={(message) => {
+                      setOpenId(null);
+                      setNotice(message);
+                      reload();
+                    }}
+                  />
+                )}
               </li>
             ))}
           </ul>

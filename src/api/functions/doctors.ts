@@ -1,6 +1,7 @@
 import { GetData } from '../helpers';
 import url from '../url';
 import type { DoctorAvailability, DoctorListItem, PagedResponse } from '../types';
+import type { DoctorCalendar } from '../staffTypes';
 
 export interface DoctorQuery {
   specialty_id?: number;
@@ -20,3 +21,7 @@ export const apiGetDoctors = (query: DoctorQuery = {}) =>
 /** Slot còn trống của một bác sĩ trong đúng một ngày. `date` dạng 'yyyy-MM-dd'. */
 export const apiGetDoctorSlots = (doctorId: number, date: string) =>
   GetData<DoctorAvailability>(url.doctorAvailableSlots(doctorId), { date });
+
+/** Cả tháng chứa `month` ('yyyy-MM-dd' bất kỳ trong tháng): ngày còn chỗ, kín, không làm, nghỉ lễ. */
+export const apiGetDoctorCalendar = (doctorId: number, month: string) =>
+  GetData<DoctorCalendar>(url.doctorCalendar(doctorId), { month });

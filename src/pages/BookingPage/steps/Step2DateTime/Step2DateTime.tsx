@@ -13,7 +13,8 @@ import {
   Check,
 } from 'lucide-react';
 import type { BookingDoctor } from '../../../../types/booking';
-import { apiGetDoctorSlots } from '../../../../api/functions/doctors';
+import { apiGetDoctorCalendar, apiGetDoctorSlots } from '../../../../api/functions/doctors';
+import type { DoctorCalendarDay } from '../../../../api/staffTypes';
 import type { AvailableSlot } from '../../../../api/types';
 import { formatDateLabel, formatTimeLabel, monthGrid, todayIso, toIsoDate } from '../../bookingFormat';
 import './Step2DateTime.css';
@@ -72,6 +73,24 @@ export const Step2DateTime: React.FC<Step2DateTimeProps> = ({
   const [isHoliday, setIsHoliday] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Trạng thái từng ngày của tháng đang xem, một lần gọi cho cả tháng. Rỗng thì lịch vẫn bấm được.
+  const [monthDays, setMonthDays] = useState<Record<string, DoctorCalendarDay>>({});
+
+  useEffect(() => {
+    if (!selectedDoctor) {
+      return;
+    }
+    let cancelled = false;
+    const month = `${viewYear}-${String(viewMonth).padStart(2, '0')}-01`;
+    apiGetDoctorCalendar(selectedDoctor.doctorId, month).then((result) => {
+      if (!cancelled) {
+        setMonthDays(Object.fromEntries((result.data?.days ?? []).map((day) => [day.date, day])));
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedDoctor, viewYear, viewMonth]);
 
   useEffect(() => {
     if (!selectedDoctor || !selectedDate) {
@@ -271,14 +290,27 @@ export const Step2DateTime: React.FC<Step2DateTimeProps> = ({
               // Ngày đã qua không đặt được; backend cũng sẽ từ chối, nhưng chặn ở đây thì
               // người dùng không phải bấm mới biết.
               const isPast = iso < today;
+              const known = monthDays[iso];
+              const unbookable = Boolean(known && known.status !== 'available');
 
               return (
                 <button
                   key={iso}
                   type="button"
-                  className={`cal-day current-month ${isSelected ? 'is-selected' : ''}`}
+                  className={`cal-day current-month ${isSelected ? 'is-selected' : ''} ${known ? `cal-${known.status}` : ''}`}
                   onClick={() => onSelectDate(iso)}
-                  disabled={isPast}
+                  disabled={isPast || unbookable}
+                  title={
+                    known?.status === 'available'
+                      ? `Còn ${known.available_slots} khung giờ`
+                      : known?.status === 'full'
+                        ? 'Đã kín lịch'
+                        : known?.status === 'holiday'
+                          ? 'Phòng khám nghỉ lễ'
+                          : known?.status === 'off'
+                            ? 'Bác sĩ không làm việc'
+                            : undefined
+                  }
                 >
                   {day}
                 </button>
@@ -292,8 +324,12 @@ export const Step2DateTime: React.FC<Step2DateTimeProps> = ({
               <span>Ngày có thể đặt</span>
             </div>
             <div className="legend-item">
+              <span className="legend-dot dot-booked" />
+              <span>Kín lịch</span>
+            </div>
+            <div className="legend-item">
               <span className="legend-dot dot-off" />
-              <span>Ngày đã qua</span>
+              <span>Nghỉ / đã qua</span>
             </div>
           </div>
         </div>

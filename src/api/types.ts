@@ -134,6 +134,12 @@ export interface Appointment extends AppointmentListItem {
   subtotal_amount: number;
   total_amount: number;
   services: AppointmentServiceLine[];
+  compensation_percent: number;
+  compensation_reason: string | null;
+  rescheduled_from_appointment_id: number | null;
+  postponed_at: string | null;
+  /** Phòng khám đã dời lịch và đang chờ bệnh nhân đồng ý hoặc chọn giờ khác. */
+  awaiting_reschedule_response: boolean;
 }
 
 export interface CheckInResult {
