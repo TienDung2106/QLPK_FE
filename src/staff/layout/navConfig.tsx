@@ -14,6 +14,8 @@ import {
   CalendarPlus,
   ClipboardList,
   FileText,
+  History,
+  PieChart,
   Pill,
   Receipt,
   Settings,
@@ -94,8 +96,10 @@ export const NAV_SECTIONS: NavSection[] = [
     items: [
       { to: '/nha-thuoc', label: 'Đơn thuốc', icon: <FileText size={ICON} />, permission: PERMISSION.PrescriptionsDispense, end: true },
       { to: '/nha-thuoc/kho', label: 'Tồn kho', icon: <Pill size={ICON} />, permission: PERMISSION.InventoryViewAdjust },
+      { to: '/nha-thuoc/bao-cao', label: 'Báo cáo kho', icon: <PieChart size={ICON} />, permission: PERMISSION.InventoryViewAdjust },
       { to: '/nha-thuoc/goi-y-nhap', label: 'Gợi ý nhập hàng', icon: <ShoppingCart size={ICON} />, permission: PERMISSION.InventoryViewAdjust },
       { to: '/nha-thuoc/nha-cung-cap', label: 'Nhà cung cấp', icon: <Truck size={ICON} />, permission: PERMISSION.InventoryViewAdjust },
+      { to: '/nha-thuoc/lich-su-kho', label: 'Lịch sử kho', icon: <History size={ICON} />, permission: PERMISSION.InventoryViewAdjust },
     ],
   },
 ];

@@ -1,18 +1,25 @@
 import { useState } from 'react';
-import { useLocation, useParams } from 'react-router-dom';
-import { PackagePlus, SlidersHorizontal } from 'lucide-react';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { Ban, PackagePlus, Pencil, SlidersHorizontal } from 'lucide-react';
 import {
   apiGetMedicineBatches,
   apiImportMedicineBatch,
+  apiSearchMedicineStock,
+  apiSearchStockMovements,
+  apiSetMedicineStatus,
   apiSearchSuppliers,
   apiUpdateMedicineClassification,
 } from '../../api/functions/pharmacy';
-import type { MedicineStock } from '../../api/staffTypes';
+import type { MedicineBatch, MedicineStock } from '../../api/staffTypes';
 import { useAction, useApiQuery } from '../hooks';
 import { formatDate, formatDateTime, formatMoney, formatNumber, nullIfBlank } from '../format';
 import { CRITICALITY_LEVEL, labelOf, VELOCITY_CLASS } from '../labels';
 import { useToast } from '../components/toastContext';
-import { Alert, Badge, Button, Field, PageHeader, Panel, Sheet, StatusBadge, TableState } from '../components/ui';
+import { Alert, Badge, Button, ConfirmDialog, Field, PageHeader, Panel, Sheet, StatusBadge, TableState } from '../components/ui';
+import { BatchActionDialog } from './BatchActionDialog';
+import type { BatchActionKind } from './BatchActionDialog';
+import { MedicineFormSheet } from './MedicineFormSheet';
+import { StockMovementTable } from './StockMovementTable';
 
 interface ImportForm {
   batch_number: string;
@@ -40,6 +47,11 @@ const MedicineDetailPage = () => {
   const location = useLocation();
   const toast = useToast();
   const { run, isPending } = useAction();
+  const navigate = useNavigate();
+  const [editOpen, setEditOpen] = useState(false);
+  const [retireOpen, setRetireOpen] = useState(false);
+  const [batchAction, setBatchAction] = useState<{ batch: MedicineBatch; kind: BatchActionKind } | null>(null);
+  const [historyPage, setHistoryPage] = useState(1);
   const [stock, setStock] = useState<MedicineStock | null>(
     (location.state as { stock?: MedicineStock } | null)?.stock ?? null,
   );
@@ -53,6 +65,10 @@ const MedicineDetailPage = () => {
   });
 
   const batches = useApiQuery(() => apiGetMedicineBatches(medicineId), [medicineId]);
+  const history = useApiQuery(
+    () => apiSearchStockMovements({ medicine_id: medicineId, page_number: historyPage, page_size: 10 }),
+    [medicineId, historyPage],
+  );
   const suppliers = useApiQuery(() => apiSearchSuppliers({ is_active: true, page_size: 100 }), [], {
     enabled: sheet === 'import',
   });
@@ -82,6 +98,7 @@ const MedicineDetailPage = () => {
     setForm(emptyImport);
     setSheet(null);
     batches.reload();
+    history.reload();
     toast.success(`Đã nhập lô ${result.data.batch.batch_number}.`);
   };
 
@@ -108,6 +125,29 @@ const MedicineDetailPage = () => {
     toast.success('Đã cập nhật phân loại thuốc.');
   };
 
+  /** Không có API đọc một thuốc theo mã: tìm lại theo tên rồi khớp mã để làm mới số tồn. */
+  const refreshStock = async (name: string | undefined) => {
+    if (!name) {
+      return;
+    }
+    const result = await apiSearchMedicineStock({ search: name, page_size: 20 });
+    const found = result.data?.items.find((item) => item.medicine_id === medicineId);
+    if (found) {
+      setStock(found);
+    }
+  };
+
+  const retire = async () => {
+    const result = await run('retire', () => apiSetMedicineStatus(medicineId, false));
+    setRetireOpen(false);
+    if (!result.ok) {
+      toast.error(result.error);
+      return;
+    }
+    toast.success('Đã ngừng kinh doanh thuốc này.');
+    navigate('/nha-thuoc/kho');
+  };
+
   const openSheet = (which: 'import' | 'classify') => {
     setFormError(null);
     if (which === 'classify' && stock) {
@@ -131,6 +171,12 @@ const MedicineDetailPage = () => {
         description={stock ? `${stock.active_ingredient ?? 'Chưa rõ hoạt chất'} · ${stock.medicine_group ?? 'Chưa phân nhóm'} · đơn vị ${stock.unit_of_measure}` : undefined}
         actions={
           <>
+            <Button icon={<Ban size={16} />} disabled={!stock} title={stock ? undefined : 'Mở từ bảng tồn kho'} onClick={() => setRetireOpen(true)}>
+              Ngừng kinh doanh
+            </Button>
+            <Button icon={<Pencil size={16} />} disabled={!stock} title={stock ? undefined : 'Mở từ bảng tồn kho'} onClick={() => setEditOpen(true)}>
+              Sửa thông tin
+            </Button>
             <Button icon={<SlidersHorizontal size={16} />} onClick={() => openSheet('classify')}>
               Phân loại & ngưỡng
             </Button>
@@ -191,11 +237,12 @@ const MedicineDetailPage = () => {
                 <th className="st-num">Giá nhập</th>
                 <th>Nhà cung cấp</th>
                 <th>Nhập lúc</th>
+                <th />
               </tr>
             </thead>
             <tbody>
               <TableState
-                columns={9}
+                columns={10}
                 loading={batches.loading}
                 error={batches.error}
                 isEmpty={list.length === 0}
@@ -216,12 +263,79 @@ const MedicineDetailPage = () => {
                   <td className="st-num">{formatMoney(batch.import_unit_price)}</td>
                   <td>{batch.supplier_name ?? '—'}</td>
                   <td className="st-nowrap">{formatDateTime(batch.imported_at)}</td>
+                  <td className="st-num st-nowrap">
+                    {batch.is_active && batch.quantity_remaining > 0 && (
+                      <select
+                        className="st-select"
+                        aria-label={`Thao tác với lô ${batch.batch_number}`}
+                        value=""
+                        style={{ width: 'auto', height: 30 }}
+                        onChange={(event) => {
+                          const kind = event.target.value as BatchActionKind;
+                          if (kind) {
+                            setBatchAction({ batch, kind });
+                          }
+                        }}
+                      >
+                        <option value="">Thao tác…</option>
+                        <option value="adjust">Kiểm kê</option>
+                        <option value="stock-out">Xuất ngoài đơn</option>
+                        <option value="write-off">Huỷ hết hạn / hỏng</option>
+                        {batch.supplier_id && <option value="return-to-supplier">Trả nhà cung cấp</option>}
+                      </select>
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       </Panel>
+
+      <Panel title="Lịch sử kho của thuốc" subtitle="Mọi lần nhập, giữ, giao, kiểm kê và huỷ" bodyless>
+        <StockMovementTable
+          page={history.data}
+          loading={history.loading}
+          error={history.error}
+          onRetry={history.reload}
+          onPage={setHistoryPage}
+          showMedicine={false}
+        />
+      </Panel>
+
+      <BatchActionDialog
+        batch={batchAction?.batch ?? null}
+        kind={batchAction?.kind ?? null}
+        medicineName={stock?.medicine_name}
+        onClose={() => setBatchAction(null)}
+        onDone={(batch) => {
+          setBatchAction(null);
+          toast.success(`Đã cập nhật lô ${batch.batch_number}.`);
+          batches.reload();
+          history.reload();
+          void refreshStock(stock?.medicine_name);
+        }}
+      />
+      <MedicineFormSheet
+        open={editOpen}
+        medicine={stock}
+        onClose={() => setEditOpen(false)}
+        onSaved={(saved) => {
+          setEditOpen(false);
+          setStock(saved);
+          toast.success('Đã lưu thông tin thuốc.');
+        }}
+      />
+      <ConfirmDialog
+        open={retireOpen}
+        title="Ngừng kinh doanh thuốc này?"
+        text="Thuốc biến mất khỏi danh sách kho và không kê đơn được nữa. Thuốc còn tồn thì phải huỷ hoặc trả hết các lô trước."
+        confirmLabel="Ngừng kinh doanh"
+        tone="danger-solid"
+        loading={isPending('retire')}
+        onConfirm={retire}
+        onClose={() => setRetireOpen(false)}
+      />
 
       <Sheet
         open={sheet === 'import'}

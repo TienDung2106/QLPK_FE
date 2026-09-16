@@ -52,6 +52,8 @@ const InventoryPage = lazy(() => import('./pharmacy/InventoryPage'));
 const MedicineDetailPage = lazy(() => import('./pharmacy/MedicineDetailPage'));
 const ReorderPage = lazy(() => import('./pharmacy/ReorderPage'));
 const SuppliersPage = lazy(() => import('./pharmacy/SuppliersPage'));
+const InventoryReportPage = lazy(() => import('./pharmacy/InventoryReportPage'));
+const StockHistoryPage = lazy(() => import('./pharmacy/StockHistoryPage'));
 
 /** Chờ tải một trang con: chỉ vùng nội dung, sidebar vẫn đứng yên. */
 const PageLoading = () => (
@@ -128,6 +130,8 @@ export function staffRoutes() {
       <Route path="/nha-thuoc/kho/:medicineId" element={guard([P.InventoryViewAdjust], <MedicineDetailPage />)} />
       <Route path="/nha-thuoc/goi-y-nhap" element={guard([P.InventoryViewAdjust], <ReorderPage />)} />
       <Route path="/nha-thuoc/nha-cung-cap" element={guard([P.InventoryViewAdjust], <SuppliersPage />)} />
+      <Route path="/nha-thuoc/bao-cao" element={guard([P.InventoryViewAdjust], <InventoryReportPage />)} />
+      <Route path="/nha-thuoc/lich-su-kho" element={guard([P.InventoryViewAdjust], <StockHistoryPage />)} />
     </Route>
   );
 }
