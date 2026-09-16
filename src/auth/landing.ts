@@ -4,10 +4,10 @@ import { ROLE } from '../api/types';
 /** Nơi mỗi vai trò được đưa tới sau khi đăng nhập. */
 const LANDING_BY_ROLE: Record<string, string> = {
   [ROLE.Patient]: '/lich-hen-cua-toi',
-  [ROLE.Doctor]: '/',
-  [ROLE.Receptionist]: '/',
-  [ROLE.Pharmacist]: '/',
-  [ROLE.Admin]: '/',
+  [ROLE.Doctor]: '/bac-si',
+  [ROLE.Receptionist]: '/thu-ngan',
+  [ROLE.Pharmacist]: '/nha-thuoc',
+  [ROLE.Admin]: '/quan-tri',
 };
 
 /**

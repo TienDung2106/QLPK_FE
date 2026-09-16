@@ -10,6 +10,7 @@ import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
 import { ChangePasswordPage } from './pages/ChangePasswordPage';
 import { MyAppointmentsPage } from './pages/MyAppointmentsPage';
 import { ProfilePage } from './pages/ProfilePage';
+import { staffRoutes } from './staff/StaffRoutes';
 
 /**
  * Các trang công khai vốn nhận callback điều hướng qua prop (từ thời App.tsx chuyển trang
@@ -114,6 +115,9 @@ function App() {
                 </AuthGuard>
               }
             />
+
+            {/* Khu nhân viên: admin /quan-tri, bác sĩ /bac-si, thu ngân /thu-ngan, nhà thuốc /nha-thuoc. */}
+            {staffRoutes()}
 
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

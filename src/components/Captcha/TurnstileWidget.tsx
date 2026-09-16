@@ -1,12 +1,13 @@
 import { useEffect, useRef } from 'react';
+import { TURNSTILE_SITE_KEY } from '../../api/apiTarget';
 
 const SCRIPT_SRC = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
 
 /**
- * Site key. Mặc định là test key luôn-pass mà Cloudflare công bố, khớp với test secret
- * backend dùng ở môi trường Development.
+ * Site key, đi cặp với backend đang được chọn (key thật cho Azure, test key luôn-pass cho
+ * backend local) — xem apiTarget.ts.
  */
-const SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY || '1x00000000000000000000AA';
+const SITE_KEY = TURNSTILE_SITE_KEY;
 
 interface TurnstileApi {
   render: (

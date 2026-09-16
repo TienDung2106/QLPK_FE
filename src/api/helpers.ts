@@ -62,6 +62,13 @@ const MESSAGE_BY_ERROR_CODE: Record<string, string> = {
   password_reset_code_invalid: 'Mã đặt lại không đúng hoặc đã hết hạn. Vui lòng lấy mã mới.',
   otp_resend_too_soon: 'Mã vừa được gửi. Vui lòng đợi một lát rồi thử lại.',
   verification_code_not_sent: 'Không gửi được mã xác thực. Vui lòng thử lại sau ít phút.',
+  nothing_outstanding: 'Hoá đơn này không còn khoản nào phải thu.',
+  nothing_to_refund: 'Hoá đơn này không có khoản nào phải hoàn.',
+  prescription_not_prepared: 'Đơn thuốc chưa được soạn xong nên chưa lập hoá đơn được.',
+  invoice_outdated: 'Hoá đơn đã cũ so với lượt khám. Vui lòng lập lại hoá đơn.',
+  cancellation_window_closed: 'Đã quá hạn huỷ lịch theo quy định của phòng khám.',
+  no_slot_available_today: 'Hôm nay bác sĩ không còn khung giờ trống.',
+  email_already_registered: 'Email này đã được dùng cho một tài khoản khác.',
 };
 
 function describe(problem: ProblemDetails | undefined, status: number | undefined): string {
@@ -127,13 +134,36 @@ function toFailure<T>(error: unknown): ApiResult<T> {
   };
 }
 
+/**
+ * Đổi tên tham số query từ snake_case sang camelCase và bỏ giá trị rỗng.
+ *
+ * Chỉ JSON của QLPK dùng snake_case. Query string thì ASP.NET bind theo tên property C#
+ * (`PageSize`, `FromDate` — xem /openapi/v1.json), không phân biệt hoa thường nhưng KHÔNG
+ * hiểu dấu gạch dưới: `page_size` bị bỏ qua mà không báo lỗi gì, lọc và phân trang âm thầm
+ * mất tác dụng. Đổi ở một chỗ này để tầng trên vẫn viết snake_case thống nhất với body.
+ */
+function toQueryParams(params: unknown): Record<string, unknown> | undefined {
+  if (!params || typeof params !== 'object') {
+    return undefined;
+  }
+
+  const result: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(params as Record<string, unknown>)) {
+    if (value === undefined || value === null || value === '') {
+      continue;
+    }
+    result[key.replace(/_([a-z0-9])/g, (_, char: string) => char.toUpperCase())] = value;
+  }
+  return result;
+}
+
 export async function GetData<T>(
   endpoint: string,
   params?: unknown,
   config?: AxiosRequestConfig,
 ): Promise<ApiResult<T>> {
   try {
-    const response = await httpClient.get<T>(endpoint, { ...config, params });
+    const response = await httpClient.get<T>(endpoint, { ...config, params: toQueryParams(params) });
     return toSuccess(response.status, response.data);
   } catch (error) {
     return toFailure<T>(error);
@@ -160,6 +190,19 @@ export async function PutData<T>(
 ): Promise<ApiResult<T>> {
   try {
     const response = await httpClient.put<T>(endpoint, body, config);
+    return toSuccess(response.status, response.data);
+  } catch (error) {
+    return toFailure<T>(error);
+  }
+}
+
+export async function PatchData<T>(
+  endpoint: string,
+  body?: unknown,
+  config?: AxiosRequestConfig,
+): Promise<ApiResult<T>> {
+  try {
+    const response = await httpClient.patch<T>(endpoint, body, config);
     return toSuccess(response.status, response.data);
   } catch (error) {
     return toFailure<T>(error);

@@ -5,6 +5,7 @@ import {
   Building2,
   ChevronDown,
   KeyRound,
+  LayoutDashboard,
   LogIn,
   LogOut,
   Menu,
@@ -13,6 +14,8 @@ import {
 } from 'lucide-react';
 import type { NavItem } from '../../types';
 import useAuth from '../../hooks/useAuth';
+import { ROLE } from '../../api/types';
+import { resolveLandingPath } from '../../auth/landing';
 
 interface NavbarProps {
   onOpenBooking?: () => void;
@@ -34,6 +37,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenBooking }) => {
   const location = useLocation();
   const { isAuthenticated, account, logout } = useAuth();
   const accountMenuRef = useRef<HTMLDivElement>(null);
+  const isStaff = Boolean(account && account.role_code !== ROLE.Patient);
 
   // Các liên kết trong menu là neo trong trang chủ, nên khi đang ở trang khác phải quay về
   // trang chủ trước rồi mới cuộn tới mục — nếu không thì '#services' chỉ đổi URL.
@@ -130,16 +134,28 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenBooking }) => {
 
               {accountMenuOpen && (
                 <div className="account-dropdown" role="menu">
-                  <Link
-                    to="/lich-hen-cua-toi"
-                    role="menuitem"
-                    onClick={() => setAccountMenuOpen(false)}
-                  >
-                    <Calendar size={16} /> Lịch hẹn của tôi
-                  </Link>
-                  <Link to="/ho-so" role="menuitem" onClick={() => setAccountMenuOpen(false)}>
-                    <User size={16} /> Hồ sơ của tôi
-                  </Link>
+                  {isStaff ? (
+                    <Link
+                      to={resolveLandingPath(account)}
+                      role="menuitem"
+                      onClick={() => setAccountMenuOpen(false)}
+                    >
+                      <LayoutDashboard size={16} /> Khu làm việc
+                    </Link>
+                  ) : (
+                    <>
+                      <Link
+                        to="/lich-hen-cua-toi"
+                        role="menuitem"
+                        onClick={() => setAccountMenuOpen(false)}
+                      >
+                        <Calendar size={16} /> Lịch hẹn của tôi
+                      </Link>
+                      <Link to="/ho-so" role="menuitem" onClick={() => setAccountMenuOpen(false)}>
+                        <User size={16} /> Hồ sơ của tôi
+                      </Link>
+                    </>
+                  )}
                   <Link
                     to="/doi-mat-khau"
                     role="menuitem"

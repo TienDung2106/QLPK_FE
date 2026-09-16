@@ -41,24 +41,36 @@ render.
 
 ## Đổi giữa backend local và backend trên server
 
-**Phía frontend** — `.env.development`, comment một trong hai dòng:
+**Phía frontend** — cả hai đường dẫn luôn nằm sẵn trong `.env`, không phải sửa URL nữa:
 
 ```dotenv
-# Đang trỏ tới API đã deploy trên Azure:
-VITE_API_ROOT=https://app-qlpk-hoangqlpk97.azurewebsites.net/api
-# Đổi sang backend chạy tại máy:
-# VITE_API_ROOT=http://localhost:5131/api
+VITE_API_ROOT_SERVER=https://app-qlpk-hoangqlpk97.azurewebsites.net/api
+VITE_API_ROOT_LOCAL=http://localhost:5131/api
 ```
 
-Sửa xong phải **khởi động lại `npm run dev`** — Vite nhúng biến môi trường lúc khởi động,
-không đọc lại khi đang chạy.
+Chọn backend bằng lệnh chạy:
+
+| Lệnh | Backend | File env |
+|---|---|---|
+| `npm run dev` | Azure (mặc định) | `.env.development` → `VITE_API_TARGET=server` |
+| `npm run dev:local` | `localhost:5131` | `.env.localapi` → `VITE_API_TARGET=local` |
+| `npm run build` | Azure, luôn luôn | `.env.production` → `VITE_API_TARGET=server` |
+
+Hoặc đổi `VITE_API_TARGET` trong `.env.development` thành `local`. Site key Turnstile đi cặp
+tự động (`VITE_TURNSTILE_SITE_KEY_SERVER` / `_LOCAL`). Toàn bộ logic chọn nằm ở
+`src/api/apiTarget.ts`; khu nhân viên hiện badge **API: Azure / API: Local** ở topbar khi chạy dev.
+
+Đổi lệnh hoặc sửa file env thì phải **khởi động lại dev server** — Vite nhúng biến môi trường
+lúc khởi động, không đọc lại khi đang chạy.
 
 Muốn đè riêng cho máy mình mà không sửa file chung, tạo **`.env.development.local`** (không
 phải `.env.local`): Vite xếp `.env.[mode]` ưu tiên **cao hơn** `.env.local`, nên khi đã có
-`.env.development` thì `.env.local` bị bỏ qua hoàn toàn mà không báo lỗi gì.
+`.env.development` thì `.env.local` bị bỏ qua hoàn toàn mà không báo lỗi gì. Biến kiểu cũ
+`VITE_API_ROOT` nếu còn đặt thì vẫn thắng `VITE_API_TARGET`.
 
-`.env.production` luôn trỏ tới API trên Azure; đó là file `npm run build` dùng, tức là bản
-deploy lên Static Web Apps.
+**Query string:** JSON của QLPK là snake_case, nhưng tham số query ASP.NET bind theo tên
+property C# (`PageSize`, `FromDate`). `GetData` trong `src/api/helpers.ts` tự đổi
+`page_size` → `pageSize`, nên tầng gọi API cứ viết snake_case.
 
 **Phía backend** — `QLPK/appsettings.json`, mục `Cors:AllowedOrigins`. Trình đọc cấu hình
 của ASP.NET Core chấp nhận comment `//`, nên tắt một origin là comment đúng dòng đó:

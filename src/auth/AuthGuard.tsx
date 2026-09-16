@@ -44,6 +44,30 @@ export const AuthGuard = ({ children, allowWhenPasswordChangeRequired = false }:
 };
 
 /**
+ * Chặn một trang trong khu nhân viên theo **quyền** (không theo tên vai trò): admin mang cả
+ * quyền thu ngân lẫn nhà thuốc nên tự vào được các trang đó. Có một trong `anyOf` là đủ.
+ * Backend vẫn là nơi quyết định cuối; guard này chỉ để không dẫn người dùng tới trang 403.
+ */
+export const PermissionGuard = ({ anyOf, children }: { anyOf: string[]; children: ReactNode }) => {
+  const { hasPermission } = useAuth();
+
+  if (!anyOf.some((permission) => hasPermission(permission))) {
+    return (
+      <div className="st-denied">
+        <div>
+          <h1 className="st-page-title">Không có quyền truy cập</h1>
+          <p className="st-page-desc">
+            Tài khoản của bạn không được cấp quyền dùng trang này. Liên hệ quản trị viên nếu bạn cần.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return <>{children}</>;
+};
+
+/**
  * Ngược lại: đăng nhập / đăng ký / quên mật khẩu thì người đã đăng nhập không cần xem nữa.
  *
  * Đây cũng là nơi duy nhất quyết định trang đích sau khi đăng nhập. Trang đăng nhập chỉ
