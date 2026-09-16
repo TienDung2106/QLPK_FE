@@ -172,6 +172,46 @@
   color: var(--danger-on-dark);
 }
 
+/* Ô mật khẩu có nút hiện/ẩn nằm bên phải, trong lòng ô nhập. */
+.auth-password-wrap {
+  position: relative;
+}
+
+.auth-password-wrap .auth-input {
+  padding-right: 3rem;
+}
+
+.auth-password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 0.6rem;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.2rem;
+  height: 2.2rem;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.auth-password-toggle:hover:not(:disabled),
+.auth-password-toggle:focus-visible {
+  color: var(--text-main);
+  background: rgba(0, 0, 0, 0.06);
+  outline: none;
+}
+
+.auth-password-toggle:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* Ô mã xác thực: các chữ số cách nhau để dễ đối chiếu với mã trong e-mail. */
 .auth-input.auth-code-input {
   text-align: center;

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { AlertCircle, CheckCircle2, Loader2, ShieldCheck } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Eye, EyeOff, Loader2, ShieldCheck } from 'lucide-react';
 import { AuthLayout } from '../AuthLayout';
 import { CaptchaField } from '../../components/Captcha/CaptchaField';
 import useAuth from '../../hooks/useAuth';
@@ -21,6 +21,7 @@ export const LoginPage = () => {
   const [audience, setAudience] = useState<Audience>('patient');
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [remember, setRemember] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -196,16 +197,29 @@ export const LoginPage = () => {
           <label className="auth-label-sr" htmlFor="login-password">
             Mật khẩu
           </label>
-          <input
-            id="login-password"
-            className="auth-input"
-            type="password"
-            autoComplete="current-password"
-            placeholder="Mật khẩu"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            disabled={submitting}
-          />
+          <div className="auth-password-wrap">
+            <input
+              id="login-password"
+              className="auth-input"
+              type={showPassword ? 'text' : 'password'}
+              autoComplete="current-password"
+              placeholder="Mật khẩu"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              disabled={submitting}
+            />
+            <button
+              type="button"
+              className="auth-password-toggle"
+              onClick={() => setShowPassword((shown) => !shown)}
+              aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+              aria-pressed={showPassword}
+              aria-controls="login-password"
+              disabled={submitting}
+            >
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          </div>
         </div>
 
         {captchaRequired && (
