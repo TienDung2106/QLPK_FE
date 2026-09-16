@@ -25,6 +25,7 @@ const SettingsPage = lazy(() => import('./admin/SettingsPage'));
 const DoctorSchedulePage = lazy(() => import('./doctor/DoctorSchedulePage'));
 const ExaminationPage = lazy(() => import('./doctor/ExaminationPage'));
 const DoctorTimeOffPage = lazy(() => import('./doctor/DoctorTimeOffPage'));
+const DoctorWorkingHoursPage = lazy(() => import('./doctor/DoctorWorkingHoursPage'));
 
 // Thu ngân / lễ tân
 const DeskAppointmentsPage = lazy(() => import('./desk/DeskAppointmentsPage'));
@@ -89,6 +90,7 @@ export function staffRoutes() {
       <Route path="/bac-si" element={guard([P.AppointmentsViewOwnSchedule], <DoctorSchedulePage />)} />
       <Route path="/bac-si/kham/:appointmentId" element={guard([P.ExaminationsPerform], <ExaminationPage />)} />
       <Route path="/bac-si/bao-nghi" element={guard([P.DoctorTimeOffReportOwn], <DoctorTimeOffPage />)} />
+      <Route path="/bac-si/gio-lam" element={guard([P.DoctorSchedulesManageOwn], <DoctorWorkingHoursPage />)} />
 
       <Route path="/thu-ngan" element={guard([P.AppointmentsManage], <DeskAppointmentsPage />)} />
       <Route

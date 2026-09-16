@@ -2,9 +2,9 @@ import { Link } from 'react-router-dom';
 import type { TimeOff } from '../../api/staffTypes';
 import type { TimeOffFormValue } from './timeOffForm';
 import type { QueryState } from '../hooks';
-import { formatDate, formatDateTime, formatTime } from '../format';
+import { formatDate, formatDateTime, formatTime, todayIso } from '../format';
 import { APPOINTMENT_STATUS, labelOf } from '../labels';
-import { EmptyState, Field, Panel, StatusBadge, TableSkeleton, Alert } from './ui';
+import { Button, EmptyState, Field, Panel, StatusBadge, TableSkeleton, Alert } from './ui';
 
 export const TimeOffForm = ({ value, onChange }: { value: TimeOffFormValue; onChange: (value: TimeOffFormValue) => void }) => (
   <div className="st-form-grid">
@@ -35,12 +35,16 @@ export const TimeOffList = ({
   query,
   emptyText,
   appointmentLinkBase,
+  onWithdraw,
 }: {
   query: QueryState<TimeOff[]>;
   emptyText: string;
   /** Có thì lịch hẹn bị ảnh hưởng thành liên kết (khu quầy). */
   appointmentLinkBase?: string;
+  /** Có thì hiện nút "Rút lại" cho ngày nghỉ chưa tới. */
+  onWithdraw?: (item: TimeOff) => void;
 }) => {
+  const today = todayIso();
   const items = [...(query.data ?? [])].sort((a, b) => b.off_date.localeCompare(a.off_date));
 
   return (
@@ -68,6 +72,7 @@ export const TimeOffList = ({
                 <th>Lý do</th>
                 <th>Lịch hẹn bị ảnh hưởng</th>
                 <th>Ghi nhận lúc</th>
+                {onWithdraw && <th />}
               </tr>
             </thead>
             <tbody>
@@ -99,6 +104,15 @@ export const TimeOffList = ({
                     )}
                   </td>
                   <td className="st-nowrap st-muted">{formatDateTime(item.created_at)}</td>
+                  {onWithdraw && (
+                    <td className="st-num">
+                      {item.off_date > today && (
+                        <Button size="sm" variant="ghost" onClick={() => onWithdraw(item)}>
+                          Rút lại
+                        </Button>
+                      )}
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>

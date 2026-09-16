@@ -57,6 +57,7 @@ export const NAV_SECTIONS: NavSection[] = [
     base: '/bac-si',
     items: [
       { to: '/bac-si', label: 'Lịch khám của tôi', icon: <Stethoscope size={ICON} />, permission: PERMISSION.AppointmentsViewOwnSchedule, end: true },
+      { to: '/bac-si/gio-lam', label: 'Giờ làm việc', icon: <CalendarClock size={ICON} />, permission: PERMISSION.DoctorSchedulesManageOwn },
       { to: '/bac-si/bao-nghi', label: 'Báo nghỉ', icon: <CalendarOff size={ICON} />, permission: PERMISSION.DoctorTimeOffReportOwn },
     ],
   },

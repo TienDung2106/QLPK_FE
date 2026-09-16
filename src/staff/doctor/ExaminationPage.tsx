@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { CheckCircle2, ClipboardCheck, History, Loader2, Pill, Play, Save, Trash2 } from 'lucide-react';
+import { CalendarPlus, Check, CheckCircle2, ClipboardCheck, History, Loader2, Pill, Play, Save, Trash2, X } from 'lucide-react';
 import {
   apiCompleteExamination,
   apiDeletePrescription,
+  apiDoctorConfirmAppointment,
+  apiDoctorDeclineAppointment,
   apiGetDoctorSchedule,
   apiGetMedicalRecord,
   apiGetPatientHistory,
@@ -18,6 +20,9 @@ import { useAction, useApiQuery, useDebounced } from '../hooks';
 import { formatDate, formatMoney, formatTime, nullIfBlank, todayIso } from '../format';
 import { APPOINTMENT_STATUS, labelOf, PRESCRIPTION_STATUS } from '../labels';
 import { useToast } from '../components/toastContext';
+import useAuth from '../../hooks/useAuth';
+import { PERMISSION } from '../permissions';
+import { FollowUpSheet } from './FollowUpSheet';
 import { Alert, Button, ConfirmDialog, EmptyState, Field, PageHeader, Panel, StatusBadge } from '../components/ui';
 
 /* ---------------------------------------------------------------- Record form */
@@ -168,6 +173,11 @@ const ExaminationPage = () => {
   const navigate = useNavigate();
   const toast = useToast();
   const { run, isPending, pending } = useAction();
+  const { hasPermission } = useAuth();
+  const canConfirm = hasPermission(PERMISSION.AppointmentsConfirmOwn);
+  const canFollowUp = hasPermission(PERMISSION.AppointmentsBookFollowUp);
+  const [followUpOpen, setFollowUpOpen] = useState(false);
+  const [followUpBooked, setFollowUpBooked] = useState<string | null>(null);
 
   const [appointment, setAppointment] = useState<AppointmentListItem | null>(
     (location.state as { appointment?: AppointmentListItem } | null)?.appointment ?? null,
@@ -177,7 +187,7 @@ const ExaminationPage = () => {
   const [lines, setLines] = useState<Line[]>([]);
   const [rxNotes, setRxNotes] = useState('');
   const [rxDirty, setRxDirty] = useState(false);
-  const [confirm, setConfirm] = useState<'complete' | 'delete-rx' | null>(null);
+  const [confirm, setConfirm] = useState<'complete' | 'delete-rx' | 'accept' | 'decline' | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
 
   // Bác sĩ không có API đọc một lịch hẹn; mở thẳng URL thì tìm lại trong lịch của chính mình.
@@ -338,6 +348,32 @@ const ExaminationPage = () => {
     }
   };
 
+  const accept = async () => {
+    const result = await run('accept', () => apiDoctorConfirmAppointment(appointmentId));
+    setConfirm(null);
+    if (result.ok && result.data) {
+      setStatus(result.data.status);
+      toast.success('Đã xác nhận lịch hẹn. Bệnh nhân nhận được mã nhận phòng.');
+    } else {
+      toast.error(result.error);
+    }
+  };
+
+  const decline = async (reason: string) => {
+    if (reason.length < 3) {
+      toast.error('Lý do từ chối cần ít nhất 3 ký tự.');
+      return;
+    }
+    const result = await run('decline', () => apiDoctorDeclineAppointment(appointmentId, reason));
+    setConfirm(null);
+    if (result.ok && result.data) {
+      setStatus(result.data.status);
+      toast.success('Đã từ chối lịch hẹn.');
+    } else {
+      toast.error(result.error);
+    }
+  };
+
   const updateLine = (key: number, patch: Partial<Line>) => {
     setLines((current) => current.map((line) => (line.key === key ? { ...line, ...patch } : line)));
     setRxDirty(true);
@@ -380,6 +416,16 @@ const ExaminationPage = () => {
         }
         actions={
           <>
+            {canConfirm && status === 'pending' && (
+              <>
+                <Button icon={<X size={16} />} disabled={Boolean(pending)} onClick={() => setConfirm('decline')}>
+                  Từ chối
+                </Button>
+                <Button variant="primary" icon={<Check size={16} />} disabled={Boolean(pending)} onClick={() => setConfirm('accept')}>
+                  Xác nhận lịch
+                </Button>
+              </>
+            )}
             {status === 'checked_in' && (
               <Button variant="primary" icon={<Play size={16} />} loading={isPending('start')} onClick={start}>
                 Bắt đầu khám
@@ -396,6 +442,11 @@ const ExaminationPage = () => {
                 Hoàn tất khám
               </Button>
             )}
+            {status === 'completed' && canFollowUp && patientId && (
+              <Button variant="primary" icon={<CalendarPlus size={16} />} onClick={() => setFollowUpOpen(true)}>
+                Hẹn tái khám
+              </Button>
+            )}
             {status === 'completed' && (
               <Button onClick={() => navigate('/bac-si')}>Về lịch khám</Button>
             )}
@@ -403,7 +454,17 @@ const ExaminationPage = () => {
         }
       />
 
-      {status && ['pending', 'pending_approval', 'confirmed'].includes(status) && (
+      {status === 'pending' && canConfirm && (
+        <Alert tone="warning" className="st-alert-gap">
+          Bệnh nhân tự đặt lịch này và đang chờ bạn xác nhận. Chỉ sau khi xác nhận bệnh nhân mới nhận phòng được.
+        </Alert>
+      )}
+      {followUpBooked && (
+        <Alert tone="success" className="st-alert-gap">
+          {followUpBooked}
+        </Alert>
+      )}
+      {((status && ['pending_approval', 'confirmed'].includes(status)) || (status === 'pending' && !canConfirm)) && (
         <Alert tone="info" className="st-alert-gap">
           Bệnh nhân chưa nhận phòng. Chỉ bắt đầu khám được khi bệnh nhân đã check-in và đúng ngày hẹn.
         </Alert>
@@ -649,6 +710,40 @@ const ExaminationPage = () => {
         </Panel>
       </div>
 
+      <FollowUpSheet
+        open={followUpOpen}
+        appointmentId={appointmentId}
+        patientName={appointment?.patient_full_name ?? ''}
+        suggestedDate={recordForm.follow_up_date}
+        onClose={() => setFollowUpOpen(false)}
+        onBooked={(booked) => {
+          setFollowUpOpen(false);
+          setFollowUpBooked(
+            `Đã hẹn tái khám ${formatDate(booked.appointment_date)} lúc ${formatTime(booked.appointment_time)} (lượt khám #${booked.appointment_id}).`,
+          );
+          toast.success('Đã đặt lịch tái khám.');
+        }}
+      />
+      <ConfirmDialog
+        open={confirm === 'accept'}
+        title="Xác nhận lịch hẹn?"
+        text="Bệnh nhân sẽ nhận được mã nhận phòng và có thể check-in khi đến."
+        confirmLabel="Xác nhận"
+        loading={isPending('accept')}
+        onConfirm={accept}
+        onClose={() => setConfirm(null)}
+      />
+      <ConfirmDialog
+        open={confirm === 'decline'}
+        title="Từ chối lịch hẹn?"
+        text="Khung giờ được mở lại và tiền trả trước (nếu có) được hoàn đủ."
+        reasonLabel="Lý do (bệnh nhân sẽ thấy)"
+        confirmLabel="Từ chối lịch"
+        tone="danger-solid"
+        loading={isPending('decline')}
+        onConfirm={decline}
+        onClose={() => setConfirm(null)}
+      />
       <ConfirmDialog
         open={confirm === 'complete'}
         title="Hoàn tất lượt khám?"
