@@ -102,7 +102,7 @@ export const VoucherStrip: React.FC<VoucherStripProps> = ({ subtotal, appliedPro
                 {state === 'locked' && (
                   <>
                     <div className="voucher-progress" aria-hidden="true">
-                      <div className="voucher-progress-fill" style={{ width: `${progress}%` }} />
+                      <div className="voucher-progress-fill" style={{ transform: `scaleX(${progress / 100})` }} />
                     </div>
                     <span className="voucher-status status-locked">
                       Thêm {formatCurrency(promotion.min_booking_amount - subtotal)} để dùng

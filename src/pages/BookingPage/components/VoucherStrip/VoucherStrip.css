@@ -153,7 +153,8 @@
   height: 100%;
   border-radius: inherit;
   background: #fb923c;
-  transition: width 0.35s ease;
+  transform-origin: left center;
+  transition: transform 0.35s ease;
 }
 
 .voucher-applied {
