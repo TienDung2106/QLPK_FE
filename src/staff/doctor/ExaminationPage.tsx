@@ -1,11 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { CalendarPlus, Check, CheckCircle2, ClipboardCheck, History, Loader2, Pill, Play, Save, Trash2, X } from 'lucide-react';
+import { CalendarPlus, CheckCircle2, ClipboardCheck, History, Loader2, Pill, Play, Save, Trash2 } from 'lucide-react';
 import {
   apiCompleteExamination,
   apiDeletePrescription,
-  apiDoctorConfirmAppointment,
-  apiDoctorDeclineAppointment,
   apiGetDoctorSchedule,
   apiGetMedicalRecord,
   apiGetPatientHistory,
@@ -174,7 +172,6 @@ const ExaminationPage = () => {
   const toast = useToast();
   const { run, isPending, pending } = useAction();
   const { hasPermission } = useAuth();
-  const canConfirm = hasPermission(PERMISSION.AppointmentsConfirmOwn);
   const canFollowUp = hasPermission(PERMISSION.AppointmentsBookFollowUp);
   const [followUpOpen, setFollowUpOpen] = useState(false);
   const [followUpBooked, setFollowUpBooked] = useState<string | null>(null);
@@ -187,7 +184,7 @@ const ExaminationPage = () => {
   const [lines, setLines] = useState<Line[]>([]);
   const [rxNotes, setRxNotes] = useState('');
   const [rxDirty, setRxDirty] = useState(false);
-  const [confirm, setConfirm] = useState<'complete' | 'delete-rx' | 'accept' | 'decline' | null>(null);
+  const [confirm, setConfirm] = useState<'complete' | 'delete-rx' | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
 
   // Bác sĩ không có API đọc một lịch hẹn; mở thẳng URL thì tìm lại trong lịch của chính mình.
@@ -348,32 +345,6 @@ const ExaminationPage = () => {
     }
   };
 
-  const accept = async () => {
-    const result = await run('accept', () => apiDoctorConfirmAppointment(appointmentId));
-    setConfirm(null);
-    if (result.ok && result.data) {
-      setStatus(result.data.status);
-      toast.success('Đã xác nhận lịch hẹn. Bệnh nhân nhận được mã nhận phòng.');
-    } else {
-      toast.error(result.error);
-    }
-  };
-
-  const decline = async (reason: string) => {
-    if (reason.length < 3) {
-      toast.error('Lý do từ chối cần ít nhất 3 ký tự.');
-      return;
-    }
-    const result = await run('decline', () => apiDoctorDeclineAppointment(appointmentId, reason));
-    setConfirm(null);
-    if (result.ok && result.data) {
-      setStatus(result.data.status);
-      toast.success('Đã từ chối lịch hẹn.');
-    } else {
-      toast.error(result.error);
-    }
-  };
-
   const updateLine = (key: number, patch: Partial<Line>) => {
     setLines((current) => current.map((line) => (line.key === key ? { ...line, ...patch } : line)));
     setRxDirty(true);
@@ -416,16 +387,6 @@ const ExaminationPage = () => {
         }
         actions={
           <>
-            {canConfirm && status === 'pending' && (
-              <>
-                <Button icon={<X size={16} />} disabled={Boolean(pending)} onClick={() => setConfirm('decline')}>
-                  Từ chối
-                </Button>
-                <Button variant="primary" icon={<Check size={16} />} disabled={Boolean(pending)} onClick={() => setConfirm('accept')}>
-                  Xác nhận lịch
-                </Button>
-              </>
-            )}
             {status === 'checked_in' && (
               <Button variant="primary" icon={<Play size={16} />} loading={isPending('start')} onClick={start}>
                 Bắt đầu khám
@@ -454,17 +415,12 @@ const ExaminationPage = () => {
         }
       />
 
-      {status === 'pending' && canConfirm && (
-        <Alert tone="warning" className="st-alert-gap">
-          Bệnh nhân tự đặt lịch này và đang chờ bạn xác nhận. Chỉ sau khi xác nhận bệnh nhân mới nhận phòng được.
-        </Alert>
-      )}
       {followUpBooked && (
         <Alert tone="success" className="st-alert-gap">
           {followUpBooked}
         </Alert>
       )}
-      {((status && ['pending_approval', 'confirmed'].includes(status)) || (status === 'pending' && !canConfirm)) && (
+      {status && ['pending', 'pending_approval', 'confirmed'].includes(status) && (
         <Alert tone="info" className="st-alert-gap">
           Bệnh nhân chưa nhận phòng. Chỉ bắt đầu khám được khi bệnh nhân đã check-in và đúng ngày hẹn.
         </Alert>
@@ -723,26 +679,6 @@ const ExaminationPage = () => {
           );
           toast.success('Đã đặt lịch tái khám.');
         }}
-      />
-      <ConfirmDialog
-        open={confirm === 'accept'}
-        title="Xác nhận lịch hẹn?"
-        text="Bệnh nhân sẽ nhận được mã nhận phòng và có thể check-in khi đến."
-        confirmLabel="Xác nhận"
-        loading={isPending('accept')}
-        onConfirm={accept}
-        onClose={() => setConfirm(null)}
-      />
-      <ConfirmDialog
-        open={confirm === 'decline'}
-        title="Từ chối lịch hẹn?"
-        text="Khung giờ được mở lại và tiền trả trước (nếu có) được hoàn đủ."
-        reasonLabel="Lý do (bệnh nhân sẽ thấy)"
-        confirmLabel="Từ chối lịch"
-        tone="danger-solid"
-        loading={isPending('decline')}
-        onConfirm={decline}
-        onClose={() => setConfirm(null)}
       />
       <ConfirmDialog
         open={confirm === 'complete'}
