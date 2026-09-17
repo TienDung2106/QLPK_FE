@@ -9,14 +9,6 @@ import { formatDate, formatMoney, formatTime, nullIfBlank, toApiTime, todayIso }
 import { CONSULTATION_MODE_LABEL, DAY_OF_WEEK_LABEL, isoDayOfWeek } from '../labels';
 import { Alert, Button, Field, Sheet } from '../components/ui';
 
-const toMinutes = (time: string) => {
-  const [hours, minutes] = time.split(':').map(Number);
-  return hours * 60 + minutes;
-};
-
-const toClock = (minutes: number) =>
-  `${String(Math.floor(minutes / 60)).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}`;
-
 interface Props {
   open: boolean;
   appointmentId: number;
@@ -51,22 +43,19 @@ const FollowUpSheetBody = ({ appointmentId, patientName, suggestedDate, onClose,
   const services = useApiQuery(() => apiGetServices({ page_size: 100 }), []);
 
   const weekday = date ? isoDayOfWeek(date) : null;
-  const suggestions = useMemo(() => {
-    const result: string[] = [];
-    for (const row of hours.data ?? []) {
-      if (!row.is_active || row.day_of_week !== weekday) {
-        continue;
-      }
-      for (let t = toMinutes(row.start_time); t + row.slot_duration_minutes <= toMinutes(row.end_time); t += row.slot_duration_minutes) {
-        result.push(toClock(t));
-      }
-    }
-    return [...new Set(result)].sort();
-  }, [hours.data, weekday]);
+  // Lịch hẹn ghi vào ca, nên gợi ý là giờ bắt đầu các ca của bác sĩ trong thứ đó.
+  const suggestions = useMemo(
+    () =>
+      (hours.data ?? [])
+        .filter((row) => row.is_active && row.day_of_week === weekday)
+        .map((row) => ({ start: formatTime(row.start_time), end: formatTime(row.end_time) }))
+        .sort((a, b) => a.start.localeCompare(b.start)),
+    [hours.data, weekday],
+  );
 
   const submit = async () => {
     if (!date || !time) {
-      setError('Chọn ngày và giờ tái khám.');
+      setError('Chọn ngày và ca tái khám.');
       return;
     }
     setError(null);
@@ -122,29 +111,29 @@ const FollowUpSheetBody = ({ appointmentId, patientName, suggestedDate, onClose,
             />
           )}
         </Field>
-        <Field label="Giờ" required>
+        <Field label="Giờ bắt đầu ca" required>
           {(id) => <input id={id} type="time" className="st-input" value={time} onChange={(e) => setTime(e.target.value)} />}
         </Field>
 
         <div className="st-span-2">
           {canReadHours && hours.data && suggestions.length === 0 && (
             <div className="st-hint">
-              Bạn không có khung giờ làm việc vào {weekday ? DAY_OF_WEEK_LABEL[weekday].toLowerCase() : 'ngày này'}
+              Bạn không có ca làm việc vào {weekday ? DAY_OF_WEEK_LABEL[weekday].toLowerCase() : 'ngày này'}
               {date ? ` (${formatDate(date)})` : ''}. Chọn ngày khác.
             </div>
           )}
           {suggestions.length > 0 && (
-            <div className="st-chip-row" role="radiogroup" aria-label="Giờ trong khung làm việc">
-              {suggestions.map((slot) => (
+            <div className="st-chip-row" role="radiogroup" aria-label="Ca làm việc">
+              {suggestions.map((shift) => (
                 <button
-                  key={slot}
+                  key={shift.start}
                   type="button"
                   role="radio"
-                  aria-checked={time === slot}
-                  className={`st-slot ${time === slot ? 'active' : ''}`}
-                  onClick={() => setTime(slot)}
+                  aria-checked={time === shift.start}
+                  className={`st-slot ${time === shift.start ? 'active' : ''}`}
+                  onClick={() => setTime(shift.start)}
                 >
-                  {formatTime(slot)}
+                  {shift.start}–{shift.end}
                 </button>
               ))}
             </div>

@@ -83,8 +83,8 @@ export const apiConfirmAppointmentPayment = (appointmentId: number, payload: Pay
 
 /* Bác sĩ, nhìn từ quầy */
 
-export const apiGetStaffDoctorSlots = (doctorId: number, date: string) =>
-  GetData<DoctorAvailability>(url.staffDoctorSlots(doctorId), { date });
+export const apiGetStaffDoctorSlots = (doctorId: number, date: string, durationMinutes?: number) =>
+  GetData<DoctorAvailability>(url.staffDoctorSlots(doctorId), { date, duration_minutes: durationMinutes });
 
 /** Cả tháng chứa `month` ('yyyy-MM-dd' bất kỳ trong tháng), mỗi ngày một trạng thái. */
 export const apiGetStaffDoctorCalendar = (doctorId: number, month: string) =>

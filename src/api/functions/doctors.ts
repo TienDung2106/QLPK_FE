@@ -18,10 +18,13 @@ export interface DoctorQuery {
 export const apiGetDoctors = (query: DoctorQuery = {}) =>
   GetData<PagedResponse<DoctorListItem>>(url.doctors, query);
 
-/** Slot còn trống của một bác sĩ trong đúng một ngày. `date` dạng 'yyyy-MM-dd'. */
-export const apiGetDoctorSlots = (doctorId: number, date: string) =>
-  GetData<DoctorAvailability>(url.doctorAvailableSlots(doctorId), { date });
+/**
+ * Các ca của một bác sĩ trong đúng một ngày, kèm mức đầy. `date` dạng 'yyyy-MM-dd'.
+ * `durationMinutes` lấy từ báo giá: ca nào không đủ phút cho lượt khám sẽ báo `is_available = false`.
+ */
+export const apiGetDoctorSlots = (doctorId: number, date: string, durationMinutes?: number) =>
+  GetData<DoctorAvailability>(url.doctorAvailableSlots(doctorId), { date, duration_minutes: durationMinutes });
 
-/** Cả tháng chứa `month` ('yyyy-MM-dd' bất kỳ trong tháng): ngày còn chỗ, kín, không làm, nghỉ lễ. */
-export const apiGetDoctorCalendar = (doctorId: number, month: string) =>
-  GetData<DoctorCalendar>(url.doctorCalendar(doctorId), { month });
+/** Cả tháng chứa `month` ('yyyy-MM-dd' bất kỳ trong tháng): ngày còn ca nhận được lượt khám, kín, nghỉ. */
+export const apiGetDoctorCalendar = (doctorId: number, month: string, durationMinutes?: number) =>
+  GetData<DoctorCalendar>(url.doctorCalendar(doctorId), { month, duration_minutes: durationMinutes });

@@ -30,6 +30,23 @@ export interface PatientInfo {
   notes: string;
 }
 
+/** Một dịch vụ bệnh nhân đã tick; giá và thời lượng chỉ để hiển thị, server tính lại khi đặt. */
+export interface SelectedService {
+  serviceId: number;
+  name: string;
+  price: number;
+  durationMinutes: number;
+}
+
+/** Ca đã chọn. `startTime` cũng là appointment_time gửi lên. */
+export interface SelectedShift {
+  name: string;
+  /** 'HH:mm:ss'. */
+  startTime: string;
+  /** 'HH:mm:ss'. */
+  endTime: string;
+}
+
 export interface BookingState {
   currentStep: number;
   selectedDoctor: BookingDoctor | null;
@@ -37,14 +54,9 @@ export interface BookingState {
   selectedPatientId: number | null;
   /** 'yyyy-MM-dd'. */
   selectedDate: string;
-  /** 'HH:mm:ss', phải khớp đúng start_time của một slot còn trống. */
-  selectedTime: string;
-  /** Tên dịch vụ, chỉ để hiển thị. */
-  selectedService: string;
-  selectedServiceId: number | null;
-  servicePrice: number;
-  discountCode: string;
-  discountAmount?: number;
+  selectedShift: SelectedShift | null;
+  /** Theo thứ tự tick; dịch vụ đầu tiên là dịch vụ chính của lượt khám. */
+  selectedServices: SelectedService[];
   reasonForVisit: string;
   patientInfo: PatientInfo;
 }

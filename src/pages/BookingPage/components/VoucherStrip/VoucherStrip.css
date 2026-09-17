@@ -1,0 +1,195 @@
+/* ==========================================================================
+   VOUCHER STRIP — ưu đãi tự áp theo tổng tiền dịch vụ
+   ========================================================================== */
+
+.voucher-strip {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  background: linear-gradient(135deg, #fff7ed 0%, #ffffff 60%);
+  border: 1px solid #fed7aa;
+  border-radius: 14px;
+  padding: 1rem 1.1rem;
+}
+
+.voucher-strip-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  flex-wrap: wrap;
+}
+
+.voucher-strip-title {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: #ea580c;
+}
+
+.voucher-strip-title h3 {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #9a3412;
+}
+
+.voucher-strip-hint {
+  font-size: 0.78rem;
+  color: #9a3412;
+  opacity: 0.85;
+}
+
+.voucher-list {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(230px, 1fr);
+  gap: 0.7rem;
+  overflow-x: auto;
+  padding-bottom: 0.25rem;
+  scroll-snap-type: x mandatory;
+}
+
+.voucher-list.is-expanded {
+  grid-auto-flow: row;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  overflow-x: visible;
+}
+
+.voucher-card {
+  display: flex;
+  min-height: 92px;
+  background: #ffffff;
+  border: 1.5px solid #fde3c8;
+  border-radius: 11px;
+  overflow: hidden;
+  scroll-snap-align: start;
+  transition: border-color 0.2s, box-shadow 0.2s, opacity 0.2s;
+}
+
+.voucher-stub {
+  position: relative;
+  flex: 0 0 72px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem;
+  background: #f97316;
+  color: #ffffff;
+}
+
+/* Răng cưa bên mép cuống vé. */
+.voucher-stub::after {
+  content: '';
+  position: absolute;
+  top: 6px;
+  bottom: 6px;
+  right: -4px;
+  width: 8px;
+  background: radial-gradient(circle at 4px 4px, #ffffff 3px, transparent 3.5px) 0 0 / 8px 10px repeat-y;
+}
+
+.voucher-stub-value {
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: -0.3px;
+}
+
+.voucher-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.65rem 0.8rem 0.65rem 0.95rem;
+  min-width: 0;
+}
+
+.voucher-headline {
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.voucher-condition {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.voucher-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-top: auto;
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+.status-applied {
+  color: #059669;
+}
+
+.status-eligible {
+  color: #ea580c;
+}
+
+.status-locked {
+  color: #64748b;
+  font-weight: 600;
+}
+
+.status-used {
+  color: #94a3b8;
+}
+
+.voucher-progress {
+  height: 4px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  overflow: hidden;
+  margin-top: auto;
+}
+
+.voucher-progress-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: #fb923c;
+  transition: width 0.35s ease;
+}
+
+.voucher-applied {
+  border-color: #10b981;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.16);
+}
+
+.voucher-applied .voucher-stub {
+  background: #10b981;
+}
+
+.voucher-locked .voucher-stub {
+  background: #fdba74;
+}
+
+.voucher-used_up {
+  opacity: 0.55;
+}
+
+.voucher-used_up .voucher-stub {
+  background: #cbd5e1;
+}
+
+.voucher-toggle {
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: none;
+  border: none;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #c2410c;
+  cursor: pointer;
+}
+
+.voucher-toggle:hover {
+  text-decoration: underline;
+}

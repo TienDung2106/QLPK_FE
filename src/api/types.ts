@@ -53,12 +53,78 @@ export interface DoctorListItem {
   is_accepting_appointments: boolean;
 }
 
+/** Lý do một ca không nhận thêm được lượt khám đang chọn. */
+export type ShiftUnavailableReason = 'full' | 'not_enough_time' | 'past' | 'time_off';
+
+/**
+ * Một ca làm việc của bác sĩ trong ngày (vd 07:30–09:30). Ca nhận nhiều bệnh nhân và đầy dần
+ * theo tổng số phút các lượt khám đã đặt, không chia thành slot 30 phút cố định nữa.
+ */
 export interface AvailableSlot {
-  /** 'HH:mm:ss'. */
+  /** "Ca sáng 1", "Ca chiều 2"... */
+  shift_name: string;
+  /** 'HH:mm:ss' — giờ bắt đầu ca, cũng là appointment_time gửi lên khi đặt. */
   start_time: string;
   end_time: string;
-  duration_minutes: number;
   consultation_mode: string;
+  capacity_minutes: number;
+  used_minutes: number;
+  remaining_minutes: number;
+  booked_count: number;
+  max_patients: number;
+  /** Số phút lượt khám đang chọn cần; 0 khi không truyền duration_minutes. */
+  required_minutes: number;
+  is_available: boolean;
+  unavailable_reason: ShiftUnavailableReason | null;
+}
+
+export interface QuotedPromotion {
+  promotion_id: number;
+  promotion_code: string;
+  description: string | null;
+  discount_type: string;
+  discount_value: number;
+  max_discount_amount: number | null;
+  min_booking_amount: number;
+  discount_amount: number;
+  discount_percent: number;
+}
+
+export interface NextPromotionTier {
+  promotion_id: number;
+  promotion_code: string;
+  description: string | null;
+  discount_type: string;
+  discount_value: number;
+  max_discount_amount: number | null;
+  min_booking_amount: number;
+  /** Còn thiếu bao nhiêu tiền dịch vụ để đạt mức này. */
+  amount_needed: number;
+}
+
+/** POST /api/booking/quote — giá, voucher tự áp và thời lượng của giỏ dịch vụ, tính y như lúc đặt. */
+export interface BookingQuote {
+  subtotal_amount: number;
+  promotion: QuotedPromotion | null;
+  discount_amount: number;
+  total_amount: number;
+  service_minutes: number;
+  /** Số phút lượt khám chiếm trong ca (dịch vụ + thời gian kê đơn, dặn dò). */
+  duration_minutes: number;
+  next_tier: NextPromotionTier | null;
+}
+
+/** GET /api/booking/promotions — voucher đang chạy để bệnh nhân xem, không cần nhập mã. */
+export interface AvailablePromotion {
+  promotion_id: number;
+  promotion_code: string;
+  description: string | null;
+  discount_type: string;
+  discount_value: number;
+  max_discount_amount: number | null;
+  min_booking_amount: number;
+  valid_until: string | null;
+  is_used_up: boolean;
 }
 
 export interface DoctorAvailability {

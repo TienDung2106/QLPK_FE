@@ -33,6 +33,8 @@ const url = {
   doctorAvailableSlots: (doctorId: number) => `${root}/doctors/${doctorId}/available-slots`,
   doctorCalendar: (doctorId: number) => `${root}/doctors/${doctorId}/calendar-availability`,
   services: `${root}/services`,
+  bookingQuote: `${root}/booking/quote`,
+  bookingPromotions: `${root}/booking/promotions`,
 
   // Khu tự phục vụ của bệnh nhân
   patientProfile: `${root}/patient/profile`,

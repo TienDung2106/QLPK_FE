@@ -516,9 +516,15 @@ const DeskAppointmentDetailPage = () => {
           </div>
           <div className="st-span-2">
             <div className="st-label" style={{ marginBottom: 6 }}>
-              Khung giờ trống
+              Ca khám (lượt khám cần {appointment.duration_minutes} phút)
             </div>
-            <SlotPicker doctorId={appointment.doctor_id} date={slotDate} value={slotTime} onChange={setSlotTime} />
+            <SlotPicker
+              doctorId={appointment.doctor_id}
+              date={slotDate}
+              value={slotTime}
+              onChange={setSlotTime}
+              durationMinutes={appointment.duration_minutes}
+            />
           </div>
           {sheet === 'postpone' && (
             <Field label="Lý do (gửi cho bệnh nhân)" required className="st-span-2" hint="Mức bù cho bệnh nhân tự tính theo thời gian báo trước.">

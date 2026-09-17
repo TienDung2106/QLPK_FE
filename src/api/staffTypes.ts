@@ -804,9 +804,9 @@ export interface DoctorSchedule {
   consultation_mode: string;
   start_time: string;
   end_time: string;
-  slot_duration_minutes: number;
   max_patients: number;
-  slot_count: number;
+  /** Độ dài ca (phút) — lượng thời gian các lượt khám đặt vào ca được lấp đầy. */
+  capacity_minutes: number;
   is_active: boolean;
   managed_by: number;
   created_at: string;
@@ -819,7 +819,6 @@ export interface DoctorSchedulePayload {
   consultation_mode?: string | null;
   start_time: string;
   end_time: string;
-  slot_duration_minutes: number;
   max_patients: number;
   is_active: boolean;
 }

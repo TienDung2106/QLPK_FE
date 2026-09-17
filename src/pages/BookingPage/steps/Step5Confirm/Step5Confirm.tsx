@@ -1,21 +1,20 @@
 import React, { useState } from 'react';
-import { AlertCircle, GraduationCap, Loader2, Lock } from 'lucide-react';
-import type { BookingDoctor, PatientInfo } from '../../../../types/booking';
+import { AlertCircle, GraduationCap, Loader2, Lock, Sparkles, TicketPercent } from 'lucide-react';
+import type { BookingQuote } from '../../../../api/types';
+import type { BookingDoctor, PatientInfo, SelectedService, SelectedShift } from '../../../../types/booking';
 import { CaptchaField } from '../../../../components/Captcha/CaptchaField';
 import useCaptcha from '../../../../hooks/useCaptcha';
 import { CAPTCHA_PURPOSE } from '../../../../api/functions/captcha';
-import { formatCurrency, formatDateLabel, formatTimeLabel } from '../../bookingFormat';
+import { describePromotion, formatCurrency, formatDateLabel, formatShiftRange } from '../../bookingFormat';
 import './Step5Confirm.css';
 
 interface Step5ConfirmProps {
   selectedDoctor: BookingDoctor | null;
   /** 'yyyy-MM-dd'. */
   selectedDate: string;
-  /** 'HH:mm:ss'. */
-  selectedTime: string;
-  selectedService: string;
-  servicePrice: number;
-  discountCode: string;
+  selectedShift: SelectedShift | null;
+  selectedServices: SelectedService[];
+  quote: BookingQuote | null;
   patientInfo: PatientInfo;
   reasonForVisit: string;
   submitting: boolean;
@@ -23,7 +22,6 @@ interface Step5ConfirmProps {
   onPrevStep: () => void;
   /** Nhận sẵn token đã đổi với backend; null khi người dùng chưa qua được CAPTCHA. */
   onConfirmBooking: (captchaToken: string) => void;
-  onApplyDiscount: (code: string) => void;
   onCaptchaError: (message: string) => void;
 }
 
@@ -39,29 +37,24 @@ const GENDER_LABEL: Record<string, string> = {
 export const Step5Confirm: React.FC<Step5ConfirmProps> = ({
   selectedDoctor,
   selectedDate,
-  selectedTime,
-  selectedService,
-  servicePrice,
-  discountCode,
+  selectedShift,
+  selectedServices,
+  quote,
   patientInfo,
   reasonForVisit,
   submitting,
   error,
   onPrevStep,
   onConfirmBooking,
-  onApplyDiscount,
   onCaptchaError,
 }) => {
-  const [promoInput, setPromoInput] = useState(discountCode);
   const [agreedTerms, setAgreedTerms] = useState(false);
   const captcha = useCaptcha(CAPTCHA_PURPOSE.AppointmentBooking);
 
   const doctor = selectedDoctor;
 
-  const handleApply = (event: React.FormEvent) => {
-    event.preventDefault();
-    onApplyDiscount(promoInput.trim());
-  };
+  const subtotal = quote?.subtotal_amount ?? selectedServices.reduce((sum, service) => sum + service.price, 0);
+  const promotion = quote?.promotion ?? null;
 
   const handleConfirm = async () => {
     const exchanged = await captcha.exchange();
@@ -129,13 +122,23 @@ export const Step5Confirm: React.FC<Step5ConfirmProps> = ({
               <span className="info-row-val">{formatDateLabel(selectedDate)}</span>
             </div>
             <div className="step5-info-row">
-              <span className="info-row-label">Giờ khám</span>
-              <span className="info-row-val val-blue">{formatTimeLabel(selectedTime)}</span>
+              <span className="info-row-label">Ca khám</span>
+              <span className="info-row-val val-blue">
+                {selectedShift
+                  ? `${selectedShift.name} (${formatShiftRange(selectedShift.startTime, selectedShift.endTime)})`
+                  : 'Chưa chọn'}
+              </span>
             </div>
             <div className="step5-info-row">
               <span className="info-row-label">Dịch vụ</span>
-              <span className="info-row-val">{selectedService}</span>
+              <span className="info-row-val">{selectedServices.map((service) => service.name).join(', ')}</span>
             </div>
+            {quote && (
+              <div className="step5-info-row">
+                <span className="info-row-label">Thời gian dự kiến</span>
+                <span className="info-row-val">{quote.duration_minutes} phút</span>
+              </div>
+            )}
             <div className="step5-info-row">
               <span className="info-row-label">Phòng khám</span>
               <span className="info-row-val">
@@ -194,14 +197,20 @@ export const Step5Confirm: React.FC<Step5ConfirmProps> = ({
             <h3 className="step5-card-title">3. Chi tiết thanh toán</h3>
 
             <div className="step5-payment-rows">
+              {selectedServices.map((service) => (
+                <div className="step5-pay-row" key={service.serviceId}>
+                  <span>{service.name}</span>
+                  <span className="pay-val">{formatCurrency(service.price)}</span>
+                </div>
+              ))}
               <div className="step5-pay-row">
-                <span>Giá dịch vụ</span>
-                <span className="pay-val">{formatCurrency(servicePrice)}</span>
+                <span>Tạm tính</span>
+                <span className="pay-val">{formatCurrency(subtotal)}</span>
               </div>
               <div className="step5-pay-row">
-                <span>Mã giảm giá</span>
-                <span className="discount-status">
-                  {discountCode ? `${discountCode} — chờ xác nhận` : 'Chưa áp dụng'}
+                <span>{promotion ? `Voucher ${promotion.promotion_code}` : 'Voucher'}</span>
+                <span className={promotion ? 'pay-val pay-discount' : 'discount-status'}>
+                  {promotion ? `-${formatCurrency(quote?.discount_amount ?? 0)}` : 'Chưa đủ điều kiện'}
                 </span>
               </div>
               <div className="step5-pay-row">
@@ -213,44 +222,47 @@ export const Step5Confirm: React.FC<Step5ConfirmProps> = ({
             <div className="step5-divider" />
 
             <div className="step5-total-row">
-              <span className="total-label">Tạm tính</span>
-              <span className="total-val-red">{formatCurrency(servicePrice)}</span>
+              <span className="total-label">Tổng cộng</span>
+              <span className="total-val-red">{formatCurrency(quote?.total_amount ?? subtotal)}</span>
             </div>
 
             {/* Số tiền cuối cùng do server tính lại từ bảng giá và từ chính bản ghi khuyến
                 mãi — client không được phép quyết giá (TC-SEC-05). */}
             <p className="step5-total-note">
-              Số tiền chính thức được phòng khám chốt lại khi xác nhận lịch hẹn.
+              Số tiền được phòng khám tính lại theo bảng giá và voucher còn hiệu lực tại thời điểm đặt.
             </p>
           </div>
 
-          {/* Right Promo Code Form */}
+          {/* Voucher tự áp — không có ô nhập mã */}
           <div className="step5-payment-right">
-            <label className="step5-input-label" htmlFor="step5-promo">
-              Mã giảm giá
-            </label>
-            <form className="step5-promo-form" onSubmit={handleApply}>
-              <input
-                id="step5-promo"
-                type="text"
-                className="step5-promo-input"
-                placeholder="Nhập mã giảm giá (nếu có)"
-                value={promoInput}
-                onChange={(event) => setPromoInput(event.target.value)}
-              />
-              <button type="submit" className="step5-btn-apply">
-                Áp dụng
-              </button>
-            </form>
+            <span className="step5-input-label">Ưu đãi</span>
 
-            <div className="step5-promo-msg">
-              <span className="promo-info-dot">ⓘ</span>
-              <span>
-                {discountCode
-                  ? `Đã nhập mã ${discountCode}. Mức giảm do phòng khám xác định.`
-                  : 'Bạn chưa áp dụng mã giảm giá.'}
-              </span>
-            </div>
+            {promotion ? (
+              <div className="step5-voucher-applied">
+                <TicketPercent size={22} />
+                <div>
+                  <strong>{describePromotion(promotion)}</strong>
+                  <span>
+                    Mã {promotion.promotion_code} · Tiết kiệm {formatCurrency(quote?.discount_amount ?? 0)}
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <div className="step5-promo-msg">
+                <span className="promo-info-dot">ⓘ</span>
+                <span>Lịch khám chưa đạt mức của voucher nào.</span>
+              </div>
+            )}
+
+            {quote?.next_tier && (
+              <div className="step5-promo-msg">
+                <Sparkles size={14} className="promo-info-dot" />
+                <span>
+                  Thêm {formatCurrency(quote.next_tier.amount_needed)} dịch vụ để được{' '}
+                  {describePromotion(quote.next_tier).toLowerCase()}.
+                </span>
+              </div>
+            )}
           </div>
         </div>
       </div>

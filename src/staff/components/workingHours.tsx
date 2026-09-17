@@ -22,7 +22,6 @@ interface FormValue {
   consultation_mode: string;
   start_time: string;
   end_time: string;
-  slot_duration_minutes: string;
   max_patients: string;
   is_active: boolean;
 }
@@ -30,9 +29,8 @@ interface FormValue {
 const emptyForm: FormValue = {
   day_of_week: '1',
   consultation_mode: 'in_clinic',
-  start_time: '08:00',
-  end_time: '11:30',
-  slot_duration_minutes: '30',
+  start_time: '07:30',
+  end_time: '09:30',
   max_patients: '20',
   is_active: true,
 };
@@ -42,10 +40,20 @@ const toForm = (row: DoctorSchedule): FormValue => ({
   consultation_mode: row.consultation_mode,
   start_time: formatTime(row.start_time),
   end_time: formatTime(row.end_time),
-  slot_duration_minutes: String(row.slot_duration_minutes),
   max_patients: String(row.max_patients),
   is_active: row.is_active,
 });
+
+/** 4 ca chuẩn của phòng khám: 2 ca sáng, 2 ca chiều, mỗi ca 2 tiếng. */
+const STANDARD_SHIFTS = [
+  { label: 'Ca sáng 1', start_time: '07:30', end_time: '09:30' },
+  { label: 'Ca sáng 2', start_time: '09:30', end_time: '11:30' },
+  { label: 'Ca chiều 1', start_time: '13:30', end_time: '15:30' },
+  { label: 'Ca chiều 2', start_time: '15:30', end_time: '17:30' },
+];
+
+const MIN_SHIFT_MINUTES = 30;
+const MAX_SHIFT_MINUTES = 480;
 
 const toMinutes = (time: string) => {
   const [hours, minutes] = time.split(':').map(Number);
@@ -57,15 +65,11 @@ function toPayload(form: FormValue): DoctorSchedulePayload | string {
     return 'Nhập giờ bắt đầu và giờ kết thúc.';
   }
   const span = toMinutes(form.end_time) - toMinutes(form.start_time);
-  const slot = Number(form.slot_duration_minutes);
   if (span <= 0) {
     return 'Giờ kết thúc phải sau giờ bắt đầu.';
   }
-  if (!(slot >= 1 && slot <= 480)) {
-    return 'Thời lượng mỗi lượt từ 1 đến 480 phút.';
-  }
-  if (span % slot !== 0) {
-    return `Khung ${span} phút không chia hết cho lượt ${slot} phút. Chỉnh giờ kết thúc hoặc thời lượng lượt.`;
+  if (span < MIN_SHIFT_MINUTES || span > MAX_SHIFT_MINUTES) {
+    return `Một ca dài từ ${MIN_SHIFT_MINUTES} đến ${MAX_SHIFT_MINUTES} phút; ca này dài ${span} phút.`;
   }
   const max = Number(form.max_patients);
   if (!(max >= 1 && max <= 500)) {
@@ -76,7 +80,6 @@ function toPayload(form: FormValue): DoctorSchedulePayload | string {
     consultation_mode: form.consultation_mode,
     start_time: toApiTime(form.start_time),
     end_time: toApiTime(form.end_time),
-    slot_duration_minutes: slot,
     max_patients: max,
     is_active: form.is_active,
   };
@@ -110,8 +113,8 @@ export const AffectedAppointments = ({
 );
 
 /**
- * Bảng giờ làm việc theo tuần, dùng chung cho bác sĩ (giờ của mình) và admin (giờ của bất kỳ
- * bác sĩ nào). Slot đặt lịch sinh ra từ các dòng này, nên không có dòng nào là không đặt được.
+ * Bảng ca làm việc theo tuần, dùng chung cho bác sĩ (ca của mình) và admin (ca của bất kỳ bác sĩ
+ * nào). Mỗi dòng là một ca; bệnh nhân đặt vào ca và ca đầy dần theo tổng phút các lượt khám.
  */
 export const WorkingHoursEditor = ({
   api,
@@ -138,7 +141,7 @@ export const WorkingHoursEditor = ({
   const rows = [...(query.data ?? [])].sort(
     (a, b) => a.day_of_week - b.day_of_week || a.start_time.localeCompare(b.start_time),
   );
-  const weeklySlots = rows.filter((row) => row.is_active).reduce((sum, row) => sum + row.slot_count, 0);
+  const weeklyHours = rows.filter((row) => row.is_active).reduce((sum, row) => sum + row.capacity_minutes, 0) / 60;
 
   const openForm = (row: DoctorSchedule | 'new') => {
     setEditing(row);
@@ -166,7 +169,40 @@ export const WorkingHoursEditor = ({
       return;
     }
     setEditing(null);
-    done(result.data, editing === 'new' ? 'Đã thêm khung giờ làm việc.' : 'Đã cập nhật khung giờ.');
+    done(result.data, editing === 'new' ? 'Đã thêm ca làm việc.' : 'Đã cập nhật ca làm việc.');
+  };
+
+  /** Tạo đủ 4 ca chuẩn cho thứ đang chọn; ca nào trùng giờ đã có thì báo lại, ca còn lại vẫn được tạo. */
+  const createStandardShifts = async () => {
+    const created: DoctorSchedule[] = [];
+    const failures: string[] = [];
+
+    await run('standard', async () => {
+      for (const shift of STANDARD_SHIFTS) {
+        const payload = toPayload({ ...form, start_time: shift.start_time, end_time: shift.end_time, is_active: true });
+        if (typeof payload === 'string') {
+          failures.push(`${shift.label}: ${payload}`);
+          continue;
+        }
+        const result = await api.create(payload);
+        if (result.ok && result.data) {
+          created.push(result.data);
+        } else {
+          failures.push(`${shift.label}: ${result.error}`);
+        }
+      }
+      return { ok: true, status: 200, data: null, error: null, errorCode: null } satisfies ApiResult<null>;
+    });
+
+    if (failures.length > 0) {
+      setError(failures.join(' · '));
+    } else {
+      setEditing(null);
+    }
+    if (created.length > 0) {
+      toast.success(`Đã tạo ${created.length} ca cho ${DAY_OF_WEEK_LABEL[Number(form.day_of_week)]?.toLowerCase() ?? 'ngày này'}.`);
+      query.reload();
+    }
   };
 
   const toggle = async () => {
@@ -179,16 +215,15 @@ export const WorkingHoursEditor = ({
       toast.error(result.error);
       return;
     }
-    done(result.data, result.data.is_active ? 'Đã mở lại khung giờ.' : 'Đã tắt khung giờ.');
+    done(result.data, result.data.is_active ? 'Đã mở lại ca.' : 'Đã tắt ca.');
   };
 
   const set = (key: keyof FormValue) => (event: { target: { value: string } }) =>
     setForm((current) => ({ ...current, [key]: event.target.value }));
 
-  const previewSlots = (() => {
+  const previewMinutes = (() => {
     const span = toMinutes(form.end_time || '0:0') - toMinutes(form.start_time || '0:0');
-    const slot = Number(form.slot_duration_minutes);
-    return span > 0 && slot > 0 && span % slot === 0 ? span / slot : null;
+    return span > 0 ? span : null;
   })();
 
   return (
@@ -196,17 +231,17 @@ export const WorkingHoursEditor = ({
       {affected.length > 0 && <AffectedAppointments items={affected} linkBase={affectedLinkBase} />}
 
       <Panel
-        title="Khung giờ trong tuần"
-        subtitle={intro ?? `${rows.filter((row) => row.is_active).length} khung đang mở · ${weeklySlots} lượt khám mỗi tuần`}
+        title="Ca làm việc trong tuần"
+        subtitle={intro ?? `${rows.filter((row) => row.is_active).length} ca đang mở · ${weeklyHours.toLocaleString('vi-VN')} giờ khám mỗi tuần`}
         bodyless
         actions={
           <>
             <label className="st-check">
               <input type="checkbox" checked={showInactive} onChange={(e) => setShowInactive(e.target.checked)} />
-              Hiện khung đã tắt
+              Hiện ca đã tắt
             </label>
             <Button variant="primary" size="sm" icon={<Plus size={14} />} onClick={() => openForm('new')}>
-              Thêm khung giờ
+              Thêm ca
             </Button>
           </>
         }
@@ -226,10 +261,10 @@ export const WorkingHoursEditor = ({
           <EmptyState
             icon={<CalendarClock size={32} strokeWidth={1.6} />}
             title="Chưa có giờ làm việc"
-            text="Bệnh nhân chỉ đặt được lịch vào khung giờ làm việc. Thêm ít nhất một khung để mở lịch."
+            text="Bệnh nhân chỉ đặt được lịch vào ca làm việc. Thêm ít nhất một ca để mở lịch."
             action={
               <Button variant="primary" icon={<Plus size={15} />} onClick={() => openForm('new')}>
-                Thêm khung giờ
+                Thêm ca
               </Button>
             }
           />
@@ -239,10 +274,9 @@ export const WorkingHoursEditor = ({
               <thead>
                 <tr>
                   <th>Thứ</th>
-                  <th>Giờ</th>
+                  <th>Ca</th>
                   <th>Hình thức</th>
-                  <th className="st-num">Mỗi lượt</th>
-                  <th className="st-num">Số lượt</th>
+                  <th className="st-num">Thời lượng</th>
                   <th className="st-num">Tối đa BN</th>
                   <th>Trạng thái</th>
                   <th />
@@ -256,8 +290,7 @@ export const WorkingHoursEditor = ({
                       {formatTime(row.start_time)} – {formatTime(row.end_time)}
                     </td>
                     <td>{textOf(CONSULTATION_MODE_LABEL, row.consultation_mode)}</td>
-                    <td className="st-num">{row.slot_duration_minutes} phút</td>
-                    <td className="st-num">{row.slot_count}</td>
+                    <td className="st-num">{row.capacity_minutes} phút</td>
                     <td className="st-num">{row.max_patients}</td>
                     <td>{row.is_active ? <Badge tone="success">Đang mở</Badge> : <Badge>Đã tắt</Badge>}</td>
                     <td className="st-num st-nowrap">
@@ -278,8 +311,8 @@ export const WorkingHoursEditor = ({
 
       <Sheet
         open={editing !== null}
-        title={editing === 'new' ? 'Thêm khung giờ làm việc' : 'Sửa khung giờ làm việc'}
-        subtitle="Khung giờ lặp lại hằng tuần. Ngày nghỉ và ngày lễ tự bị trừ ra."
+        title={editing === 'new' ? 'Thêm ca làm việc' : 'Sửa ca làm việc'}
+        subtitle="Ca lặp lại hằng tuần. Ngày nghỉ và ngày lễ tự bị trừ ra. Ca đầy theo tổng phút các lượt khám đã đặt."
         onClose={() => setEditing(null)}
         footer={
           <>
@@ -316,18 +349,44 @@ export const WorkingHoursEditor = ({
               </select>
             )}
           </Field>
+          <div className="st-span-2">
+            <div className="st-hint" style={{ marginBottom: '0.4rem' }}>Ca chuẩn của phòng khám</div>
+            <div className="st-chip-row" role="radiogroup" aria-label="Ca chuẩn">
+              {STANDARD_SHIFTS.map((shift) => {
+                const active = form.start_time === shift.start_time && form.end_time === shift.end_time;
+                return (
+                  <button
+                    key={shift.label}
+                    type="button"
+                    role="radio"
+                    aria-checked={active}
+                    className={`st-slot ${active ? 'active' : ''}`}
+                    onClick={() => setForm({ ...form, start_time: shift.start_time, end_time: shift.end_time })}
+                  >
+                    {shift.label} · {shift.start_time}–{shift.end_time}
+                  </button>
+                );
+              })}
+            </div>
+            {editing === 'new' && (
+              <Button
+                size="sm"
+                variant="ghost"
+                loading={isPending('standard')}
+                onClick={createStandardShifts}
+                style={{ marginTop: '0.5rem' }}
+              >
+                Tạo cả 4 ca chuẩn cho {DAY_OF_WEEK_LABEL[Number(form.day_of_week)]?.toLowerCase() ?? 'thứ này'}
+              </Button>
+            )}
+          </div>
           <Field label="Từ giờ" required>
             {(id) => <input id={id} type="time" className="st-input" value={form.start_time} onChange={set('start_time')} />}
           </Field>
           <Field label="Đến giờ" required>
             {(id) => <input id={id} type="time" className="st-input" value={form.end_time} onChange={set('end_time')} />}
           </Field>
-          <Field label="Mỗi lượt (phút)" required hint={previewSlots ? `= ${previewSlots} lượt khám` : 'Khung giờ phải chia hết cho số phút này.'}>
-            {(id) => (
-              <input id={id} type="number" min={1} max={480} className="st-input" value={form.slot_duration_minutes} onChange={set('slot_duration_minutes')} />
-            )}
-          </Field>
-          <Field label="Tối đa bệnh nhân" required>
+          <Field label="Tối đa bệnh nhân" required hint={previewMinutes ? `Ca dài ${previewMinutes} phút` : undefined}>
             {(id) => <input id={id} type="number" min={1} max={500} className="st-input" value={form.max_patients} onChange={set('max_patients')} />}
           </Field>
           <label className="st-check st-span-2">
@@ -339,13 +398,13 @@ export const WorkingHoursEditor = ({
 
       <ConfirmDialog
         open={toggling !== null}
-        title={toggling?.is_active ? 'Tắt khung giờ này?' : 'Mở lại khung giờ này?'}
+        title={toggling?.is_active ? 'Tắt ca này?' : 'Mở lại ca này?'}
         text={
           toggling?.is_active
-            ? 'Không nhận đặt lịch mới vào khung giờ này. Lịch đã đặt vẫn giữ nguyên và sẽ được liệt kê để quầy dời.'
-            : 'Bệnh nhân có thể đặt lịch vào khung giờ này trở lại.'
+            ? 'Không nhận đặt lịch mới vào ca này. Lịch đã đặt vẫn giữ nguyên và sẽ được liệt kê để quầy dời.'
+            : 'Bệnh nhân có thể đặt lịch vào ca này trở lại.'
         }
-        confirmLabel={toggling?.is_active ? 'Tắt khung giờ' : 'Mở lại'}
+        confirmLabel={toggling?.is_active ? 'Tắt ca' : 'Mở lại'}
         tone={toggling?.is_active ? 'danger-solid' : 'primary'}
         loading={isPending('toggle')}
         onConfirm={toggle}

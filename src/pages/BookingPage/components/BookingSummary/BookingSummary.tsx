@@ -1,40 +1,43 @@
 import React from 'react';
-import { Calendar, Clock, User, BookOpen, Lock, BarChart2, ShieldCheck, Headphones } from 'lucide-react';
-import type { BookingDoctor } from '../../../../types/booking';
+import { Calendar, Clock, User, BookOpen, Lock, BarChart2, ShieldCheck, Headphones, Sparkles } from 'lucide-react';
+import type { BookingQuote } from '../../../../api/types';
+import type { BookingDoctor, SelectedService } from '../../../../types/booking';
+import { describePromotion, formatCurrency as formatVND } from '../../bookingFormat';
 import './BookingSummary.css';
 
 interface BookingSummaryProps {
   selectedDoctor: BookingDoctor | null;
   selectedDate?: string;
-  selectedTime?: string;
-  selectedService?: string;
-  servicePrice?: number;
-  discountAmount?: number;
+  /** Nhãn ca đã định dạng, vd "Ca sáng 1 (07:30–09:30)". */
+  selectedShift?: string;
+  selectedServices?: SelectedService[];
+  quote?: BookingQuote | null;
   currentStep?: number;
 }
-
-const formatVND = (num: number) =>
-  new Intl.NumberFormat('vi-VN').format(num) + 'đ';
 
 export const BookingSummary: React.FC<BookingSummaryProps> = ({
   selectedDoctor,
   selectedDate = '',
-  selectedTime = '',
-  selectedService = '',
-  servicePrice = 0,
-  discountAmount = 0,
+  selectedShift = '',
+  selectedServices = [],
+  quote = null,
   currentStep = 1,
 }) => {
-  const totalPrice = Math.max(0, servicePrice - discountAmount);
+  const localSubtotal = selectedServices.reduce((sum, service) => sum + service.price, 0);
+  const subtotal = quote?.subtotal_amount ?? localSubtotal;
+  const discountAmount = quote?.discount_amount ?? 0;
+  const totalPrice = quote?.total_amount ?? Math.max(0, subtotal - discountAmount);
+  const promotion = quote?.promotion ?? null;
 
   // Chưa chọn thì nói là chưa chọn. Trước đây các giá trị này rơi về một lịch hẹn mẫu
   // ('25/05/2026', '09:00', 300.000đ), nên thanh tóm tắt hiện ra một lựa chọn mà người
   // dùng chưa hề thực hiện.
   const displayDate = selectedDate || 'Chưa chọn';
-  const displayTime = selectedTime || 'Chưa chọn';
-  const displayService = selectedService || 'Chưa chọn';
-  const displayPrice = servicePrice > 0 ? formatVND(servicePrice) : '--';
-  const displayTotal = servicePrice > 0 ? formatVND(totalPrice) : '--';
+  const displayShift = selectedShift || 'Chưa chọn';
+  const displayPrice = subtotal > 0 ? formatVND(subtotal) : '--';
+  const displayTotal = subtotal > 0 ? formatVND(totalPrice) : '--';
+
+  const discountLabel = promotion ? `Voucher ${promotion.promotion_code}` : 'Voucher';
 
   if (currentStep === 5) {
     return (
@@ -44,13 +47,17 @@ export const BookingSummary: React.FC<BookingSummaryProps> = ({
           <h4 className="payment-heading">CHI TIẾT THANH TOÁN</h4>
 
           <div className="payment-rows">
+            {selectedServices.map((service) => (
+              <div className="payment-row" key={service.serviceId}>
+                <span>{service.name}</span>
+                <span className="payment-amount">{formatVND(service.price)}</span>
+              </div>
+            ))}
             <div className="payment-row">
-              <span>Giá dịch vụ</span>
-              <span className="payment-amount">{formatVND(servicePrice)}</span>
-            </div>
-            <div className="payment-row">
-              <span>Mã giảm giá</span>
-              <span className="payment-amount">{discountAmount > 0 ? `-${formatVND(discountAmount)}` : '0đ'}</span>
+              <span>{discountLabel}</span>
+              <span className="payment-amount discount-amount">
+                {discountAmount > 0 ? `-${formatVND(discountAmount)}` : '0đ'}
+              </span>
             </div>
             <div className="payment-row">
               <span>Phí giữ lịch đặt cọc</span>
@@ -130,12 +137,30 @@ export const BookingSummary: React.FC<BookingSummaryProps> = ({
 
         {/* Date, Time, Service rows */}
         <div className="summary-details-list">
+          <div className="summary-row summary-row-services">
+            <div className="summary-row-label">
+              <BookOpen size={15} className="summary-icon" />
+              <span>Dịch vụ</span>
+            </div>
+            <div className={`summary-row-value ${currentStep >= 2 ? 'value-bold' : ''}`}>
+              {selectedServices.length === 0 ? (
+                'Chưa chọn'
+              ) : (
+                <ul className="summary-service-list">
+                  {selectedServices.map((service) => (
+                    <li key={service.serviceId}>{service.name}</li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+
           <div className="summary-row">
             <div className="summary-row-label">
               <Calendar size={15} className="summary-icon" />
               <span>Ngày khám</span>
             </div>
-            <div className={`summary-row-value ${currentStep >= 2 ? 'value-bold' : ''}`}>
+            <div className={`summary-row-value ${currentStep >= 3 ? 'value-bold' : ''}`}>
               {displayDate}
             </div>
           </div>
@@ -143,22 +168,22 @@ export const BookingSummary: React.FC<BookingSummaryProps> = ({
           <div className="summary-row">
             <div className="summary-row-label">
               <Clock size={15} className="summary-icon" />
-              <span>Giờ khám</span>
+              <span>Ca khám</span>
             </div>
-            <div className={`summary-row-value ${currentStep >= 2 ? 'value-bold' : ''}`}>
-              {displayTime}
+            <div className={`summary-row-value ${currentStep >= 3 ? 'value-bold' : ''}`}>
+              {displayShift}
             </div>
           </div>
 
-          <div className="summary-row">
-            <div className="summary-row-label">
-              <BookOpen size={15} className="summary-icon" />
-              <span>Dịch vụ</span>
+          {quote && (
+            <div className="summary-row">
+              <div className="summary-row-label">
+                <Clock size={15} className="summary-icon" />
+                <span>Thời gian dự kiến</span>
+              </div>
+              <div className="summary-row-value">{quote.duration_minutes} phút</div>
             </div>
-            <div className={`summary-row-value ${currentStep >= 3 ? 'value-bold' : ''}`}>
-              {displayService}
-            </div>
-          </div>
+          )}
         </div>
 
         <div className="summary-divider" />
@@ -172,11 +197,16 @@ export const BookingSummary: React.FC<BookingSummaryProps> = ({
             <span className="payment-amount">{displayPrice}</span>
           </div>
           <div className="payment-row">
-            <span>Mã giảm giá</span>
+            <span>{discountLabel}</span>
             <span className="discount-tag">
-              {discountAmount > 0 ? `-${formatVND(discountAmount)}` : 'Chưa áp dụng'}
+              {discountAmount > 0 ? `-${formatVND(discountAmount)}` : 'Chưa đủ điều kiện'}
             </span>
           </div>
+          {promotion && (
+            <p className="summary-voucher-note">
+              <Sparkles size={12} /> {describePromotion(promotion)} — tự động áp dụng
+            </p>
+          )}
         </div>
 
         <div className="summary-divider" />
@@ -195,7 +225,7 @@ export const BookingSummary: React.FC<BookingSummaryProps> = ({
           {currentStep >= 2 ? (
             <div className="alert-content-with-icon">
               <Lock size={15} className="alert-lock-icon" />
-              <p>Thông tin thanh toán sẽ được cập nhật ở bước chọn dịch vụ.</p>
+              <p>Voucher giảm nhiều nhất được tự động áp dụng theo tổng tiền dịch vụ, mỗi lịch một voucher.</p>
             </div>
           ) : (
             <p>Lịch đặt của bạn sẽ được xác nhận lịch hẹn sau khi hoàn thành tất cả các bước.</p>

@@ -1136,6 +1136,15 @@
   border-color: var(--primary);
 }
 
+.st-slot:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.st-slot:disabled:hover {
+  border-color: var(--st-line-strong);
+}
+
 .st-slot.active {
   background: var(--primary);
   border-color: var(--primary);

@@ -1,0 +1,1 @@
+export { VoucherStrip } from './VoucherStrip';

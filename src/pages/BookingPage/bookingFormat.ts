@@ -59,3 +59,40 @@ export function monthGrid(year: number, month: number): (number | null)[] {
     ...Array.from({ length: daysInMonth }, (_, index) => index + 1),
   ];
 }
+
+/** 'HH:mm:ss' của đầu và cuối ca → '07:30–09:30'. */
+export function formatShiftRange(startTime: string, endTime: string): string {
+  return `${formatTimeLabel(startTime)}–${formatTimeLabel(endTime)}`;
+}
+
+/** 100000 → '100K', 1500000 → '1,5TR': gọn cho thẻ voucher. */
+export function formatCompactCurrency(amount: number): string {
+  if (amount >= 1_000_000) {
+    return `${(amount / 1_000_000).toLocaleString('vi-VN', { maximumFractionDigits: 1 })}TR`;
+  }
+
+  if (amount >= 1_000) {
+    return `${(amount / 1_000).toLocaleString('vi-VN', { maximumFractionDigits: 0 })}K`;
+  }
+
+  return formatCurrency(amount);
+}
+
+interface PromotionTerms {
+  discount_type: string;
+  discount_value: number;
+  max_discount_amount: number | null;
+}
+
+/** "Giảm 10% tối đa 100K" hoặc "Giảm 50K" — cùng một câu ở thẻ voucher, tóm tắt và bước xác nhận. */
+export function describePromotion(promotion: PromotionTerms): string {
+  if (promotion.discount_type === 'percent') {
+    const cap = promotion.max_discount_amount
+      ? ` tối đa ${formatCompactCurrency(promotion.max_discount_amount)}`
+      : '';
+
+    return `Giảm ${promotion.discount_value.toLocaleString('vi-VN')}%${cap}`;
+  }
+
+  return `Giảm ${formatCompactCurrency(promotion.discount_value)}`;
+}

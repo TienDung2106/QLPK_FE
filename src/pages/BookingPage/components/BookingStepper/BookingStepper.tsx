@@ -10,8 +10,8 @@ interface BookingStepperProps {
 
 const STEPS = [
   { number: 1, label: 'Chọn bác sĩ' },
-  { number: 2, label: 'Ngày & giờ' },
-  { number: 3, label: 'Dịch vụ' },
+  { number: 2, label: 'Dịch vụ' },
+  { number: 3, label: 'Ngày & ca' },
   { number: 4, label: 'Thông tin' },
   { number: 5, label: 'Xác nhận & thanh toán' },
 ];

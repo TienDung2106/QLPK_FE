@@ -11,22 +11,25 @@ import {
   Loader2,
   User,
   Check,
+  Clock,
+  Users,
 } from 'lucide-react';
-import type { BookingDoctor } from '../../../../types/booking';
+import type { BookingDoctor, SelectedShift } from '../../../../types/booking';
 import { apiGetDoctorCalendar, apiGetDoctorSlots } from '../../../../api/functions/doctors';
 import type { DoctorCalendarDay } from '../../../../api/staffTypes';
-import type { AvailableSlot } from '../../../../api/types';
-import { formatDateLabel, formatTimeLabel, monthGrid, todayIso, toIsoDate } from '../../bookingFormat';
-import './Step2DateTime.css';
+import type { AvailableSlot, ShiftUnavailableReason } from '../../../../api/types';
+import { formatDateLabel, formatShiftRange, monthGrid, todayIso, toIsoDate } from '../../bookingFormat';
+import './Step3DateTime.css';
 
-interface Step2DateTimeProps {
+interface Step3DateTimeProps {
   selectedDoctor: BookingDoctor | null;
   /** 'yyyy-MM-dd'. */
   selectedDate: string;
-  /** 'HH:mm:ss'. */
-  selectedTime: string;
+  selectedShift: SelectedShift | null;
+  /** Số phút lượt khám cần, lấy từ báo giá ở bước dịch vụ. */
+  durationMinutes: number;
   onSelectDate: (date: string) => void;
-  onSelectTime: (time: string) => void;
+  onSelectShift: (shift: SelectedShift) => void;
   onPrevStep: () => void;
   onNextStep: () => void;
   onChangeDoctor?: () => void;
@@ -40,7 +43,14 @@ const MONTH_LABELS = [
   'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12',
 ];
 
-/** Slot chia theo buổi để đọc cho nhanh; mốc giờ khớp với cách phòng khám nói về ca. */
+const UNAVAILABLE_LABEL: Record<ShiftUnavailableReason, string> = {
+  full: 'Đã đầy',
+  not_enough_time: 'Không đủ thời gian',
+  past: 'Đã qua giờ nhận',
+  time_off: 'Bác sĩ nghỉ',
+};
+
+/** Ca chia theo buổi để đọc cho nhanh; mốc giờ khớp với cách phòng khám nói về ca. */
 function partOfDay(startTime: string): 'morning' | 'afternoon' | 'evening' {
   const hour = Number(startTime.slice(0, 2));
 
@@ -51,12 +61,13 @@ function partOfDay(startTime: string): 'morning' | 'afternoon' | 'evening' {
   return hour < 17 ? 'afternoon' : 'evening';
 }
 
-export const Step2DateTime: React.FC<Step2DateTimeProps> = ({
+export const Step3DateTime: React.FC<Step3DateTimeProps> = ({
   selectedDoctor,
   selectedDate,
-  selectedTime,
+  selectedShift,
+  durationMinutes,
   onSelectDate,
-  onSelectTime,
+  onSelectShift,
   onPrevStep,
   onNextStep,
   onChangeDoctor,
@@ -82,7 +93,7 @@ export const Step2DateTime: React.FC<Step2DateTimeProps> = ({
     }
     let cancelled = false;
     const month = `${viewYear}-${String(viewMonth).padStart(2, '0')}-01`;
-    apiGetDoctorCalendar(selectedDoctor.doctorId, month).then((result) => {
+    apiGetDoctorCalendar(selectedDoctor.doctorId, month, durationMinutes).then((result) => {
       if (!cancelled) {
         setMonthDays(Object.fromEntries((result.data?.days ?? []).map((day) => [day.date, day])));
       }
@@ -90,7 +101,7 @@ export const Step2DateTime: React.FC<Step2DateTimeProps> = ({
     return () => {
       cancelled = true;
     };
-  }, [selectedDoctor, viewYear, viewMonth]);
+  }, [selectedDoctor, viewYear, viewMonth, durationMinutes]);
 
   useEffect(() => {
     if (!selectedDoctor || !selectedDate) {
@@ -103,7 +114,7 @@ export const Step2DateTime: React.FC<Step2DateTimeProps> = ({
       setLoading(true);
       setError(null);
 
-      const result = await apiGetDoctorSlots(selectedDoctor.doctorId, selectedDate);
+      const result = await apiGetDoctorSlots(selectedDoctor.doctorId, selectedDate, durationMinutes);
 
       if (cancelled) {
         return;
@@ -124,7 +135,7 @@ export const Step2DateTime: React.FC<Step2DateTimeProps> = ({
     return () => {
       cancelled = true;
     };
-  }, [selectedDoctor, selectedDate]);
+  }, [selectedDoctor, selectedDate, durationMinutes]);
 
   const grouped = useMemo(() => {
     const buckets: Record<'morning' | 'afternoon' | 'evening', AvailableSlot[]> = {
@@ -153,7 +164,7 @@ export const Step2DateTime: React.FC<Step2DateTimeProps> = ({
   if (!doctor) {
     return (
       <div className="step2-container">
-        <h2 className="step2-main-heading">BƯỚC 2: CHỌN NGÀY &amp; GIỜ KHÁM</h2>
+        <h2 className="step2-main-heading">BƯỚC 3: CHỌN NGÀY &amp; CA KHÁM</h2>
         <div className="account-alert error" role="alert">
           <AlertCircle size={16} />
           <span>Vui lòng quay lại bước 1 và chọn bác sĩ trước.</span>
@@ -168,7 +179,7 @@ export const Step2DateTime: React.FC<Step2DateTimeProps> = ({
     );
   }
 
-  const renderSlotGroup = (
+  const renderShiftGroup = (
     key: 'morning' | 'afternoon' | 'evening',
     label: string,
     icon: React.ReactNode,
@@ -186,19 +197,54 @@ export const Step2DateTime: React.FC<Step2DateTimeProps> = ({
           {icon}
           <span>{label}</span>
         </div>
-        <div className="time-slots-row">
+        <div className="shift-cards-row">
           {group.map((slot) => {
-            const isSelected = selectedTime === slot.start_time;
+            const isSelected = selectedShift?.startTime === slot.start_time;
+            const usedPercent = Math.min(100, (slot.used_minutes / Math.max(1, slot.capacity_minutes)) * 100);
+            const needPercent = slot.is_available
+              ? Math.min(100 - usedPercent, (slot.required_minutes / Math.max(1, slot.capacity_minutes)) * 100)
+              : 0;
 
             return (
               <button
                 key={slot.start_time}
                 type="button"
-                className={`time-slot-btn ${isSelected ? 'is-selected' : ''}`}
-                onClick={() => onSelectTime(slot.start_time)}
+                className={`shift-card ${isSelected ? 'is-selected' : ''} ${slot.is_available ? '' : 'is-disabled'}`}
+                onClick={() =>
+                  onSelectShift({ name: slot.shift_name, startTime: slot.start_time, endTime: slot.end_time })
+                }
+                disabled={!slot.is_available}
+                aria-pressed={isSelected}
               >
-                <span>{formatTimeLabel(slot.start_time)}</span>
-                {isSelected && <Check size={12} strokeWidth={3} className="slot-check" />}
+                <span className="shift-card-top">
+                  <span className="shift-name">{slot.shift_name}</span>
+                  {isSelected && <Check size={14} strokeWidth={3} className="slot-check" />}
+                </span>
+                <span className="shift-range">{formatShiftRange(slot.start_time, slot.end_time)}</span>
+
+                <span className="shift-meter" aria-hidden="true">
+                  <span className="shift-meter-used" style={{ width: `${usedPercent}%` }} />
+                  <span className="shift-meter-need" style={{ width: `${needPercent}%` }} />
+                </span>
+
+                <span className="shift-meta">
+                  {slot.is_available ? (
+                    <>
+                      <span>
+                        <Clock size={12} /> Còn {slot.remaining_minutes} phút
+                      </span>
+                      <span>
+                        <Users size={12} /> {slot.booked_count} đã đặt
+                      </span>
+                    </>
+                  ) : (
+                    <span className="shift-unavailable">
+                      {slot.unavailable_reason ? UNAVAILABLE_LABEL[slot.unavailable_reason] : 'Không nhận thêm'}
+                      {slot.unavailable_reason === 'not_enough_time' &&
+                        ` (còn ${slot.remaining_minutes}/${slot.required_minutes} phút)`}
+                    </span>
+                  )}
+                </span>
               </button>
             );
           })}
@@ -209,7 +255,7 @@ export const Step2DateTime: React.FC<Step2DateTimeProps> = ({
 
   return (
     <div className="step2-container">
-      <h2 className="step2-main-heading">BƯỚC 2: CHỌN NGÀY &amp; GIỜ KHÁM</h2>
+      <h2 className="step2-main-heading">BƯỚC 3: CHỌN NGÀY &amp; CA KHÁM</h2>
 
       {/* ── Top Doctor Card ── */}
       <div className="step2-doctor-card">
@@ -302,7 +348,7 @@ export const Step2DateTime: React.FC<Step2DateTimeProps> = ({
                   disabled={isPast || unbookable}
                   title={
                     known?.status === 'available'
-                      ? `Còn ${known.available_slots} khung giờ`
+                      ? `Còn ${known.available_slots} ca nhận được lượt khám này`
                       : known?.status === 'full'
                         ? 'Đã kín lịch'
                         : known?.status === 'holiday'
@@ -334,9 +380,13 @@ export const Step2DateTime: React.FC<Step2DateTimeProps> = ({
           </div>
         </div>
 
-        {/* Right: Time Slots Card */}
+        {/* Right: Shifts Card */}
         <div className="step2-times-card">
-          <h4 className="times-card-title">Chọn giờ khám cho ngày {formatDateLabel(selectedDate)}</h4>
+          <h4 className="times-card-title">Chọn ca khám cho ngày {formatDateLabel(selectedDate)}</h4>
+          <p className="times-card-hint">
+            Lượt khám của bạn cần khoảng <strong>{durationMinutes} phút</strong>. Bạn đến trong khung giờ của
+            ca và được khám theo số thứ tự nhận khi check-in.
+          </p>
 
           {error && (
             <div className="account-alert error" role="alert">
@@ -348,19 +398,19 @@ export const Step2DateTime: React.FC<Step2DateTimeProps> = ({
           {loading ? (
             <div className="full-page-loader">
               <Loader2 className="full-page-loader-icon" size={28} />
-              <span>Đang tải khung giờ trống...</span>
+              <span>Đang tải ca khám...</span>
             </div>
           ) : isHoliday ? (
             <div className="no-doctors-msg">Phòng khám nghỉ vào ngày này. Vui lòng chọn ngày khác.</div>
           ) : slots.length === 0 ? (
             <div className="no-doctors-msg">
-              Bác sĩ không còn khung giờ trống trong ngày này. Vui lòng chọn ngày khác hoặc đổi bác sĩ.
+              Bác sĩ không làm việc trong ngày này. Vui lòng chọn ngày khác hoặc đổi bác sĩ.
             </div>
           ) : (
             <>
-              {renderSlotGroup('morning', 'BUỔI SÁNG', <Sun size={14} className="time-icon-morning" />, 'label-morning')}
-              {renderSlotGroup('afternoon', 'BUỔI CHIỀU', <Cloud size={14} className="time-icon-afternoon" />, 'label-afternoon')}
-              {renderSlotGroup('evening', 'BUỔI TỐI', <Moon size={14} className="time-icon-evening" />, 'label-evening')}
+              {renderShiftGroup('morning', 'BUỔI SÁNG', <Sun size={14} className="time-icon-morning" />, 'label-morning')}
+              {renderShiftGroup('afternoon', 'BUỔI CHIỀU', <Cloud size={14} className="time-icon-afternoon" />, 'label-afternoon')}
+              {renderShiftGroup('evening', 'BUỔI TỐI', <Moon size={14} className="time-icon-evening" />, 'label-evening')}
             </>
           )}
         </div>
@@ -376,7 +426,7 @@ export const Step2DateTime: React.FC<Step2DateTimeProps> = ({
           type="button"
           className="btn-next-step"
           onClick={onNextStep}
-          disabled={!selectedTime}
+          disabled={!selectedShift}
         >
           <span>Tiếp tục</span>
           <ArrowRight size={15} />

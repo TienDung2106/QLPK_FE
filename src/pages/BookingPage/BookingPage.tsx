@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CheckCircle2, Clock3 } from 'lucide-react';
 import { TopBar } from '../../components/Header/TopBar';
@@ -7,15 +7,16 @@ import { BookingStepper } from './components/BookingStepper';
 import { BookingSummary } from './components/BookingSummary';
 import { BookingTrustBadges } from './components/BookingTrustBadges';
 import { Step1Doctor } from './steps/Step1Doctor';
-import { Step2DateTime } from './steps/Step2DateTime';
-import { Step3Service } from './steps/Step3Service';
+import { Step2Service } from './steps/Step2Service';
+import { Step3DateTime } from './steps/Step3DateTime';
 import { Step4PatientInfo } from './steps/Step4PatientInfo';
 import { Step5Confirm } from './steps/Step5Confirm';
 import { apiBookAppointment } from '../../api/functions/appointments';
-import type { Appointment, ClinicService } from '../../api/types';
+import { apiGetBookingQuote } from '../../api/functions/services';
+import type { Appointment, BookingQuote, ClinicService } from '../../api/types';
 import { APPOINTMENT_STATUS } from '../../api/types';
 import type { BookingDoctor, BookingState, PatientInfo } from '../../types/booking';
-import { formatDateLabel, formatTimeLabel, todayIso } from './bookingFormat';
+import { formatCurrency, formatDateLabel, formatShiftRange, formatTimeLabel, todayIso } from './bookingFormat';
 import './BookingPage.css';
 
 interface BookingPageProps {
@@ -44,14 +45,55 @@ export const BookingPage: React.FC<BookingPageProps> = ({ onBackToHome }) => {
     selectedDoctor: null,
     selectedPatientId: null,
     selectedDate: todayIso(),
-    selectedTime: '',
-    selectedService: '',
-    selectedServiceId: null,
-    servicePrice: 0,
-    discountCode: '',
+    selectedShift: null,
+    selectedServices: [],
     reasonForVisit: '',
     patientInfo: EMPTY_PATIENT,
   });
+
+  const serviceKey = state.selectedServices.map((service) => service.serviceId).join(',');
+  const patientId = state.selectedPatientId;
+  const quoteKey = `${serviceKey}|${patientId ?? ''}`;
+
+  // Kết quả báo giá gắn với đúng giỏ dịch vụ đã hỏi; giỏ đổi mà chưa có kết quả mới là đang tải.
+  const [quoteResult, setQuoteResult] = useState<{
+    key: string;
+    quote: BookingQuote | null;
+    error: string | null;
+  } | null>(null);
+
+  // Báo giá lại mỗi khi giỏ dịch vụ hoặc hồ sơ bệnh nhân đổi. Chờ một nhịp ngắn để tick liên tiếp
+  // nhiều dịch vụ chỉ tốn một lần gọi; hồ sơ bệnh nhân giúp bỏ qua voucher người đó đã dùng hết lượt.
+  useEffect(() => {
+    if (!serviceKey) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const timer = window.setTimeout(async () => {
+      const lines = serviceKey.split(',').map((id) => ({ service_id: Number(id), quantity: 1 }));
+      const result = await apiGetBookingQuote(lines, patientId);
+
+      if (!cancelled) {
+        setQuoteResult({
+          key: quoteKey,
+          quote: result.ok ? result.data : null,
+          error: result.ok ? null : result.error,
+        });
+      }
+    }, 300);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [serviceKey, patientId, quoteKey]);
+
+  const quoteLoading = Boolean(serviceKey) && quoteResult?.key !== quoteKey;
+  // Giữ báo giá cũ trong lúc tải để số tiền không nhấp nháy; nút Tiếp tục vẫn khoá tới khi có số mới.
+  const quote = serviceKey ? (quoteResult?.quote ?? null) : null;
+  const quoteError = serviceKey && !quoteLoading ? (quoteResult?.error ?? null) : null;
 
   const goToStep = (step: number) => {
     setState((prev) => ({ ...prev, currentStep: step }));
@@ -62,20 +104,33 @@ export const BookingPage: React.FC<BookingPageProps> = ({ onBackToHome }) => {
     setState((prev) => ({
       ...prev,
 
-      // Đổi bác sĩ thì giờ đã chọn không còn ý nghĩa: slot thuộc về lịch làm việc của
-      // đúng một người, và người mới gần như chắc chắn không rảnh đúng khung giờ đó.
-      selectedTime: prev.selectedDoctor?.doctorId === doctor.doctorId ? prev.selectedTime : '',
+      // Đổi bác sĩ thì ca đã chọn không còn ý nghĩa: ca thuộc về lịch làm việc của đúng một người.
+      selectedShift: prev.selectedDoctor?.doctorId === doctor.doctorId ? prev.selectedShift : null,
       selectedDoctor: doctor,
     }));
   };
 
-  const handleSelectService = (service: ClinicService) => {
-    setState((prev) => ({
-      ...prev,
-      selectedService: service.service_name,
-      selectedServiceId: service.service_id,
-      servicePrice: service.price,
-    }));
+  const handleToggleService = (service: ClinicService) => {
+    setState((prev) => {
+      const alreadySelected = prev.selectedServices.some((line) => line.serviceId === service.service_id);
+
+      return {
+        ...prev,
+        selectedServices: alreadySelected
+          ? prev.selectedServices.filter((line) => line.serviceId !== service.service_id)
+          : [
+              ...prev.selectedServices,
+              {
+                serviceId: service.service_id,
+                name: service.service_name,
+                price: service.price,
+                durationMinutes: service.duration_minutes,
+              },
+            ],
+        // Tổng thời gian đổi thì ca đã chọn có thể không còn đủ chỗ, nên chọn lại ca.
+        selectedShift: null,
+      };
+    });
   };
 
   const handleSelectPatient = (patientId: number, info: PatientInfo) => {
@@ -87,7 +142,12 @@ export const BookingPage: React.FC<BookingPageProps> = ({ onBackToHome }) => {
   };
 
   const handleConfirmBooking = async (captchaToken: string) => {
-    if (state.selectedPatientId === null || !state.selectedDoctor || state.selectedServiceId === null) {
+    if (
+      state.selectedPatientId === null ||
+      !state.selectedDoctor ||
+      !state.selectedShift ||
+      state.selectedServices.length === 0
+    ) {
       setSubmitError('Thiếu thông tin đặt lịch. Vui lòng kiểm tra lại các bước trước.');
       return;
     }
@@ -100,11 +160,11 @@ export const BookingPage: React.FC<BookingPageProps> = ({ onBackToHome }) => {
         patient_id: state.selectedPatientId,
         doctor_id: state.selectedDoctor.doctorId,
         appointment_date: state.selectedDate,
-        appointment_time: state.selectedTime,
+        appointment_time: state.selectedShift.startTime,
         reason_for_visit: state.reasonForVisit || undefined,
-        primary_service_id: state.selectedServiceId,
-        services: [{ service_id: state.selectedServiceId, quantity: 1 }],
-        promotion_code: state.discountCode || undefined,
+        primary_service_id: state.selectedServices[0].serviceId,
+        // Không gửi mã giảm giá: server tự áp voucher tốt nhất cho giỏ dịch vụ này.
+        services: state.selectedServices.map((service) => ({ service_id: service.serviceId, quantity: 1 })),
       },
       captchaToken,
     );
@@ -112,13 +172,12 @@ export const BookingPage: React.FC<BookingPageProps> = ({ onBackToHome }) => {
     setSubmitting(false);
 
     if (!result.ok || !result.data) {
-      // 409 nghĩa là khung giờ vừa bị người khác lấy mất giữa lúc xem và lúc bấm xác nhận;
-      // đưa họ về bước chọn giờ chứ không để họ bấm lại vào một slot đã mất.
+      // 409 nghĩa là ca vừa hết chỗ giữa lúc xem và lúc bấm xác nhận; đưa họ về bước chọn ca
+      // chứ không để họ bấm lại vào một ca đã đầy.
       if (result.status === 409) {
-        setSubmitError(
-          `${result.error} Vui lòng chọn một khung giờ khác.`,
-        );
-        goToStep(2);
+        setSubmitError(`${result.error} Vui lòng chọn một ca khác.`);
+        setState((prev) => ({ ...prev, selectedShift: null }));
+        goToStep(3);
         return;
       }
 
@@ -159,28 +218,31 @@ export const BookingPage: React.FC<BookingPageProps> = ({ onBackToHome }) => {
             )}
 
             {state.currentStep === 2 && (
-              <Step2DateTime
-                selectedDoctor={state.selectedDoctor}
-                selectedDate={state.selectedDate}
-                selectedTime={state.selectedTime}
-                onSelectDate={(date) =>
-                  setState((prev) => ({ ...prev, selectedDate: date, selectedTime: '' }))
-                }
-                onSelectTime={(time) => setState((prev) => ({ ...prev, selectedTime: time }))}
+              <Step2Service
+                selectedServices={state.selectedServices}
+                quote={quote}
+                quoteLoading={quoteLoading}
+                quoteError={quoteError}
+                patientId={state.selectedPatientId}
+                onToggleService={handleToggleService}
                 onPrevStep={() => goToStep(1)}
                 onNextStep={() => goToStep(3)}
-                onChangeDoctor={() => goToStep(1)}
               />
             )}
 
             {state.currentStep === 3 && (
-              <Step3Service
-                selectedServiceId={state.selectedServiceId}
-                discountCode={state.discountCode}
-                onSelectService={handleSelectService}
-                onApplyDiscount={(code) => setState((prev) => ({ ...prev, discountCode: code }))}
+              <Step3DateTime
+                selectedDoctor={state.selectedDoctor}
+                selectedDate={state.selectedDate}
+                selectedShift={state.selectedShift}
+                durationMinutes={quote?.duration_minutes ?? 0}
+                onSelectDate={(date) =>
+                  setState((prev) => ({ ...prev, selectedDate: date, selectedShift: null }))
+                }
+                onSelectShift={(shift) => setState((prev) => ({ ...prev, selectedShift: shift }))}
                 onPrevStep={() => goToStep(2)}
                 onNextStep={() => goToStep(4)}
+                onChangeDoctor={() => goToStep(1)}
               />
             )}
 
@@ -201,17 +263,15 @@ export const BookingPage: React.FC<BookingPageProps> = ({ onBackToHome }) => {
               <Step5Confirm
                 selectedDoctor={state.selectedDoctor}
                 selectedDate={state.selectedDate}
-                selectedTime={state.selectedTime}
-                selectedService={state.selectedService}
-                servicePrice={state.servicePrice}
-                discountCode={state.discountCode}
+                selectedShift={state.selectedShift}
+                selectedServices={state.selectedServices}
+                quote={quote}
                 patientInfo={state.patientInfo}
                 reasonForVisit={state.reasonForVisit}
                 submitting={submitting}
                 error={submitError}
                 onPrevStep={() => goToStep(4)}
                 onConfirmBooking={handleConfirmBooking}
-                onApplyDiscount={(code) => setState((prev) => ({ ...prev, discountCode: code }))}
                 onCaptchaError={setSubmitError}
               />
             )}
@@ -221,10 +281,13 @@ export const BookingPage: React.FC<BookingPageProps> = ({ onBackToHome }) => {
           <BookingSummary
             selectedDoctor={state.selectedDoctor}
             selectedDate={formatDateLabel(state.selectedDate)}
-            selectedTime={formatTimeLabel(state.selectedTime)}
-            selectedService={state.selectedService}
-            servicePrice={state.servicePrice}
-            discountAmount={0}
+            selectedShift={
+              state.selectedShift
+                ? `${state.selectedShift.name} (${formatShiftRange(state.selectedShift.startTime, state.selectedShift.endTime)})`
+                : ''
+            }
+            selectedServices={state.selectedServices}
+            quote={quote}
             currentStep={state.currentStep}
           />
         </div>
@@ -255,7 +318,7 @@ export const BookingPage: React.FC<BookingPageProps> = ({ onBackToHome }) => {
             <p className="modal-desc">
               {awaitingApproval ? (
                 <>
-                  Mã giảm giá bạn nhập vượt mức phòng khám duyệt tự động, nên lịch hẹn đang chờ
+                  Mức ưu đãi của lịch hẹn vượt mức phòng khám duyệt tự động, nên lịch hẹn đang chờ
                   nhân viên xác nhận. Bạn sẽ được liên hệ trong thời gian sớm nhất.
                 </>
               ) : (
@@ -272,14 +335,21 @@ export const BookingPage: React.FC<BookingPageProps> = ({ onBackToHome }) => {
                 <strong>Bác sĩ:</strong> {booked.doctor_full_name}
               </div>
               <div>
-                <strong>Thời gian:</strong> {formatTimeLabel(booked.appointment_time)} -{' '}
-                {formatDateLabel(booked.appointment_date)}
+                <strong>Ca khám:</strong>{' '}
+                {state.selectedShift
+                  ? formatShiftRange(state.selectedShift.startTime, state.selectedShift.endTime)
+                  : formatTimeLabel(booked.appointment_time)}{' '}
+                - {formatDateLabel(booked.appointment_date)}
+              </div>
+              <div>
+                <strong>Dịch vụ:</strong> {booked.services.map((line) => line.service_name).join(', ')}
               </div>
               <div>
                 <strong>Khách hàng:</strong> {booked.patient_full_name}
               </div>
               <div>
-                <strong>Tổng tiền:</strong> {booked.total_amount.toLocaleString('vi-VN')}đ
+                <strong>Tổng tiền:</strong> {formatCurrency(booked.total_amount)}
+                {booked.discount_percent > 0 && ` (đã giảm ${booked.discount_percent.toLocaleString('vi-VN')}%)`}
               </div>
             </div>
 

@@ -47,7 +47,7 @@ export const AppointmentDetail = ({ appointmentId, onChanged }: Props) => {
       return;
     }
     let cancelled = false;
-    apiGetDoctorSlots(appointment.doctor_id, date).then((result) => {
+    apiGetDoctorSlots(appointment.doctor_id, date, appointment.duration_minutes).then((result) => {
       if (!cancelled) {
         setSlots(result.ok && result.data && !result.data.is_clinic_holiday ? result.data.slots : []);
         if (!result.ok) {
@@ -154,17 +154,19 @@ export const AppointmentDetail = ({ appointmentId, onChanged }: Props) => {
               {slots === null ? (
                 <Loader2 className="spin" size={16} />
               ) : slots.length === 0 ? (
-                <p className="reschedule-hint">Không còn giờ trống ngày này. Chọn ngày khác.</p>
+                <p className="reschedule-hint">Bác sĩ không làm việc ngày này. Chọn ngày khác.</p>
               ) : (
                 <div className="reschedule-slots">
                   {slots.map((slot) => (
                     <button
                       key={slot.start_time}
                       type="button"
-                      className={`time-slot-btn ${time === slot.start_time ? 'is-selected' : ''}`}
+                      className={`time-slot-btn ${time === slot.start_time ? 'is-selected' : ''} ${slot.is_available ? '' : 'is-disabled'}`}
+                      disabled={!slot.is_available}
+                      title={slot.is_available ? `Còn ${slot.remaining_minutes} phút` : 'Ca không còn đủ thời gian'}
                       onClick={() => setTime(slot.start_time)}
                     >
-                      {formatTime(slot.start_time)}
+                      {formatTime(slot.start_time)}–{formatTime(slot.end_time)}
                     </button>
                   ))}
                 </div>

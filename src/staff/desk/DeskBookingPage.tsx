@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CalendarPlus, Footprints, Minus, Plus } from 'lucide-react';
-import { apiGetServices } from '../../api/functions/services';
+import { apiGetBookingQuote, apiGetServices } from '../../api/functions/services';
+import type { BookingQuote } from '../../api/types';
 import { apiBookOnBehalf, apiBookWalkIn } from '../../api/functions/desk';
 import type { DeskPatient } from '../../api/staffTypes';
 import { useAction, useApiQuery } from '../hooks';
@@ -42,6 +43,31 @@ const DeskBookingPage = () => {
   const subtotal = chosen.reduce((sum, service) => sum + service.price * quantities[service.service_id], 0);
   const effectiveDate = mode === 'walk-in' ? todayIso() : date;
 
+  // Báo giá để quầy thấy trước thời lượng (ca nào còn chứa được) và voucher sẽ tự áp khi không nhập mã.
+  const [quote, setQuote] = useState<BookingQuote | null>(null);
+  const quoteKey = chosen.map((service) => `${service.service_id}x${quantities[service.service_id]}`).join(',');
+  const patientId = patient?.patient_id ?? null;
+
+  useEffect(() => {
+    let cancelled = false;
+    const lines = quoteKey
+      ? quoteKey.split(',').map((part) => {
+          const [id, quantity] = part.split('x').map(Number);
+          return { service_id: id, quantity };
+        })
+      : [];
+
+    apiGetBookingQuote(lines, patientId).then((result) => {
+      if (!cancelled) {
+        setQuote(result.ok ? result.data : null);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [quoteKey, patientId]);
+
   const setQuantity = (serviceId: number, quantity: number) => {
     setQuantities((current) => ({ ...current, [serviceId]: Math.max(0, quantity) }));
     if (quantity <= 0 && primaryServiceId === serviceId) {
@@ -59,7 +85,7 @@ const DeskBookingPage = () => {
       return;
     }
     if (mode === 'booking' && !time) {
-      setError('Chọn khung giờ trống.');
+      setError('Chọn ca khám.');
       return;
     }
     setError(null);
@@ -170,9 +196,16 @@ const DeskBookingPage = () => {
               )}
               <div className="st-span-2">
                 <div className="st-label" style={{ marginBottom: 6 }}>
-                  Khung giờ {mode === 'walk-in' ? '(bỏ trống để lấy giờ sớm nhất)' : ''}
+                  Ca khám {mode === 'walk-in' ? '(bỏ trống để lấy ca sớm nhất còn đủ thời gian)' : ''}
+                  {quote && <span className="st-cell-sub"> · lượt khám cần {quote.duration_minutes} phút</span>}
                 </div>
-                <SlotPicker doctorId={doctorId} date={effectiveDate} value={time} onChange={setTime} />
+                <SlotPicker
+                  doctorId={doctorId}
+                  date={effectiveDate}
+                  value={time}
+                  onChange={setTime}
+                  durationMinutes={quote?.duration_minutes}
+                />
               </div>
             </div>
           </Panel>
@@ -270,7 +303,15 @@ const DeskBookingPage = () => {
               <Field label="Lý do khám" className="st-span-2">
                 {(id) => <textarea id={id} className="st-textarea" maxLength={1000} value={reason} onChange={(event) => setReason(event.target.value)} />}
               </Field>
-              <Field label="Mã khuyến mãi" className="st-span-2">
+              <Field
+                label="Mã khuyến mãi"
+                className="st-span-2"
+                hint={
+                  quote?.promotion
+                    ? `Bỏ trống để tự áp ${quote.promotion.promotion_code} (giảm ${formatMoney(quote.discount_amount)}).`
+                    : 'Bỏ trống để tự áp voucher tốt nhất theo tổng tiền.'
+                }
+              >
                 {(id) => (
                   <input id={id} className="st-input st-mono" maxLength={50} value={promotionCode} onChange={(event) => setPromotionCode(event.target.value.toUpperCase())} />
                 )}
@@ -282,11 +323,29 @@ const DeskBookingPage = () => {
             <dl className="st-totals">
               <dt>Dịch vụ đã chọn</dt>
               <dd>{chosen.length}</dd>
-              <dt className="st-total-row">Tạm tính dịch vụ</dt>
-              <dd className="st-total-row">{formatMoney(subtotal)}</dd>
+              <dt>Tạm tính dịch vụ</dt>
+              <dd>{formatMoney(quote?.subtotal_amount ?? subtotal)}</dd>
+              {quote && (
+                <>
+                  <dt>Thời lượng</dt>
+                  <dd>{quote.duration_minutes} phút</dd>
+                </>
+              )}
+              {!promotionCode.trim() && quote?.promotion && (
+                <>
+                  <dt>Voucher tự áp ({quote.promotion.promotion_code})</dt>
+                  <dd>-{formatMoney(quote.discount_amount)}</dd>
+                </>
+              )}
+              <dt className="st-total-row">Tổng dự kiến</dt>
+              <dd className="st-total-row">
+                {formatMoney(promotionCode.trim() ? subtotal : quote?.total_amount ?? subtotal)}
+              </dd>
             </dl>
             <p className="st-hint" style={{ marginTop: '0.5rem' }}>
-              Phí khám của bác sĩ và giảm giá được backend tính khi tạo lịch.
+              {promotionCode.trim()
+                ? 'Mã nhập tay được kiểm tra khi tạo lịch; tổng cuối do backend tính.'
+                : 'Tổng cuối do backend tính lại khi tạo lịch.'}
             </p>
             <Button
               variant="primary"

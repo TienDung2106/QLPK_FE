@@ -173,28 +173,39 @@ export const PatientPicker = ({
   );
 };
 
-/* ---------------------------------------------------------------- Slots */
+/* ---------------------------------------------------------------- Shifts */
 
 interface SlotPickerProps {
   doctorId: number | null;
   date: string;
   value: string | null;
   onChange: (startTime: string | null) => void;
+  /** Số phút lượt khám cần; ca không đủ chỗ sẽ bị khoá. Bỏ trống thì chỉ khoá ca đã đầy. */
+  durationMinutes?: number;
 }
 
-/** Slot còn trống của một bác sĩ trong một ngày, qua API của quầy. */
-export const SlotPicker = ({ doctorId, date, value, onChange }: SlotPickerProps) => {
-  const query = useApiQuery<DoctorAvailability>(() => apiGetStaffDoctorSlots(doctorId!, date), [doctorId, date], {
-    enabled: Boolean(doctorId && date),
-  });
+const SHIFT_UNAVAILABLE_LABEL: Record<string, string> = {
+  full: 'đã đầy',
+  not_enough_time: 'không đủ thời gian',
+  past: 'đã qua',
+  time_off: 'bác sĩ nghỉ',
+};
+
+/** Các ca của một bác sĩ trong một ngày, qua API của quầy, kèm số phút còn trống. */
+export const SlotPicker = ({ doctorId, date, value, onChange, durationMinutes }: SlotPickerProps) => {
+  const query = useApiQuery<DoctorAvailability>(
+    () => apiGetStaffDoctorSlots(doctorId!, date, durationMinutes),
+    [doctorId, date, durationMinutes],
+    { enabled: Boolean(doctorId && date) },
+  );
 
   if (!doctorId || !date) {
-    return <div className="st-hint">Chọn bác sĩ và ngày để xem khung giờ trống.</div>;
+    return <div className="st-hint">Chọn bác sĩ và ngày để xem ca khám.</div>;
   }
   if (query.loading) {
     return (
       <div className="st-hint">
-        <Loader2 size={13} className="st-spin" /> Đang tải khung giờ…
+        <Loader2 size={13} className="st-spin" /> Đang tải ca khám…
       </div>
     );
   }
@@ -206,21 +217,28 @@ export const SlotPicker = ({ doctorId, date, value, onChange }: SlotPickerProps)
   }
   const slots = query.data?.slots ?? [];
   if (slots.length === 0) {
-    return <Alert tone="warning">Bác sĩ không còn khung giờ trống ngày {formatDate(date)}.</Alert>;
+    return <Alert tone="warning">Bác sĩ không làm việc ngày {formatDate(date)}.</Alert>;
   }
 
   return (
-    <div className="st-chip-row" role="radiogroup" aria-label="Khung giờ trống">
+    <div className="st-chip-row" role="radiogroup" aria-label="Ca khám">
       {slots.map((slot) => (
         <button
           key={slot.start_time}
           type="button"
           role="radio"
           aria-checked={value === slot.start_time}
+          disabled={!slot.is_available}
+          title={`${slot.booked_count} lượt đã đặt · đã dùng ${slot.used_minutes}/${slot.capacity_minutes} phút`}
           className={`st-slot ${value === slot.start_time ? 'active' : ''}`}
           onClick={() => onChange(value === slot.start_time ? null : slot.start_time)}
         >
-          {formatTime(slot.start_time)}
+          {slot.shift_name} · {formatTime(slot.start_time)}–{formatTime(slot.end_time)}
+          <span className="st-cell-sub" style={{ marginLeft: 6 }}>
+            {slot.is_available
+              ? `còn ${slot.remaining_minutes}′`
+              : SHIFT_UNAVAILABLE_LABEL[slot.unavailable_reason ?? ''] ?? 'không nhận'}
+          </span>
         </button>
       ))}
     </div>
