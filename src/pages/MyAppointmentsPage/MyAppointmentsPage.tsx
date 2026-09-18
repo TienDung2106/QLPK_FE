@@ -50,6 +50,14 @@ function formatTime(time: string): string {
   return time.slice(0, 5);
 }
 
+/** Lý do gửi kèm khi bệnh nhân huỷ một lịch đã quá giờ hẹn mà chưa khám. */
+const OVERDUE_CANCEL_REASON = 'Lịch hẹn đã quá hạn';
+
+/** Giờ hẹn đã trôi qua. Lịch như vậy huỷ được ngay, không bị giới hạn huỷ trước giờ hẹn. */
+function isOverdue(appointment: AppointmentListItem): boolean {
+  return new Date(`${appointment.appointment_date}T${appointment.appointment_time}`) <= new Date();
+}
+
 export const MyAppointmentsPage = () => {
   const navigate = useNavigate();
 
@@ -109,8 +117,8 @@ export const MyAppointmentsPage = () => {
     setNotice(null);
   };
 
-  const handleCancel = async (appointmentId: number) => {
-    if (cancelReason.trim().length < 3) {
+  const handleCancel = async (appointmentId: number, reason: string) => {
+    if (reason.length < 3) {
       setError('Lý do huỷ phải có ít nhất 3 ký tự.');
       return;
     }
@@ -119,7 +127,7 @@ export const MyAppointmentsPage = () => {
     setError(null);
     setNotice(null);
 
-    const result = await apiCancelAppointment(appointmentId, cancelReason.trim());
+    const result = await apiCancelAppointment(appointmentId, reason);
 
     setBusyId(null);
 
@@ -271,6 +279,9 @@ export const MyAppointmentsPage = () => {
                   <span className={`appointment-status status-${appointment.status}`}>
                     {APPOINTMENT_STATUS_LABEL[appointment.status] ?? appointment.status}
                   </span>
+                  {CANCELLABLE.has(appointment.status) && isOverdue(appointment) && (
+                    <span className="appointment-status status-overdue">Đã quá hạn</span>
+                  )}
 
                   <h3 className="appointment-doctor">
                     <Stethoscope size={16} />
@@ -330,7 +341,7 @@ export const MyAppointmentsPage = () => {
                         <button
                           type="button"
                           className="btn btn-danger"
-                          onClick={() => handleCancel(appointment.appointment_id)}
+                          onClick={() => handleCancel(appointment.appointment_id, cancelReason.trim())}
                           disabled={busyId === appointment.appointment_id}
                         >
                           {busyId === appointment.appointment_id ? (
@@ -342,6 +353,17 @@ export const MyAppointmentsPage = () => {
                         </button>
                       </div>
                     </div>
+                  ) : isOverdue(appointment) ? (
+                    // Đã quá giờ hẹn mà chưa khám thì không còn gì để giữ: huỷ ngay, khỏi hỏi lý do.
+                    <button
+                      type="button"
+                      className="btn btn-outline appointment-cancel"
+                      onClick={() => handleCancel(appointment.appointment_id, OVERDUE_CANCEL_REASON)}
+                      disabled={busyId === appointment.appointment_id}
+                    >
+                      {busyId === appointment.appointment_id ? <Loader2 className="spin" size={16} /> : <X size={16} />}
+                      <span>Huỷ ngay</span>
+                    </button>
                   ) : (
                     <button
                       type="button"

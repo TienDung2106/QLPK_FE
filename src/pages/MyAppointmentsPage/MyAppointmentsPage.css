@@ -158,6 +158,13 @@
   color: var(--danger);
 }
 
+/* Giờ hẹn đã trôi qua mà chưa khám: không phải lỗi, chỉ cần bệnh nhân để ý và dọn đi. */
+.appointment-status.status-overdue {
+  margin-left: 0.4rem;
+  background: #fffbeb;
+  color: #b45309;
+}
+
 .appointment-doctor {
   display: flex;
   align-items: center;
