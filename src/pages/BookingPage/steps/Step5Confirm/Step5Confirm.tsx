@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
-import { AlertCircle, GraduationCap, Loader2, Lock, Sparkles, TicketPercent } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { AlertCircle, GraduationCap, Loader2, Lock, Sparkles, TicketPercent, X } from 'lucide-react';
 import type { BookingQuote } from '../../../../api/types';
 import type { BookingDoctor, PatientInfo, SelectedService, SelectedShift } from '../../../../types/booking';
 import { CaptchaField } from '../../../../components/Captcha/CaptchaField';
 import useCaptcha from '../../../../hooks/useCaptcha';
 import { CAPTCHA_PURPOSE } from '../../../../api/functions/captcha';
 import { describePromotion, formatCurrency, formatDateLabel, formatShiftRange } from '../../bookingFormat';
+import { CLINIC_TERMS, CLINIC_TERMS_UPDATED_AT } from './clinicTerms';
 import './Step5Confirm.css';
 
 interface Step5ConfirmProps {
@@ -49,7 +50,17 @@ export const Step5Confirm: React.FC<Step5ConfirmProps> = ({
   onCaptchaError,
 }) => {
   const [agreedTerms, setAgreedTerms] = useState(false);
+  const [showTerms, setShowTerms] = useState(false);
   const captcha = useCaptcha(CAPTCHA_PURPOSE.AppointmentBooking);
+
+  useEffect(() => {
+    if (!showTerms) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setShowTerms(false);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showTerms]);
 
   const doctor = selectedDoctor;
 
@@ -289,9 +300,17 @@ export const Step5Confirm: React.FC<Step5ConfirmProps> = ({
             />
             <span>
               Tôi đã đọc và đồng ý với các{' '}
-              <a href="#terms" className="link-terms" onClick={(event) => event.preventDefault()}>
+              <button
+                type="button"
+                className="link-terms"
+                onClick={(event) => {
+                  // Nằm trong <label> nên phải chặn để không tự tick checkbox.
+                  event.preventDefault();
+                  setShowTerms(true);
+                }}
+              >
                 điều khoản dịch vụ
-              </a>{' '}
+              </button>{' '}
               của phòng khám.
             </span>
           </label>
@@ -316,6 +335,64 @@ export const Step5Confirm: React.FC<Step5ConfirmProps> = ({
           <span className="step5-security-text">Thông tin được bảo mật mã hóa đầu cuối</span>
         </div>
       </div>
+
+      {showTerms && (
+        <div className="booking-modal-overlay" onClick={() => setShowTerms(false)}>
+          <div
+            className="step5-terms-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="step5-terms-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="step5-terms-header">
+              <div>
+                <h3 id="step5-terms-title">Điều khoản dịch vụ</h3>
+                <p>Phòng khám Da liễu · Cập nhật {CLINIC_TERMS_UPDATED_AT}</p>
+              </div>
+              <button
+                type="button"
+                className="step5-terms-close"
+                aria-label="Đóng"
+                onClick={() => setShowTerms(false)}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="step5-terms-body">
+              {CLINIC_TERMS.map((section, index) => (
+                <section key={section.title} className="step5-terms-section">
+                  <h4>
+                    {index + 1}. {section.title}
+                  </h4>
+                  <ul>
+                    {section.items.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                </section>
+              ))}
+            </div>
+
+            <div className="step5-terms-footer">
+              <button type="button" className="btn-modal-secondary" onClick={() => setShowTerms(false)}>
+                Đóng
+              </button>
+              <button
+                type="button"
+                className="btn-modal-primary"
+                onClick={() => {
+                  setAgreedTerms(true);
+                  setShowTerms(false);
+                }}
+              >
+                Tôi đồng ý
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
