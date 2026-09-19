@@ -5,6 +5,7 @@ import {
   AlertCircle,
   AlertTriangle,
   ArrowLeft,
+  Check,
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
@@ -102,6 +103,33 @@ export const Panel = ({ title, subtitle, actions, children, bodyless = false, cl
     )}
     {bodyless ? children : <div className="st-panel-body">{children}</div>}
   </section>
+);
+
+/* ---------------------------------------------------------------- Steps */
+
+export interface StepItem {
+  label: string;
+  done?: boolean;
+  disabled?: boolean;
+}
+
+/** Thanh các bước của một luồng nhiều bước (vd. khám bệnh: bệnh án → đơn thuốc → hoàn tất). */
+export const Steps = ({ steps, current, onChange }: { steps: StepItem[]; current: number; onChange: (index: number) => void }) => (
+  <ol className="st-steps">
+    {steps.map((step, index) => (
+      <li key={step.label} className={`st-step ${index === current ? 'active' : ''} ${step.done ? 'done' : ''}`}>
+        <button
+          type="button"
+          disabled={step.disabled}
+          aria-current={index === current ? 'step' : undefined}
+          onClick={() => onChange(index)}
+        >
+          <span className="st-step-bubble">{step.done && index !== current ? <Check size={13} strokeWidth={2.6} /> : index + 1}</span>
+          <span className="st-step-label">{step.label}</span>
+        </button>
+      </li>
+    ))}
+  </ol>
 );
 
 /* ---------------------------------------------------------------- Badge */

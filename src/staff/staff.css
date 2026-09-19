@@ -1659,3 +1659,118 @@ button.st-stat:hover {
   outline: none;
   box-shadow: var(--st-focus);
 }
+
+/* Thanh các bước */
+.st-steps {
+  display: flex;
+  align-items: center;
+  margin: 0 0 1rem;
+  padding: 0.7rem 1rem;
+  list-style: none;
+  background: var(--st-surface);
+  border: 1px solid var(--st-line);
+  border-radius: var(--radius-md, 10px);
+}
+
+.st-step {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+.st-step:last-child {
+  flex: 0 0 auto;
+}
+
+.st-step:not(:last-child)::after {
+  content: '';
+  flex: 1;
+  height: 2px;
+  margin: 0 0.75rem;
+  background: var(--st-line);
+  border-radius: 2px;
+}
+
+.st-step.done:not(:last-child)::after {
+  background: var(--primary);
+}
+
+.st-step button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.35rem;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--st-text-3);
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.st-step button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.st-step button:focus-visible {
+  outline: none;
+  box-shadow: var(--st-focus);
+}
+
+.st-step-bubble {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2px solid var(--st-line-strong);
+  background: var(--st-surface);
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.st-step.done .st-step-bubble {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: #fff;
+}
+
+.st-step.active button {
+  color: var(--st-text);
+}
+
+.st-step.active .st-step-bubble {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: #fff;
+  box-shadow: 0 0 0 4px rgba(24, 119, 242, 0.15);
+}
+
+.st-step-nav {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 1.1rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--st-line);
+}
+
+.st-step-nav > div {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 600px) {
+  .st-step-label {
+    display: none;
+  }
+  .st-step.active .st-step-label {
+    display: inline;
+  }
+}
