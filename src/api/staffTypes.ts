@@ -311,6 +311,8 @@ export interface Prescription {
   doctor_id: number;
   doctor_full_name: string;
   status: string;
+  /** Tiến độ ở quầy thu ngân: awaiting_payment / invoiced / paid; null khi bác sĩ chưa hoàn tất lượt khám. */
+  settlement_status?: string | null;
   notes: string | null;
   created_at: string;
   prepared_at: string | null;

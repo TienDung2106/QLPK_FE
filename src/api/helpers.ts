@@ -41,10 +41,8 @@ const UNEXPECTED_ERROR = 'Đã có lỗi xảy ra. Vui lòng thử lại.';
  * Câu tiếng Việt cho những thất bại backend có gắn mã lỗi ổn định
  * (QLPK.Service/Common/Exceptions/ErrorCodes.cs).
  *
- * Backend viết `detail` bằng tiếng Anh, và dịch toàn bộ chuỗi đó ở phía server là một
- * thay đổi lớn hơn nhiều. Mã lỗi thì đã được thiết kế để client rẽ nhánh mà không phải
- * đọc văn bản — nên dịch theo mã, và những lỗi chưa có mã thì vẫn hiện nguyên văn
- * backend trả về, chứ không đoán bừa.
+ * Backend đã viết `detail` bằng tiếng Việt; bảng này chỉ giữ câu chữ thống nhất cho những lỗi
+ * có mã ổn định. Lỗi chưa có mã thì hiện nguyên văn backend trả về.
  */
 const MESSAGE_BY_ERROR_CODE: Record<string, string> = {
   captcha_required: 'Vui lòng hoàn tất ô kiểm tra bảo mật rồi thử lại.',

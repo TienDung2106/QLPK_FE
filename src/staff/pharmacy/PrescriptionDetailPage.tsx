@@ -79,6 +79,11 @@ const PrescriptionDetailPage = () => {
   }
 
   const holding = HOLDING_STOCK.includes(prescription.status);
+  // Soạn xong không cần "gửi" gì: lượt khám đã nằm sẵn trong hàng đợi quyết toán của thu ngân từ lúc
+  // bác sĩ hoàn tất. Chỉ giao thuốc được khi quầy đã thu đủ tiền.
+  // API cũ chưa trả settlement_status (undefined): không khoá nút, để backend tự từ chối như trước.
+  const paid = prescription.settlement_status === 'paid' || prescription.settlement_status === undefined;
+  const knownPaid = prescription.settlement_status === 'paid';
   const totalValue = prescription.items.reduce((sum, item) => sum + item.unit_price * item.quantity_prescribed, 0);
 
   return (
@@ -105,7 +110,13 @@ const PrescriptionDetailPage = () => {
                 <Button variant="danger" icon={<Undo2 size={16} />} disabled={Boolean(pending)} onClick={() => setConfirm('cancel')}>
                   Huỷ soạn
                 </Button>
-                <Button variant="success" icon={<PackageCheck size={16} />} disabled={Boolean(pending)} onClick={() => setConfirm('deliver')}>
+                <Button
+                  variant="success"
+                  icon={<PackageCheck size={16} />}
+                  disabled={Boolean(pending) || !paid}
+                  title={paid ? undefined : 'Chỉ giao được sau khi quầy thu ngân thu đủ tiền'}
+                  onClick={() => setConfirm('deliver')}
+                >
                   Giao thuốc
                 </Button>
               </>
@@ -119,9 +130,17 @@ const PrescriptionDetailPage = () => {
           Soạn thuốc sẽ giữ hàng theo lô hết hạn sớm nhất. Sau khi soạn, quầy mới lập được hoá đơn có tiền thuốc.
         </Alert>
       )}
-      {prescription.status === 'awaiting_payment' && (
+      {holding && !knownPaid && (
         <Alert tone="warning" className="st-alert-gap">
-          Đơn đã lên hoá đơn nhưng chưa thu đủ tiền. Chỉ giao thuốc khi quầy báo đã thanh toán.
+          {prescription.settlement_status === 'invoiced'
+            ? 'Quầy đã lập hoá đơn nhưng chưa thu đủ tiền. '
+            : 'Đã soạn xong — đơn đã tự có trong Hàng đợi quyết toán của thu ngân, không cần gửi thêm. '}
+          Hướng dẫn bệnh nhân qua quầy thanh toán, rồi quay lại đây giao thuốc.
+        </Alert>
+      )}
+      {holding && knownPaid && (
+        <Alert tone="success" className="st-alert-gap">
+          Quầy đã thu đủ tiền — có thể giao thuốc cho bệnh nhân.
         </Alert>
       )}
       {shortfalls.length > 0 && (

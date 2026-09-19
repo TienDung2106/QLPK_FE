@@ -4,7 +4,7 @@ import { RefreshCw } from 'lucide-react';
 import { apiSearchPrescriptions } from '../../api/functions/pharmacy';
 import { useApiQuery, useDebounced } from '../hooks';
 import { formatDateTime, formatMoney } from '../format';
-import { labelOf, PRESCRIPTION_STATUS } from '../labels';
+import { DISPENSE_REQUEST_STATUS, labelOf, PRESCRIPTION_STATUS } from '../labels';
 import { Button, Field, FilterTabs, PageHeader, Pagination, SearchInput, StatusBadge, TableState } from '../components/ui';
 
 const STATUS_TABS = [
@@ -86,11 +86,12 @@ const PrescriptionsPage = () => {
                 <th className="st-num">Giá trị giữ</th>
                 <th>Tạo lúc</th>
                 <th>Trạng thái</th>
+                <th>Thanh toán</th>
               </tr>
             </thead>
             <tbody>
               <TableState
-                columns={7}
+                columns={8}
                 loading={query.loading}
                 error={query.error}
                 isEmpty={items.length === 0}
@@ -111,6 +112,13 @@ const PrescriptionsPage = () => {
                   <td className="st-nowrap">{formatDateTime(item.created_at)}</td>
                   <td>
                     <StatusBadge value={labelOf(PRESCRIPTION_STATUS, item.status)} />
+                  </td>
+                  <td>
+                    {item.settlement_status ? (
+                      <StatusBadge value={labelOf(DISPENSE_REQUEST_STATUS, item.settlement_status)} />
+                    ) : (
+                      <span className="st-muted">—</span>
+                    )}
                   </td>
                 </tr>
               ))}
