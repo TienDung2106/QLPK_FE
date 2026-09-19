@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CalendarPlus, Footprints, Minus, Plus } from 'lucide-react';
+import { CalendarPlus, Footprints } from 'lucide-react';
 import { apiGetBookingQuote, apiGetServices } from '../../api/functions/services';
 import type { BookingQuote } from '../../api/types';
 import { apiBookOnBehalf, apiBookWalkIn } from '../../api/functions/desk';
@@ -12,6 +12,8 @@ import { useToast } from '../components/toastContext';
 import { DoctorSelect, PatientPicker, SlotPicker } from '../components/pickers';
 import { DoctorMonthCalendar } from '../components/DoctorMonthCalendar';
 import { Alert, Button, EmptyState, Field, FilterTabs, PageHeader, Panel } from '../components/ui';
+import { VoucherStrip } from '../../pages/BookingPage/components/VoucherStrip';
+import { describePromotion } from '../../pages/BookingPage/bookingFormat';
 
 type Mode = 'booking' | 'walk-in';
 
@@ -29,33 +31,29 @@ const DeskBookingPage = () => {
   const [doctorId, setDoctorId] = useState<number | null>(null);
   const [date, setDate] = useState(todayIso());
   const [time, setTime] = useState<string | null>(null);
-  const [quantities, setQuantities] = useState<Record<number, number>>({});
-  const [primaryServiceId, setPrimaryServiceId] = useState<number | null>(null);
+  // Giống luồng bệnh nhân: mỗi lượt khám tối đa một dịch vụ (bỏ trống nếu chỉ khám).
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [visitType, setVisitType] = useState('new_visit');
   const [consultationMode, setConsultationMode] = useState('in_clinic');
   const [reason, setReason] = useState('');
-  const [promotionCode, setPromotionCode] = useState('');
   const [error, setError] = useState<string | null>(null);
 
   const services = useApiQuery(() => apiGetServices({ page_size: 100 }), []);
   const serviceList = services.data?.items ?? [];
-  const chosen = serviceList.filter((service) => (quantities[service.service_id] ?? 0) > 0);
-  const subtotal = chosen.reduce((sum, service) => sum + service.price * quantities[service.service_id], 0);
+  const chosen = selectedIds
+    .map((id) => serviceList.find((service) => service.service_id === id))
+    .filter((service) => service !== undefined);
+  const subtotal = chosen.reduce((sum, service) => sum + service.price, 0);
   const effectiveDate = mode === 'walk-in' ? todayIso() : date;
 
-  // Báo giá để quầy thấy trước thời lượng (ca nào còn chứa được) và voucher sẽ tự áp khi không nhập mã.
+  // Báo giá để quầy thấy trước thời lượng (ca nào còn chứa được) và voucher server sẽ tự áp.
   const [quote, setQuote] = useState<BookingQuote | null>(null);
-  const quoteKey = chosen.map((service) => `${service.service_id}x${quantities[service.service_id]}`).join(',');
+  const quoteKey = chosen.map((service) => service.service_id).join(',');
   const patientId = patient?.patient_id ?? null;
 
   useEffect(() => {
     let cancelled = false;
-    const lines = quoteKey
-      ? quoteKey.split(',').map((part) => {
-          const [id, quantity] = part.split('x').map(Number);
-          return { service_id: id, quantity };
-        })
-      : [];
+    const lines = quoteKey ? quoteKey.split(',').map((id) => ({ service_id: Number(id), quantity: 1 })) : [];
 
     apiGetBookingQuote(lines, patientId).then((result) => {
       if (!cancelled) {
@@ -68,11 +66,9 @@ const DeskBookingPage = () => {
     };
   }, [quoteKey, patientId]);
 
-  const setQuantity = (serviceId: number, quantity: number) => {
-    setQuantities((current) => ({ ...current, [serviceId]: Math.max(0, quantity) }));
-    if (quantity <= 0 && primaryServiceId === serviceId) {
-      setPrimaryServiceId(null);
-    }
+  const toggleService = (serviceId: number) => {
+    // Chọn dịch vụ khác thì thay dịch vụ cũ; bấm lại dịch vụ đang chọn thì bỏ chọn.
+    setSelectedIds((current) => (current.includes(serviceId) ? [] : [serviceId]));
   };
 
   const submit = async () => {
@@ -95,9 +91,9 @@ const DeskBookingPage = () => {
       doctor_id: doctorId,
       visit_type: visitType,
       reason_for_visit: reason.trim() || undefined,
-      primary_service_id: primaryServiceId ?? chosen[0]?.service_id,
-      services: chosen.map((service) => ({ service_id: service.service_id, quantity: quantities[service.service_id] })),
-      promotion_code: promotionCode.trim() || undefined,
+      primary_service_id: chosen[0]?.service_id,
+      // Không gửi mã giảm giá: server tự áp voucher tốt nhất cho giỏ dịch vụ này.
+      services: chosen.map((service) => ({ service_id: service.service_id, quantity: 1 })),
     };
 
     const result = await run('submit', () =>
@@ -210,7 +206,13 @@ const DeskBookingPage = () => {
             </div>
           </Panel>
 
-          <Panel title="Dịch vụ" subtitle="Có thể bỏ trống nếu chỉ khám" bodyless>
+          <VoucherStrip
+            subtotal={quote?.subtotal_amount ?? subtotal}
+            appliedPromotionId={quote?.promotion?.promotion_id ?? null}
+            patientId={patientId}
+          />
+
+          <Panel title="Dịch vụ" subtitle="Chọn 1 dịch vụ cho lượt khám · có thể bỏ trống nếu chỉ khám" bodyless>
             {services.error && (
               <div className="st-panel-body">
                 <Alert tone="danger">{services.error}</Alert>
@@ -223,17 +225,30 @@ const DeskBookingPage = () => {
                 <table className="st-table">
                   <thead>
                     <tr>
+                      <th style={{ width: 40 }} aria-label="Chọn" />
                       <th>Dịch vụ</th>
                       <th className="st-num">Giá</th>
-                      <th>Số lượng</th>
-                      <th>Chính</th>
                     </tr>
                   </thead>
                   <tbody>
                     {serviceList.map((service) => {
-                      const quantity = quantities[service.service_id] ?? 0;
+                      const checked = selectedIds.includes(service.service_id);
                       return (
-                        <tr key={service.service_id}>
+                        <tr key={service.service_id} onClick={() => toggleService(service.service_id)} style={{ cursor: 'pointer' }}>
+                          <td>
+                            <input
+                              type="radio"
+                              name="desk-service"
+                              aria-label={`Chọn ${service.service_name}`}
+                              checked={checked}
+                              readOnly
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                toggleService(service.service_id);
+                              }}
+                              style={{ accentColor: 'var(--primary)', width: 16, height: 16 }}
+                            />
+                          </td>
                           <td>
                             <div className="st-cell-main">{service.service_name}</div>
                             <div className="st-cell-sub">
@@ -241,26 +256,6 @@ const DeskBookingPage = () => {
                             </div>
                           </td>
                           <td className="st-num">{formatMoney(service.price)}</td>
-                          <td>
-                            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                              <Button size="sm" iconOnly aria-label="Giảm" icon={<Minus size={13} />} disabled={quantity === 0} onClick={() => setQuantity(service.service_id, quantity - 1)} />
-                              <span className="st-strong" style={{ minWidth: 18, textAlign: 'center' }}>
-                                {quantity}
-                              </span>
-                              <Button size="sm" iconOnly aria-label="Tăng" icon={<Plus size={13} />} onClick={() => setQuantity(service.service_id, quantity + 1)} />
-                            </div>
-                          </td>
-                          <td>
-                            <input
-                              type="radio"
-                              name="primary-service"
-                              aria-label={`Đặt ${service.service_name} là dịch vụ chính`}
-                              disabled={quantity === 0}
-                              checked={primaryServiceId === service.service_id}
-                              onChange={() => setPrimaryServiceId(service.service_id)}
-                              style={{ accentColor: 'var(--primary)' }}
-                            />
-                          </td>
                         </tr>
                       );
                     })}
@@ -303,26 +298,13 @@ const DeskBookingPage = () => {
               <Field label="Lý do khám" className="st-span-2">
                 {(id) => <textarea id={id} className="st-textarea" maxLength={1000} value={reason} onChange={(event) => setReason(event.target.value)} />}
               </Field>
-              <Field
-                label="Mã khuyến mãi"
-                className="st-span-2"
-                hint={
-                  quote?.promotion
-                    ? `Bỏ trống để tự áp ${quote.promotion.promotion_code} (giảm ${formatMoney(quote.discount_amount)}).`
-                    : 'Bỏ trống để tự áp voucher tốt nhất theo tổng tiền.'
-                }
-              >
-                {(id) => (
-                  <input id={id} className="st-input st-mono" maxLength={50} value={promotionCode} onChange={(event) => setPromotionCode(event.target.value.toUpperCase())} />
-                )}
-              </Field>
             </div>
           </Panel>
 
           <Panel title="Tóm tắt">
             <dl className="st-totals">
-              <dt>Dịch vụ đã chọn</dt>
-              <dd>{chosen.length}</dd>
+              <dt>Dịch vụ</dt>
+              <dd>{chosen[0]?.service_name ?? 'Chỉ khám'}</dd>
               <dt>Tạm tính dịch vụ</dt>
               <dd>{formatMoney(quote?.subtotal_amount ?? subtotal)}</dd>
               {quote && (
@@ -331,21 +313,22 @@ const DeskBookingPage = () => {
                   <dd>{quote.duration_minutes} phút</dd>
                 </>
               )}
-              {!promotionCode.trim() && quote?.promotion && (
+              {quote?.promotion && (
                 <>
                   <dt>Voucher tự áp ({quote.promotion.promotion_code})</dt>
                   <dd>-{formatMoney(quote.discount_amount)}</dd>
                 </>
               )}
               <dt className="st-total-row">Tổng dự kiến</dt>
-              <dd className="st-total-row">
-                {formatMoney(promotionCode.trim() ? subtotal : quote?.total_amount ?? subtotal)}
-              </dd>
+              <dd className="st-total-row">{formatMoney(quote?.total_amount ?? subtotal)}</dd>
             </dl>
+            {quote?.next_tier && (
+              <p className="st-hint" style={{ marginTop: '0.5rem' }}>
+                Dịch vụ từ {formatMoney((quote.subtotal_amount ?? subtotal) + quote.next_tier.amount_needed)} được {describePromotion(quote.next_tier).toLowerCase()}.
+              </p>
+            )}
             <p className="st-hint" style={{ marginTop: '0.5rem' }}>
-              {promotionCode.trim()
-                ? 'Mã nhập tay được kiểm tra khi tạo lịch; tổng cuối do backend tính.'
-                : 'Tổng cuối do backend tính lại khi tạo lịch.'}
+              Hệ thống tự áp 1 voucher giảm nhiều nhất; tổng cuối do backend tính lại khi tạo lịch.
             </p>
             <Button
               variant="primary"

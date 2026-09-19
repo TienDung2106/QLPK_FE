@@ -32,7 +32,7 @@ const COLLAPSED_COUNT = 3;
 
 /**
  * Dải voucher kiểu sàn thương mại điện tử: bệnh nhân không nhập mã, chỉ nhìn để biết chọn thêm
- * dịch vụ nào thì mở được mức giảm tốt hơn. Voucher thật sự được áp do server chọn (một mã duy nhất).
+ * dịch vụ nào thì được mức giảm tốt hơn. Voucher thật sự được áp do server chọn (một mã duy nhất).
  */
 export const VoucherStrip: React.FC<VoucherStripProps> = ({ subtotal, appliedPromotionId, patientId }) => {
   const [promotions, setPromotions] = useState<AvailablePromotion[]>([]);
@@ -105,7 +105,7 @@ export const VoucherStrip: React.FC<VoucherStripProps> = ({ subtotal, appliedPro
                       <div className="voucher-progress-fill" style={{ transform: `scaleX(${progress / 100})` }} />
                     </div>
                     <span className="voucher-status status-locked">
-                      Thêm {formatCurrency(promotion.min_booking_amount - subtotal)} để dùng
+                      Cần dịch vụ từ {formatCurrency(promotion.min_booking_amount)}
                     </span>
                   </>
                 )}
