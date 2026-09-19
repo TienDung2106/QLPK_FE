@@ -103,6 +103,7 @@ const url = {
   doctorCompleteExamination: (appointmentId: number) => `${root}/doctor/appointments/${appointmentId}/complete`,
   doctorPatientHistory: (patientId: number) => `${root}/doctor/patients/${patientId}/medical-records`,
   doctorMedicines: `${root}/doctor/medicines`,
+  doctorMedicineGroups: `${root}/doctor/medicines/groups`,
   doctorTimeOff: `${root}/doctor/time-off`,
 
   // Quầy lễ tân / thu ngân

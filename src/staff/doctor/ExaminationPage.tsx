@@ -1,15 +1,16 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import {
   ArrowLeft,
   ArrowRight,
   CalendarPlus,
+  Check,
   CheckCircle2,
   ClipboardCheck,
   History,
-  Loader2,
   Pill,
   Play,
+  Plus,
   Save,
   Trash2,
 } from 'lucide-react';
@@ -19,6 +20,7 @@ import {
   apiGetDoctorSchedule,
   apiGetMedicalRecord,
   apiGetPatientHistory,
+  apiGetPrescribableMedicineGroups,
   apiSaveMedicalRecord,
   apiSearchPrescribableMedicines,
   apiStartExamination,
@@ -33,7 +35,19 @@ import { useToast } from '../components/toastContext';
 import useAuth from '../../hooks/useAuth';
 import { PERMISSION } from '../permissions';
 import { FollowUpSheet } from './FollowUpSheet';
-import { Alert, Button, ConfirmDialog, EmptyState, Field, PageHeader, Panel, StatusBadge, Steps } from '../components/ui';
+import {
+  Alert,
+  Button,
+  ConfirmDialog,
+  EmptyState,
+  Field,
+  PageHeader,
+  Panel,
+  SearchInput,
+  StatusBadge,
+  Steps,
+  TableSkeleton,
+} from '../components/ui';
 
 /* ---------------------------------------------------------------- Record form */
 
@@ -98,84 +112,129 @@ const linesFromPrescription = (prescription: Prescription | null): Line[] =>
     usage_instructions: item.usage_instructions ?? '',
   }));
 
-const MedicineSearch = ({ onPick, disabled }: { onPick: (medicine: PrescribableMedicine) => void; disabled?: boolean }) => {
-  const [text, setText] = useState('');
-  const [open, setOpen] = useState(false);
-  const search = useDebounced(text.trim(), 250);
-  const ref = useRef<HTMLDivElement>(null);
-  const query = useApiQuery(() => apiSearchPrescribableMedicines({ search, page_size: 10 }), [search], {
-    enabled: open && search.length >= 1,
-  });
+const CATALOG_PAGE_SIZE = 100;
 
-  useEffect(() => {
-    const close = (event: MouseEvent) => {
-      if (!ref.current?.contains(event.target as Node)) {
-        setOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', close);
-    return () => document.removeEventListener('mousedown', close);
-  }, []);
+/** Danh mục thuốc luôn hiện sẵn: lọc theo tên/hoạt chất, nhóm thuốc và tồn kho, bấm để thêm vào đơn. */
+const MedicineCatalog = ({ onPick, pickedIds }: { onPick: (medicine: PrescribableMedicine) => void; pickedIds: Set<number> }) => {
+  const [text, setText] = useState('');
+  const [group, setGroup] = useState('');
+  const [inStockOnly, setInStockOnly] = useState(true);
+  const search = useDebounced(text.trim(), 250);
+
+  const groups = useApiQuery(() => apiGetPrescribableMedicineGroups(), []);
+  const query = useApiQuery(
+    () =>
+      apiSearchPrescribableMedicines({
+        search: search || undefined,
+        medicine_group: group || undefined,
+        in_stock_only: inStockOnly || undefined,
+        page_size: CATALOG_PAGE_SIZE,
+      }),
+    [search, group, inStockOnly],
+  );
+  const items = query.data?.items ?? [];
+  const total = query.data?.total_items ?? 0;
+  const filtered = Boolean(search || group || inStockOnly);
+
+  const clearFilters = () => {
+    setText('');
+    setGroup('');
+    setInStockOnly(false);
+  };
 
   return (
-    <div className="st-picker" ref={ref}>
-      <Field label="Thêm thuốc">
-        {(id) => (
-          <input
-            id={id}
-            className="st-input"
-            placeholder="Gõ tên thuốc hoặc hoạt chất…"
-            value={text}
-            disabled={disabled}
-            autoComplete="off"
-            onFocus={() => setOpen(true)}
-            onChange={(event) => {
-              setText(event.target.value);
-              setOpen(true);
-            }}
-          />
-        )}
-      </Field>
-      {open && search.length >= 1 && (
-        <div className="st-picker-list" role="listbox">
-          {query.loading && (
-            <div className="st-picker-option st-muted">
-              <Loader2 size={14} className="st-spin" /> Đang tìm…
-            </div>
-          )}
-          {!query.loading && (query.data?.items ?? []).length === 0 && (
-            <div className="st-picker-option st-muted">Không tìm thấy thuốc.</div>
-          )}
-          {(query.data?.items ?? []).map((medicine) => (
-            <button
-              key={medicine.medicine_id}
-              type="button"
-              role="option"
-              aria-selected={false}
-              className="st-picker-option"
-              onClick={() => {
-                onPick(medicine);
-                setText('');
-                setOpen(false);
-              }}
-            >
-              <span>
-                <span className="st-cell-main">{medicine.medicine_name}</span>
-                <br />
-                <span className="st-cell-sub">
-                  {medicine.active_ingredient ?? '—'} · {formatMoney(medicine.unit_price)}/{medicine.unit_of_measure}
-                </span>
-              </span>
-              <span
-                className="st-cell-sub st-nowrap"
-                style={{
-                  color: medicine.available_stock > 0 ? undefined : 'var(--st-danger)',
-                }}
-              >
-                Còn {medicine.available_stock}
-              </span>
-            </button>
+    <div className="st-catalog">
+      <div className="st-catalog-filters">
+        <SearchInput value={text} onChange={setText} placeholder="Tìm tên thuốc hoặc hoạt chất…" />
+        <select className="st-select" aria-label="Nhóm thuốc" value={group} onChange={(event) => setGroup(event.target.value)}>
+          <option value="">Tất cả nhóm thuốc</option>
+          {(groups.data ?? []).map((name) => (
+            <option key={name} value={name}>
+              {name}
+            </option>
           ))}
+        </select>
+        <label className="st-check">
+          <input type="checkbox" checked={inStockOnly} onChange={(event) => setInStockOnly(event.target.checked)} />
+          Chỉ thuốc còn hàng
+        </label>
+        <span className="st-cell-sub st-catalog-count">
+          {query.loading ? 'Đang tải…' : total > items.length ? `Đang hiện ${items.length}/${total} — gõ tên hoặc chọn nhóm để thu hẹp` : `${total} thuốc`}
+        </span>
+      </div>
+
+      {query.error ? (
+        <Alert tone="danger">{query.error}</Alert>
+      ) : !query.loading && items.length === 0 ? (
+        <EmptyState
+          title="Không có thuốc phù hợp"
+          text="Thử đổi từ khoá hoặc nhóm thuốc."
+          action={
+            filtered && (
+              <Button size="sm" onClick={clearFilters}>
+                Xoá bộ lọc
+              </Button>
+            )
+          }
+        />
+      ) : (
+        <div className="st-catalog-list">
+          <table className="st-table">
+            <thead>
+              <tr>
+                <th>Thuốc</th>
+                <th>Nhóm</th>
+                <th className="st-num">Giá</th>
+                <th className="st-num">Tồn</th>
+                <th />
+              </tr>
+            </thead>
+            <tbody>
+              {query.loading && items.length === 0 ? (
+                <TableSkeleton columns={5} rows={5} />
+              ) : (
+                items.map((medicine) => {
+                  const picked = pickedIds.has(medicine.medicine_id);
+                  const outOfStock = medicine.available_stock <= 0;
+                  const disabled = picked || outOfStock;
+                  return (
+                    <tr
+                      key={medicine.medicine_id}
+                      className={disabled ? 'st-row-muted' : 'st-row-link'}
+                      onClick={() => !disabled && onPick(medicine)}
+                    >
+                      <td>
+                        <div className="st-cell-main">{medicine.medicine_name}</div>
+                        <div className="st-cell-sub">{medicine.active_ingredient ?? '—'}</div>
+                      </td>
+                      <td className="st-cell-sub">{medicine.medicine_group ?? '—'}</td>
+                      <td className="st-num">
+                        {formatMoney(medicine.unit_price)}
+                        <span className="st-cell-sub">/{medicine.unit_of_measure}</span>
+                      </td>
+                      <td className="st-num" style={{ color: outOfStock ? 'var(--st-danger)' : undefined }}>
+                        {medicine.available_stock}
+                      </td>
+                      <td className="st-num">
+                        <Button
+                          size="sm"
+                          variant={picked ? 'ghost' : 'secondary'}
+                          icon={picked ? <Check size={13} /> : <Plus size={13} />}
+                          disabled={disabled}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            onPick(medicine);
+                          }}
+                        >
+                          {picked ? 'Đã thêm' : outOfStock ? 'Hết hàng' : 'Thêm'}
+                        </Button>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
         </div>
       )}
     </div>
@@ -654,17 +713,18 @@ const ExaminationPage = () => {
               }
             >
               {rxEditable && (
-                <div style={{ marginBottom: '0.9rem' }}>
-                  <MedicineSearch onPick={addMedicine} />
+                <div style={{ marginBottom: '1.1rem' }}>
+                  <MedicineCatalog onPick={addMedicine} pickedIds={new Set(lines.map((line) => line.medicine.medicine_id))} />
                 </div>
               )}
 
+              {rxEditable && <h3 className="st-catalog-heading">Thuốc đã kê ({lines.length})</h3>}
               {lines.length === 0 ? (
                 <EmptyState
                   icon={<ClipboardCheck size={30} strokeWidth={1.6} />}
                   title="Chưa kê thuốc"
                   text={
-                    rxEditable ? 'Tìm và thêm thuốc ở ô phía trên. Không kê đơn thì cứ hoàn tất khám.' : 'Lượt khám này không có đơn thuốc.'
+                    rxEditable ? 'Chọn thuốc từ danh mục phía trên. Không kê đơn thì cứ hoàn tất khám.' : 'Lượt khám này không có đơn thuốc.'
                   }
                 />
               ) : (

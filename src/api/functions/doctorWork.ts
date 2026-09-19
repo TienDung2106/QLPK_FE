@@ -78,8 +78,12 @@ export const apiCompleteExamination = (appointmentId: number) =>
 export const apiGetPatientHistory = (patientId: number, query: PageQuery = {}) =>
   GetData<PagedResponse<MedicalRecord>>(url.doctorPatientHistory(patientId), query);
 
-export const apiSearchPrescribableMedicines = (query: { search?: string } & PageQuery = {}) =>
-  GetData<PagedResponse<PrescribableMedicine>>(url.doctorMedicines, query);
+export const apiSearchPrescribableMedicines = (
+  query: { search?: string; medicine_group?: string; in_stock_only?: boolean } & PageQuery = {},
+) => GetData<PagedResponse<PrescribableMedicine>>(url.doctorMedicines, query);
+
+/** Các nhóm thuốc đang có, cho dropdown lọc khi kê đơn. */
+export const apiGetPrescribableMedicineGroups = () => GetData<string[]>(url.doctorMedicineGroups);
 
 /* Báo nghỉ — doctor_time_off.report_own */
 
