@@ -168,7 +168,7 @@ const MedicineDetailPage = () => {
         backTo="/nha-thuoc/kho"
         backLabel="Tồn kho"
         title={stock?.medicine_name ?? `Thuốc #${medicineId}`}
-        description={stock ? `${stock.active_ingredient ?? 'Chưa rõ hoạt chất'} · ${stock.medicine_group ?? 'Chưa phân nhóm'} · đơn vị ${stock.unit_of_measure}` : undefined}
+        description={stock ? `${stock.active_ingredient ?? 'Chưa rõ hoạt chất'} · ${stock.medicine_group ?? 'Chưa phân nhóm'} · đơn vị ${stock.unit_of_measure}${stock.packaging ? ` (${stock.packaging})` : ''}` : undefined}
         actions={
           <>
             <Button icon={<Ban size={16} />} disabled={!stock} title={stock ? undefined : 'Mở từ bảng tồn kho'} onClick={() => setRetireOpen(true)}>

@@ -57,7 +57,7 @@ export const StockTable = ({ page, loading, error, onRetry, onPage, showReorder,
                   <td>
                     <div className="st-cell-main">{item.medicine_name}</div>
                     <div className="st-cell-sub">
-                      {item.active_ingredient ?? '—'} · {item.unit_of_measure}
+                      {item.active_ingredient ?? '—'} · {item.packaging ?? item.unit_of_measure}
                     </div>
                   </td>
                   <td>{item.medicine_group ?? '—'}</td>

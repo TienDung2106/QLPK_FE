@@ -11,7 +11,8 @@ const toForm = (stock: MedicineStock | null): Form => ({
   medicine_name: stock?.medicine_name ?? '',
   active_ingredient: stock?.active_ingredient ?? '',
   medicine_group: stock?.medicine_group ?? '',
-  unit_of_measure: stock?.unit_of_measure ?? '',
+  unit_of_measure: stock?.unit_of_measure ?? 'hộp',
+  packaging: stock?.packaging ?? '',
   unit_price: '',
   manufacturer: '',
   storage_condition: '',
@@ -55,6 +56,7 @@ const MedicineFormBody = ({ medicine, onClose, onSaved }: Props) => {
       active_ingredient: nullIfBlank(form.active_ingredient),
       medicine_group: nullIfBlank(form.medicine_group),
       unit_of_measure: form.unit_of_measure.trim(),
+      packaging: nullIfBlank(form.packaging),
       unit_price: price,
       manufacturer: nullIfBlank(form.manufacturer),
       storage_condition: nullIfBlank(form.storage_condition),
@@ -102,8 +104,13 @@ const MedicineFormBody = ({ medicine, onClose, onSaved }: Props) => {
         <Field label="Nhóm thuốc">
           {(id) => <input id={id} className="st-input" maxLength={100} value={form.medicine_group} onChange={set('medicine_group')} />}
         </Field>
-        <Field label="Đơn vị tính" required hint="Ví dụ: viên, tuýp, lọ">
+        <Field label="Đơn vị bán" required hint="Đơn vị xuất kho và tính tiền: hộp, tuýp, chai, lọ">
           {(id) => <input id={id} className="st-input" maxLength={20} value={form.unit_of_measure} onChange={set('unit_of_measure')} />}
+        </Field>
+        <Field label="Quy cách đóng gói" className="st-span-2" hint="Một đơn vị gồm gì, vd: Hộp 3 vỉ × 10 viên">
+          {(id) => (
+            <input id={id} className="st-input" maxLength={100} placeholder="Hộp 3 vỉ × 10 viên" value={form.packaging} onChange={set('packaging')} />
+          )}
         </Field>
         <Field label="Giá bán / đơn vị (₫)" required hint={form.unit_price ? formatMoney(Number(form.unit_price)) : undefined}>
           {(id) => <input id={id} type="number" min={0} step="any" className="st-input" value={form.unit_price} onChange={set('unit_price')} />}

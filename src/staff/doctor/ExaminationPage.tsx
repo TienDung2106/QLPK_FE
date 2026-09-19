@@ -84,7 +84,7 @@ const toRecordPayload = (form: RecordForm): MedicalRecordPayload => ({
 
 interface Line {
   key: number;
-  medicine: Pick<PrescribableMedicine, 'medicine_id' | 'medicine_name' | 'unit_of_measure' | 'unit_price'> & {
+  medicine: Pick<PrescribableMedicine, 'medicine_id' | 'medicine_name' | 'unit_of_measure' | 'packaging' | 'unit_price'> & {
     available_stock?: number;
   };
   quantity: string;
@@ -103,6 +103,7 @@ const linesFromPrescription = (prescription: Prescription | null): Line[] =>
       medicine_id: item.medicine_id,
       medicine_name: item.medicine_name,
       unit_of_measure: item.unit_of_measure,
+      packaging: item.packaging,
       unit_price: item.unit_price,
     },
     quantity: String(item.quantity_prescribed),
@@ -209,11 +210,22 @@ const MedicineCatalog = ({ onPick, pickedIds }: { onPick: (medicine: Prescribabl
                       </td>
                       <td className="st-cell-sub">{medicine.medicine_group ?? '—'}</td>
                       <td className="st-num">
-                        {formatMoney(medicine.unit_price)}
-                        <span className="st-cell-sub">/{medicine.unit_of_measure}</span>
+                        <div>
+                          {formatMoney(medicine.unit_price)}
+                          <span className="st-cell-sub">/{medicine.unit_of_measure}</span>
+                        </div>
+                        {medicine.packaging && <div className="st-cell-sub">{medicine.packaging}</div>}
                       </td>
-                      <td className="st-num" style={{ color: outOfStock ? 'var(--st-danger)' : undefined }}>
-                        {medicine.available_stock}
+                      <td className="st-num">
+                        <div style={{ color: outOfStock ? 'var(--st-danger)' : undefined }}>
+                          {medicine.available_stock} {medicine.unit_of_measure}
+                        </div>
+                        {medicine.batch_count > 0 && (
+                          <div className="st-cell-sub">
+                            {medicine.batch_count} lô
+                            {medicine.earliest_expiry_date && ` · HSD ${formatDate(medicine.earliest_expiry_date)}`}
+                          </div>
+                        )}
                       </td>
                       <td className="st-num">
                         <Button
@@ -735,6 +747,7 @@ const ExaminationPage = () => {
                         <div className="st-cell-main">{line.medicine.medicine_name}</div>
                         <div className="st-cell-sub">
                           {formatMoney(line.medicine.unit_price)}/{line.medicine.unit_of_measure}
+                          {line.medicine.packaging && ` (${line.medicine.packaging})`}
                           {line.medicine.available_stock !== undefined && ` · còn ${line.medicine.available_stock}`}
                         </div>
                       </div>

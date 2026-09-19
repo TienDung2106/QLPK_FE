@@ -158,6 +158,7 @@ const PrescriptionDetailPage = () => {
                         <div className="st-cell-main">{item.medicine_name}</div>
                         <div className="st-cell-sub">
                           {formatMoney(item.unit_price)} / {item.unit_of_measure}
+                          {item.packaging && ` · ${item.packaging}`}
                         </div>
                       </td>
                       <td>

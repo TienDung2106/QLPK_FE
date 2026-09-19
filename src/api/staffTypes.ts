@@ -289,6 +289,8 @@ export interface PrescriptionItem {
   medicine_id: number;
   medicine_name: string;
   unit_of_measure: string;
+  /** Quy cách một đơn vị, vd "Hộp 3 vỉ × 10 viên". */
+  packaging: string | null;
   quantity_prescribed: number;
   quantity_reserved: number;
   quantity_delivered: number;
@@ -370,8 +372,13 @@ export interface PrescribableMedicine {
   active_ingredient: string | null;
   medicine_group: string | null;
   unit_of_measure: string;
+  /** Quy cách một đơn vị, vd "Hộp 3 vỉ × 10 viên". */
+  packaging: string | null;
   unit_price: number;
   available_stock: number;
+  /** Số lô chưa hết hạn còn hàng; nhà thuốc xuất lô hết hạn sớm nhất trước. */
+  batch_count: number;
+  earliest_expiry_date: string | null;
 }
 
 /* ---------------------------------------------------------------- Pharmacy */
@@ -402,6 +409,8 @@ export interface MedicineStock {
   active_ingredient: string | null;
   medicine_group: string | null;
   unit_of_measure: string;
+  /** Quy cách một đơn vị, vd "Hộp 3 vỉ × 10 viên". */
+  packaging: string | null;
   current_stock: number;
   usable_stock: number;
   reserved_stock: number;
@@ -983,6 +992,8 @@ export interface MedicinePayload {
   active_ingredient?: string | null;
   medicine_group?: string | null;
   unit_of_measure: string;
+  /** Quy cách một đơn vị, vd "Hộp 3 vỉ × 10 viên". */
+  packaging?: string | null;
   unit_price: number;
   manufacturer?: string | null;
   storage_condition?: string | null;
