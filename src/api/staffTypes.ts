@@ -985,6 +985,8 @@ export interface StaffPromotion {
 export interface LinkPatientAccountPayload {
   account_email: string;
   relationship_to_account?: string | null;
+  /** Mã chủ tài khoản nhận qua email (bước request-code); bắt buộc khi liên kết. */
+  code?: string;
 }
 
 /* ---------------------------------------------------------------- Pharmacy extras */

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { CalendarPlus, Link2, Save } from 'lucide-react';
-import { apiGetDeskPatient, apiLinkPatientAccount, apiUpdateDeskPatient } from '../../api/functions/desk';
+import { apiGetDeskPatient, apiLinkPatientAccount, apiRequestLinkPatientCode, apiUpdateDeskPatient } from '../../api/functions/desk';
 import { useAction, useApiQuery } from '../hooks';
 import { formatDate, formatDateTime, formatTime } from '../format';
 import { APPOINTMENT_STATUS, labelOf, PATIENT_CREATED_VIA_LABEL, PATIENT_RELATIONSHIP_LABEL, textOf } from '../labels';
@@ -25,6 +25,9 @@ const PatientDetailPage = () => {
   const [linkEmail, setLinkEmail] = useState('');
   const [linkRelationship, setLinkRelationship] = useState('self');
   const [linkError, setLinkError] = useState<string | null>(null);
+  // Mã chỉ hợp lệ cho đúng email + quan hệ đã gửi; đổi một trong hai thì phải gửi lại.
+  const [linkCodeSent, setLinkCodeSent] = useState(false);
+  const [linkCode, setLinkCode] = useState('');
 
   // Hồ sơ mới về (lần đầu hoặc sau khi lưu) thì nạp lại form, ngay trong lượt render.
   const [formSource, setFormSource] = useState<typeof patient>(null);
@@ -62,13 +65,35 @@ const PatientDetailPage = () => {
     );
   }
 
-  const linkAccount = async () => {
+  const requestLinkCode = async () => {
     if (!linkEmail.trim()) {
       setLinkError('Nhập email tài khoản bệnh nhân đã đăng ký.');
       return;
     }
     const result = await run('link', () =>
-      apiLinkPatientAccount(patientId, { account_email: linkEmail.trim(), relationship_to_account: linkRelationship }),
+      apiRequestLinkPatientCode(patientId, { account_email: linkEmail.trim(), relationship_to_account: linkRelationship }),
+    );
+    if (!result.ok) {
+      setLinkError(result.error);
+      return;
+    }
+    setLinkError(null);
+    setLinkCode('');
+    setLinkCodeSent(true);
+    toast.success(`Đã gửi mã xác nhận tới ${linkEmail.trim()}.`);
+  };
+
+  const linkAccount = async () => {
+    if (!linkCode.trim()) {
+      setLinkError('Nhập mã xác nhận chủ tài khoản nhận qua email.');
+      return;
+    }
+    const result = await run('link', () =>
+      apiLinkPatientAccount(patientId, {
+        account_email: linkEmail.trim(),
+        relationship_to_account: linkRelationship,
+        code: linkCode.trim(),
+      }),
     );
     if (!result.ok || !result.data) {
       setLinkError(result.error);
@@ -100,6 +125,8 @@ const PatientDetailPage = () => {
                   setLinkEmail('');
                   setLinkRelationship('self');
                   setLinkError(null);
+                  setLinkCodeSent(false);
+                  setLinkCode('');
                   setLinkOpen(true);
                 }}
               >
@@ -184,23 +211,29 @@ const PatientDetailPage = () => {
             <Button variant="ghost" onClick={() => setLinkOpen(false)}>
               Huỷ
             </Button>
-            <Button variant="primary" loading={isPending('link')} onClick={linkAccount}>
-              Liên kết
+            {linkCodeSent && (
+              <Button variant="ghost" disabled={isPending('link')} onClick={requestLinkCode}>
+                Gửi lại mã
+              </Button>
+            )}
+            <Button variant="primary" loading={isPending('link')} onClick={linkCodeSent ? linkAccount : requestLinkCode}>
+              {linkCodeSent ? 'Liên kết' : 'Gửi mã cho chủ tài khoản'}
             </Button>
           </>
         }
       >
         {linkError && <Alert tone="danger" className="st-alert-gap">{linkError}</Alert>}
         <Alert tone="info" className="st-alert-gap">
-          Chỉ liên kết được hồ sơ chưa từng đăng nhập. Tài khoản đích đã có hồ sơ “Bản thân” thì chọn quan hệ khác.
+          Chỉ liên kết được hồ sơ chưa từng đăng nhập. Tài khoản đích đã có hồ sơ “Bản thân” thì chọn quan hệ khác. Chủ tài khoản
+          sẽ nhận mã xác nhận qua email và đọc lại cho quầy.
         </Alert>
         <div className="st-form-grid">
           <Field label="Email tài khoản bệnh nhân" required className="st-span-2">
-            {(id) => <input id={id} type="email" className="st-input" value={linkEmail} onChange={(e) => setLinkEmail(e.target.value)} />}
+            {(id) => <input id={id} type="email" className="st-input" value={linkEmail} onChange={(e) => { setLinkEmail(e.target.value); setLinkCodeSent(false); }} />}
           </Field>
           <Field label="Hồ sơ này là của" required className="st-span-2">
             {(id) => (
-              <select id={id} className="st-select" value={linkRelationship} onChange={(e) => setLinkRelationship(e.target.value)}>
+              <select id={id} className="st-select" value={linkRelationship} onChange={(e) => { setLinkRelationship(e.target.value); setLinkCodeSent(false); }}>
                 {Object.entries(PATIENT_RELATIONSHIP_LABEL).map(([value, label]) => (
                   <option key={value} value={value}>
                     {label} của chủ tài khoản
@@ -209,6 +242,21 @@ const PatientDetailPage = () => {
               </select>
             )}
           </Field>
+          {linkCodeSent && (
+            <Field label="Mã xác nhận" required className="st-span-2">
+              {(id) => (
+                <input
+                  id={id}
+                  className="st-input"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  maxLength={10}
+                  value={linkCode}
+                  onChange={(e) => setLinkCode(e.target.value)}
+                />
+              )}
+            </Field>
+          )}
         </div>
       </Sheet>
     </>

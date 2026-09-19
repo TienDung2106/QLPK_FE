@@ -119,6 +119,7 @@ const url = {
   staffDoctorCalendar: (doctorId: number) => `${root}/staff/doctors/${doctorId}/calendar-availability`,
   staffPromotions: `${root}/staff/promotions`,
   staffPatientLinkAccount: (patientId: number) => `${root}/staff/patients/${patientId}/link-account`,
+  staffPatientLinkAccountCode: (patientId: number) => `${root}/staff/patients/${patientId}/link-account/request-code`,
   staffInvoicePdf: (invoiceId: number) => `${root}/staff/invoices/${invoiceId}/pdf`,
   staffPatients: `${root}/staff/patients`,
   staffPatientById: (patientId: number) => `${root}/staff/patients/${patientId}`,

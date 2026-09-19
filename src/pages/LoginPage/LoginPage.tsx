@@ -79,7 +79,8 @@ export const LoginPage = () => {
           setCaptchaRequired(true);
         }
 
-        if (result.status === 429 && result.retryAfterSeconds) {
+        // 429 của bộ giới hạn theo IP không phải khoá tài khoản; lời nhắn backend đã nói đúng.
+        if (result.status === 429 && result.retryAfterSeconds && result.errorCode !== 'rate_limited') {
           const minutes = Math.ceil(result.retryAfterSeconds / 60);
           setError(
             `Tài khoản đang tạm khoá do đăng nhập sai nhiều lần. Vui lòng thử lại sau ${minutes} phút.`,

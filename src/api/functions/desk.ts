@@ -116,6 +116,10 @@ export const apiRegisterDeskPatient = (payload: RegisterDeskPatientPayload) =>
 export const apiUpdateDeskPatient = (patientId: number, payload: DeskPatientPayload) =>
   PutData<DeskPatient>(url.staffPatientById(patientId), payload);
 
+/** Gửi mã xác nhận tới email chủ tài khoản đích; phải có mã này mới liên kết được. */
+export const apiRequestLinkPatientCode = (patientId: number, payload: LinkPatientAccountPayload) =>
+  PostData<void>(url.staffPatientLinkAccountCode(patientId), payload);
+
 /** Chuyển hồ sơ tạo tại quầy sang tài khoản bệnh nhân tự đăng ký sau này. */
 export const apiLinkPatientAccount = (patientId: number, payload: LinkPatientAccountPayload) =>
   PatchData<DeskPatient>(url.staffPatientLinkAccount(patientId), payload);

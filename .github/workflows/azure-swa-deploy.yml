@@ -44,6 +44,10 @@ jobs:
       # deploy dùng đúng bộ thư viện đã test ở máy.
       - run: npm ci
 
+      # Dừng deploy khi có thư viện dính lỗ hổng mức high trở lên đã công bố.
+      - name: Audit dependencies
+        run: npm audit --audit-level=high
+
       # Chạy trước khi deploy, để một lỗi TypeScript không lên tới production.
       # tsconfig.app.json bật noUnusedLocals nên một import thừa cũng làm bước này đỏ.
       - name: Build
