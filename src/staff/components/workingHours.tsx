@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { CalendarClock, Pencil, Plus } from 'lucide-react';
+import { CalendarClock, Plus } from 'lucide-react';
 import type { ApiResult } from '../../api/helpers';
 import type { AppointmentListItem } from '../../api/types';
 import type { DoctorSchedule, DoctorSchedulePayload } from '../../api/staffTypes';
@@ -8,13 +8,14 @@ import { useAction, useApiQuery } from '../hooks';
 import { formatDate, formatTime, toApiTime } from '../format';
 import { CONSULTATION_MODE_LABEL, DAY_OF_WEEK_LABEL, textOf } from '../labels';
 import { useToast } from './toastContext';
-import { Alert, Badge, Button, ConfirmDialog, EmptyState, Field, Panel, Sheet, TableSkeleton } from './ui';
+import { Alert, Button, ConfirmDialog, EmptyState, Field, Panel, Sheet, TableSkeleton } from './ui';
 
 export interface WorkingHoursApi {
   list: (includeInactive: boolean) => Promise<ApiResult<DoctorSchedule[]>>;
-  create: (payload: DoctorSchedulePayload) => Promise<ApiResult<DoctorSchedule>>;
-  update: (scheduleId: number, payload: DoctorSchedulePayload) => Promise<ApiResult<DoctorSchedule>>;
-  setStatus: (scheduleId: number, isActive: boolean) => Promise<ApiResult<DoctorSchedule>>;
+  /** Bỏ trống các hàm ghi => chỉ xem (bác sĩ xem ca của mình; chỉ admin được sửa). */
+  create?: (payload: DoctorSchedulePayload) => Promise<ApiResult<DoctorSchedule>>;
+  update?: (scheduleId: number, payload: DoctorSchedulePayload) => Promise<ApiResult<DoctorSchedule>>;
+  setStatus?: (scheduleId: number, isActive: boolean) => Promise<ApiResult<DoctorSchedule>>;
 }
 
 interface FormValue {
@@ -113,8 +114,8 @@ export const AffectedAppointments = ({
 );
 
 /**
- * Bảng ca làm việc theo tuần, dùng chung cho bác sĩ (ca của mình) và admin (ca của bất kỳ bác sĩ
- * nào). Mỗi dòng là một ca; bệnh nhân đặt vào ca và ca đầy dần theo tổng phút các lượt khám.
+ * Bảng ca làm việc theo tuần, dùng chung cho bác sĩ (chỉ xem ca của mình) và admin (sửa ca của bất kỳ
+ * bác sĩ nào). Mỗi dòng là một thứ, các ca trong ngày hiện thành thẻ; admin bấm thẻ để sửa/tắt ca.
  */
 export const WorkingHoursEditor = ({
   api,
@@ -141,6 +142,13 @@ export const WorkingHoursEditor = ({
   const rows = [...(query.data ?? [])].sort(
     (a, b) => a.day_of_week - b.day_of_week || a.start_time.localeCompare(b.start_time),
   );
+  const days = [
+    ...rows.reduce(
+      (map, row) => map.set(row.day_of_week, [...(map.get(row.day_of_week) ?? []), row]),
+      new Map<number, DoctorSchedule[]>(),
+    ),
+  ];
+  const readOnly = !api.create || !api.update || !api.setStatus;
   const weeklyHours = rows.filter((row) => row.is_active).reduce((sum, row) => sum + row.capacity_minutes, 0) / 60;
 
   const openForm = (row: DoctorSchedule | 'new') => {
@@ -161,8 +169,12 @@ export const WorkingHoursEditor = ({
       setError(payload);
       return;
     }
+    const { create, update } = api;
+    if (!create || !update) {
+      return;
+    }
     const result = await run('save', () =>
-      editing === 'new' || editing === null ? api.create(payload) : api.update(editing.doctor_schedule_id, payload),
+      editing === 'new' || editing === null ? create(payload) : update(editing.doctor_schedule_id, payload),
     );
     if (!result.ok || !result.data) {
       setError(result.error);
@@ -174,6 +186,10 @@ export const WorkingHoursEditor = ({
 
   /** Tạo đủ 4 ca chuẩn cho thứ đang chọn; ca nào trùng giờ đã có thì báo lại, ca còn lại vẫn được tạo. */
   const createStandardShifts = async () => {
+    const { create } = api;
+    if (!create) {
+      return;
+    }
     const created: DoctorSchedule[] = [];
     const failures: string[] = [];
 
@@ -184,7 +200,7 @@ export const WorkingHoursEditor = ({
           failures.push(`${shift.label}: ${payload}`);
           continue;
         }
-        const result = await api.create(payload);
+        const result = await create(payload);
         if (result.ok && result.data) {
           created.push(result.data);
         } else {
@@ -206,10 +222,11 @@ export const WorkingHoursEditor = ({
   };
 
   const toggle = async () => {
-    if (!toggling) {
+    const { setStatus } = api;
+    if (!toggling || !setStatus) {
       return;
     }
-    const result = await run('toggle', () => api.setStatus(toggling.doctor_schedule_id, !toggling.is_active));
+    const result = await run('toggle', () => setStatus(toggling.doctor_schedule_id, !toggling.is_active));
     setToggling(null);
     if (!result.ok || !result.data) {
       toast.error(result.error);
@@ -232,7 +249,12 @@ export const WorkingHoursEditor = ({
 
       <Panel
         title="Ca làm việc trong tuần"
-        subtitle={intro ?? `${rows.filter((row) => row.is_active).length} ca đang mở · ${weeklyHours.toLocaleString('vi-VN')} giờ khám mỗi tuần`}
+        subtitle={
+          intro ??
+          `${rows.filter((row) => row.is_active).length} ca đang mở · ${weeklyHours.toLocaleString('vi-VN')} giờ khám mỗi tuần${
+            readOnly ? ' · Chỉ quản trị viên được thay đổi ca' : ''
+          }`
+        }
         bodyless
         actions={
           <>
@@ -240,9 +262,11 @@ export const WorkingHoursEditor = ({
               <input type="checkbox" checked={showInactive} onChange={(e) => setShowInactive(e.target.checked)} />
               Hiện ca đã tắt
             </label>
-            <Button variant="primary" size="sm" icon={<Plus size={14} />} onClick={() => openForm('new')}>
-              Thêm ca
-            </Button>
+            {!readOnly && (
+              <Button variant="primary" size="sm" icon={<Plus size={14} />} onClick={() => openForm('new')}>
+                Thêm ca
+              </Button>
+            )}
           </>
         }
       >
@@ -254,52 +278,73 @@ export const WorkingHoursEditor = ({
         {query.loading && rows.length === 0 ? (
           <table className="st-table">
             <tbody>
-              <TableSkeleton columns={6} rows={4} />
+              <TableSkeleton columns={3} rows={4} />
             </tbody>
           </table>
         ) : rows.length === 0 && !query.error ? (
           <EmptyState
             icon={<CalendarClock size={32} strokeWidth={1.6} />}
             title="Chưa có giờ làm việc"
-            text="Bệnh nhân chỉ đặt được lịch vào ca làm việc. Thêm ít nhất một ca để mở lịch."
+            text={
+              readOnly
+                ? 'Bạn chưa được xếp ca nào. Liên hệ quản trị viên để được xếp lịch làm việc.'
+                : 'Bệnh nhân chỉ đặt được lịch vào ca làm việc. Thêm ít nhất một ca để mở lịch.'
+            }
             action={
-              <Button variant="primary" icon={<Plus size={15} />} onClick={() => openForm('new')}>
-                Thêm ca
-              </Button>
+              readOnly ? undefined : (
+                <Button variant="primary" icon={<Plus size={15} />} onClick={() => openForm('new')}>
+                  Thêm ca
+                </Button>
+              )
             }
           />
         ) : (
           <div className="st-table-wrap">
-            <table className="st-table">
+            <table className="st-table st-week-table">
               <thead>
                 <tr>
                   <th>Thứ</th>
-                  <th>Ca</th>
-                  <th>Hình thức</th>
-                  <th className="st-num">Thời lượng</th>
-                  <th className="st-num">Tối đa BN</th>
-                  <th>Trạng thái</th>
-                  <th />
+                  <th>Ca làm việc</th>
+                  <th className="st-num">Giờ khám</th>
                 </tr>
               </thead>
               <tbody>
-                {rows.map((row) => (
-                  <tr key={row.doctor_schedule_id} className={row.is_active ? '' : 'st-row-muted'}>
-                    <td className="st-strong">{DAY_OF_WEEK_LABEL[row.day_of_week] ?? row.day_of_week}</td>
-                    <td className="st-nowrap">
-                      {formatTime(row.start_time)} – {formatTime(row.end_time)}
+                {days.map(([day, shifts]) => (
+                  <tr key={day}>
+                    <td className="st-strong st-nowrap">{DAY_OF_WEEK_LABEL[day] ?? day}</td>
+                    <td>
+                      <div className="st-shift-row">
+                        {shifts.map((row) => {
+                          const mode = textOf(CONSULTATION_MODE_LABEL, row.consultation_mode);
+                          const label = (
+                            <>
+                              {formatTime(row.start_time)}–{formatTime(row.end_time)}
+                              {row.consultation_mode !== 'in_clinic' && <span className="st-shift-meta">{mode}</span>}
+                              {!row.is_active && <span className="st-shift-meta">đã tắt</span>}
+                            </>
+                          );
+                          const title = `${mode} · ${row.capacity_minutes} phút · tối đa ${row.max_patients} BN${row.is_active ? '' : ' · đã tắt'}`;
+                          const className = `st-shift ${row.is_active ? '' : 'off'}`;
+                          return readOnly ? (
+                            <span key={row.doctor_schedule_id} className={className} title={title}>
+                              {label}
+                            </span>
+                          ) : (
+                            <button
+                              key={row.doctor_schedule_id}
+                              type="button"
+                              className={`${className} editable`}
+                              title={`${title} — bấm để sửa`}
+                              onClick={() => openForm(row)}
+                            >
+                              {label}
+                            </button>
+                          );
+                        })}
+                      </div>
                     </td>
-                    <td>{textOf(CONSULTATION_MODE_LABEL, row.consultation_mode)}</td>
-                    <td className="st-num">{row.capacity_minutes} phút</td>
-                    <td className="st-num">{row.max_patients}</td>
-                    <td>{row.is_active ? <Badge tone="success">Đang mở</Badge> : <Badge>Đã tắt</Badge>}</td>
-                    <td className="st-num st-nowrap">
-                      <Button size="sm" variant="ghost" icon={<Pencil size={13} />} onClick={() => openForm(row)}>
-                        Sửa
-                      </Button>
-                      <Button size="sm" variant={row.is_active ? 'danger' : 'ghost'} onClick={() => setToggling(row)}>
-                        {row.is_active ? 'Tắt' : 'Mở lại'}
-                      </Button>
+                    <td className="st-num">
+                      {(shifts.filter((row) => row.is_active).reduce((sum, row) => sum + row.capacity_minutes, 0) / 60).toLocaleString('vi-VN')} giờ
                     </td>
                   </tr>
                 ))}
@@ -316,6 +361,18 @@ export const WorkingHoursEditor = ({
         onClose={() => setEditing(null)}
         footer={
           <>
+            {editing !== null && editing !== 'new' && (
+              <Button
+                variant={editing.is_active ? 'danger' : 'ghost'}
+                style={{ marginRight: 'auto' }}
+                onClick={() => {
+                  setToggling(editing);
+                  setEditing(null);
+                }}
+              >
+                {editing.is_active ? 'Tắt ca' : 'Mở lại ca'}
+              </Button>
+            )}
             <Button variant="ghost" onClick={() => setEditing(null)}>
               Huỷ
             </Button>

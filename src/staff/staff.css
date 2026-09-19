@@ -1605,3 +1605,57 @@ button.st-stat:hover {
   font-size: 0.9em;
   letter-spacing: 0;
 }
+
+/* Ca làm việc: mỗi thứ một dòng, các ca là thẻ */
+.st-week-table td {
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+
+.st-shift-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.st-shift {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  height: 28px;
+  padding: 0 0.6rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid #cfe3d8;
+  background: var(--st-success-soft);
+  color: var(--st-success);
+  font-size: 0.8rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.st-shift.off {
+  border-color: var(--st-line);
+  background: var(--st-neutral-soft);
+  color: var(--st-neutral);
+}
+
+.st-shift-meta {
+  font-weight: 500;
+  font-size: 0.72rem;
+  opacity: 0.8;
+}
+
+.st-shift.editable {
+  cursor: pointer;
+  transition: border-color 140ms var(--st-ease), box-shadow 140ms var(--st-ease);
+}
+
+.st-shift.editable:hover {
+  border-color: var(--primary);
+}
+
+.st-shift.editable:focus-visible {
+  outline: none;
+  box-shadow: var(--st-focus);
+}
