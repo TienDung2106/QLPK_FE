@@ -28,10 +28,36 @@ export function resolveLandingPath(
     return '/doi-mat-khau';
   }
 
-  // Nơi họ định tới trước khi bị chặn lại; bỏ qua nếu chính nó là một trang khách.
-  if (redirectTo && !['/login', '/dang-ky', '/quen-mat-khau'].includes(redirectTo)) {
+  // Nơi họ định tới trước khi bị chặn lại.
+  if (redirectTo && isRedirectAllowed(account, redirectTo)) {
     return redirectTo;
   }
 
   return (account && LANDING_BY_ROLE[account.role_code]) ?? '/';
+}
+
+const GUEST_PATHS = ['/login', '/dang-ky', '/quen-mat-khau'];
+
+/** Các khu làm việc của nhân viên — mỗi vai trò chỉ thuộc về một khu. */
+const STAFF_AREAS = ['/quan-tri', '/bac-si', '/thu-ngan', '/nha-thuoc'];
+
+/**
+ * `redirectTo` được ghi lại lúc phiên *trước* bị xoá (đăng xuất, hết hạn), nên có thể là
+ * trang của một tài khoản khác: admin đăng xuất ở `/quan-tri/cai-dat`, thu ngân đăng nhập
+ * tiếp thì bị đưa vào đó và chỉ thấy "Không có quyền truy cập". Chỉ tin nó khi nó nằm
+ * trong khu của chính vai trò đang đăng nhập.
+ */
+function isRedirectAllowed(account: AuthenticatedAccount | null, redirectTo: string): boolean {
+  if (GUEST_PATHS.includes(redirectTo)) {
+    return false;
+  }
+
+  const area = STAFF_AREAS.find((prefix) => redirectTo === prefix || redirectTo.startsWith(`${prefix}/`));
+
+  if (!area) {
+    // Trang công khai, trang bệnh nhân, /thong-bao…: các guard khác đã lo.
+    return true;
+  }
+
+  return !!account && LANDING_BY_ROLE[account.role_code] === area;
 }

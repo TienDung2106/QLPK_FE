@@ -149,6 +149,11 @@
   opacity: 1;
 }
 
+/* Lớp phủ khi mở menu ở màn hẹp. Trên desktop nó sẽ thành một ô grid và đẩy lệch cả bố cục. */
+.st-rail-scrim {
+  display: none;
+}
+
 /* ---------------------------------------------------------------- Main column */
 
 .st-main {
@@ -171,7 +176,8 @@
   border-bottom: 1px solid var(--st-line);
 }
 
-.st-topbar-menu {
+/* Chỉ dùng ở màn hẹp. Cần specificity cao hơn .st-btn (khai báo phía dưới, display: inline-flex). */
+.st-topbar .st-topbar-menu {
   display: none;
 }
 
@@ -1490,6 +1496,7 @@ button.st-stat:hover {
   }
 
   .st-rail-scrim {
+    display: block;
     position: fixed;
     inset: 0;
     z-index: 79;
@@ -1500,7 +1507,7 @@ button.st-stat:hover {
     padding: 0 1rem;
   }
 
-  .st-topbar-menu {
+  .st-topbar .st-topbar-menu {
     display: inline-flex;
   }
 
