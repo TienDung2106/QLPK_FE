@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Briefcase, ChevronDown, ArrowRight, Info, Check, GraduationCap, Loader2, AlertCircle } from 'lucide-react';
+import { Briefcase, ChevronDown, Info, Check, GraduationCap, Loader2, AlertCircle } from 'lucide-react';
 import type { BookingDoctor } from '../../../../types/booking';
 import { apiGetDoctors } from '../../../../api/functions/doctors';
 import type { DoctorListItem } from '../../../../api/types';
@@ -241,7 +241,9 @@ export const Step1Doctor: React.FC<Step1DoctorProps> = ({
                       className={`btn-choose-doctor ${isSel ? 'chosen' : ''}`}
                       onClick={(event) => {
                         event.stopPropagation();
+                        // Bấm "Chọn bác sĩ" là chốt luôn và sang bước chọn dịch vụ, không cần nút Tiếp tục.
                         onSelectDoctor(doctor);
+                        onNextStep();
                       }}
                     >
                       Chọn bác sĩ
@@ -251,19 +253,6 @@ export const Step1Doctor: React.FC<Step1DoctorProps> = ({
               })}
             </div>
           )}
-
-          {/* Next button */}
-          <div className="step1-next-row">
-            <button
-              type="button"
-              className="step1-next-btn"
-              onClick={onNextStep}
-              disabled={!selectedDoctor}
-            >
-              <span>Tiếp tục</span>
-              <ArrowRight size={16} />
-            </button>
-          </div>
         </div>
       </div>
     </div>
