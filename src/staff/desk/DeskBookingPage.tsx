@@ -11,7 +11,7 @@ import { CONSULTATION_MODE_LABEL, VISIT_TYPE_LABEL } from '../labels';
 import { useToast } from '../components/toastContext';
 import { DoctorSelect, PatientPicker, SlotPicker } from '../components/pickers';
 import { DoctorMonthCalendar } from '../components/DoctorMonthCalendar';
-import { Alert, Button, EmptyState, Field, FilterTabs, PageHeader, Panel } from '../components/ui';
+import { Alert, Button, Field, FilterTabs, PageHeader, Panel } from '../components/ui';
 import { VoucherStrip } from '../../pages/BookingPage/components/VoucherStrip';
 import { describePromotion } from '../../pages/BookingPage/bookingFormat';
 
@@ -66,10 +66,14 @@ const DeskBookingPage = () => {
     };
   }, [quoteKey, patientId]);
 
-  const toggleService = (serviceId: number) => {
-    // Chọn dịch vụ khác thì thay dịch vụ cũ; bấm lại dịch vụ đang chọn thì bỏ chọn.
-    setSelectedIds((current) => (current.includes(serviceId) ? [] : [serviceId]));
-  };
+  // Gom dịch vụ theo nhóm để dropdown dễ tìm.
+  const serviceGroups = Object.entries(
+    serviceList.reduce<Record<string, typeof serviceList>>((groups, service) => {
+      const group = service.service_group ?? 'Khác';
+      (groups[group] ??= []).push(service);
+      return groups;
+    }, {}),
+  );
 
   const submit = async () => {
     if (!patient) {
@@ -206,64 +210,46 @@ const DeskBookingPage = () => {
             </div>
           </Panel>
 
+          <Panel title="Dịch vụ" subtitle="Chọn 1 dịch vụ cho lượt khám · có thể bỏ trống nếu chỉ khám">
+            {services.error && <Alert tone="danger" className="st-alert-gap">{services.error}</Alert>}
+            <Field label="Dịch vụ">
+              {(id) => (
+                <select
+                  id={id}
+                  className="st-select"
+                  value={selectedIds[0] ?? ''}
+                  disabled={services.loading || serviceList.length === 0}
+                  onChange={(event) => setSelectedIds(event.target.value ? [Number(event.target.value)] : [])}
+                >
+                  <option value="">
+                    {!services.loading && serviceList.length === 0
+                      ? 'Chưa có dịch vụ đang hoạt động'
+                      : 'Chỉ khám (không dùng dịch vụ)'}
+                  </option>
+                  {serviceGroups.map(([group, items]) => (
+                    <optgroup key={group} label={group}>
+                      {items.map((service) => (
+                        <option key={service.service_id} value={service.service_id}>
+                          {service.service_name} · {service.duration_minutes} phút · {formatMoney(service.price)}
+                        </option>
+                      ))}
+                    </optgroup>
+                  ))}
+                </select>
+              )}
+            </Field>
+            {chosen[0] && (
+              <p className="st-hint" style={{ marginTop: '0.4rem' }}>
+                {chosen[0].service_group ?? 'Khác'} · {chosen[0].duration_minutes} phút · {formatMoney(chosen[0].price)}
+              </p>
+            )}
+          </Panel>
+
           <VoucherStrip
             subtotal={quote?.subtotal_amount ?? subtotal}
             appliedPromotionId={quote?.promotion?.promotion_id ?? null}
             patientId={patientId}
           />
-
-          <Panel title="Dịch vụ" subtitle="Chọn 1 dịch vụ cho lượt khám · có thể bỏ trống nếu chỉ khám" bodyless>
-            {services.error && (
-              <div className="st-panel-body">
-                <Alert tone="danger">{services.error}</Alert>
-              </div>
-            )}
-            {!services.loading && serviceList.length === 0 && !services.error ? (
-              <EmptyState title="Chưa có dịch vụ đang hoạt động" />
-            ) : (
-              <div className="st-table-wrap">
-                <table className="st-table">
-                  <thead>
-                    <tr>
-                      <th style={{ width: 40 }} aria-label="Chọn" />
-                      <th>Dịch vụ</th>
-                      <th className="st-num">Giá</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {serviceList.map((service) => {
-                      const checked = selectedIds.includes(service.service_id);
-                      return (
-                        <tr key={service.service_id} onClick={() => toggleService(service.service_id)} style={{ cursor: 'pointer' }}>
-                          <td>
-                            <input
-                              type="radio"
-                              name="desk-service"
-                              aria-label={`Chọn ${service.service_name}`}
-                              checked={checked}
-                              readOnly
-                              onClick={(event) => {
-                                event.stopPropagation();
-                                toggleService(service.service_id);
-                              }}
-                              style={{ accentColor: 'var(--primary)', width: 16, height: 16 }}
-                            />
-                          </td>
-                          <td>
-                            <div className="st-cell-main">{service.service_name}</div>
-                            <div className="st-cell-sub">
-                              {service.service_group ?? 'Khác'} · {service.duration_minutes} phút
-                            </div>
-                          </td>
-                          <td className="st-num">{formatMoney(service.price)}</td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </Panel>
         </div>
 
         <div className="st-stack">
