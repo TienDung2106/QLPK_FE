@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CalendarPlus, Footprints } from 'lucide-react';
+import { CalendarPlus, Footprints, X } from 'lucide-react';
 import { apiGetBookingQuote, apiGetServices } from '../../api/functions/services';
 import type { BookingQuote } from '../../api/types';
 import { apiBookOnBehalf, apiBookWalkIn } from '../../api/functions/desk';
@@ -31,7 +31,7 @@ const DeskBookingPage = () => {
   const [doctorId, setDoctorId] = useState<number | null>(null);
   const [date, setDate] = useState(todayIso());
   const [time, setTime] = useState<string | null>(null);
-  // Giống luồng bệnh nhân: mỗi lượt khám tối đa một dịch vụ (bỏ trống nếu chỉ khám).
+  // Giống luồng bệnh nhân: chọn nhiều dịch vụ, mỗi dịch vụ một lần; dịch vụ chọn đầu tiên là dịch vụ chính.
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [visitType, setVisitType] = useState('new_visit');
   const [consultationMode, setConsultationMode] = useState('in_clinic');
@@ -66,13 +66,15 @@ const DeskBookingPage = () => {
     };
   }, [quoteKey, patientId]);
 
-  // Gom dịch vụ theo nhóm để dropdown dễ tìm.
+  // Dropdown chỉ còn dịch vụ chưa chọn (nên không chọn trùng), gom theo nhóm để dễ tìm.
   const serviceGroups = Object.entries(
-    serviceList.reduce<Record<string, typeof serviceList>>((groups, service) => {
-      const group = service.service_group ?? 'Khác';
-      (groups[group] ??= []).push(service);
-      return groups;
-    }, {}),
+    serviceList
+      .filter((service) => !selectedIds.includes(service.service_id))
+      .reduce<Record<string, typeof serviceList>>((groups, service) => {
+        const group = service.service_group ?? 'Khác';
+        (groups[group] ??= []).push(service);
+        return groups;
+      }, {}),
   );
 
   const submit = async () => {
@@ -210,21 +212,28 @@ const DeskBookingPage = () => {
             </div>
           </Panel>
 
-          <Panel title="Dịch vụ" subtitle="Chọn 1 dịch vụ cho lượt khám · có thể bỏ trống nếu chỉ khám">
+          <Panel title="Dịch vụ" subtitle="Chọn nhiều dịch vụ, mỗi dịch vụ một lần · bỏ trống nếu chỉ khám">
             {services.error && <Alert tone="danger" className="st-alert-gap">{services.error}</Alert>}
-            <Field label="Dịch vụ">
+            <Field label="Thêm dịch vụ">
               {(id) => (
                 <select
                   id={id}
                   className="st-select"
-                  value={selectedIds[0] ?? ''}
-                  disabled={services.loading || serviceList.length === 0}
-                  onChange={(event) => setSelectedIds(event.target.value ? [Number(event.target.value)] : [])}
+                  value=""
+                  disabled={services.loading || serviceGroups.length === 0}
+                  onChange={(event) => {
+                    const serviceId = Number(event.target.value);
+                    if (serviceId) {
+                      setSelectedIds((current) => (current.includes(serviceId) ? current : [...current, serviceId]));
+                    }
+                  }}
                 >
                   <option value="">
                     {!services.loading && serviceList.length === 0
                       ? 'Chưa có dịch vụ đang hoạt động'
-                      : 'Chỉ khám (không dùng dịch vụ)'}
+                      : serviceGroups.length === 0
+                        ? 'Đã chọn hết dịch vụ'
+                        : '— Thêm dịch vụ —'}
                   </option>
                   {serviceGroups.map(([group, items]) => (
                     <optgroup key={group} label={group}>
@@ -238,10 +247,42 @@ const DeskBookingPage = () => {
                 </select>
               )}
             </Field>
-            {chosen[0] && (
-              <p className="st-hint" style={{ marginTop: '0.4rem' }}>
-                {chosen[0].service_group ?? 'Khác'} · {chosen[0].duration_minutes} phút · {formatMoney(chosen[0].price)}
+            {chosen.length === 0 ? (
+              <p className="st-hint" style={{ marginTop: '0.5rem' }}>
+                Chưa chọn dịch vụ — chỉ khám.
               </p>
+            ) : (
+              <ul style={{ listStyle: 'none', margin: '0.6rem 0 0', padding: 0, display: 'grid', gap: 6 }}>
+                {chosen.map((service, index) => (
+                  <li
+                    key={service.service_id}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      padding: '0.4rem 0.4rem 0.4rem 0.7rem',
+                      border: '1px solid var(--border-light)',
+                      borderRadius: 8,
+                    }}
+                  >
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <span className="st-cell-main">{service.service_name}</span>
+                      <span className="st-cell-sub">
+                        {' '}
+                        · {service.duration_minutes} phút{index === 0 ? ' · Dịch vụ chính' : ''}
+                      </span>
+                    </div>
+                    <span className="st-strong">{formatMoney(service.price)}</span>
+                    <Button
+                      size="sm"
+                      iconOnly
+                      aria-label={`Bỏ ${service.service_name}`}
+                      icon={<X size={13} />}
+                      onClick={() => setSelectedIds((current) => current.filter((id) => id !== service.service_id))}
+                    />
+                  </li>
+                ))}
+              </ul>
             )}
           </Panel>
 
@@ -289,8 +330,8 @@ const DeskBookingPage = () => {
 
           <Panel title="Tóm tắt">
             <dl className="st-totals">
-              <dt>Dịch vụ</dt>
-              <dd>{chosen[0]?.service_name ?? 'Chỉ khám'}</dd>
+              <dt>Dịch vụ đã chọn</dt>
+              <dd>{chosen.length || 'Chỉ khám'}</dd>
               <dt>Tạm tính dịch vụ</dt>
               <dd>{formatMoney(quote?.subtotal_amount ?? subtotal)}</dd>
               {quote && (
@@ -310,7 +351,7 @@ const DeskBookingPage = () => {
             </dl>
             {quote?.next_tier && (
               <p className="st-hint" style={{ marginTop: '0.5rem' }}>
-                Dịch vụ từ {formatMoney((quote.subtotal_amount ?? subtotal) + quote.next_tier.amount_needed)} được {describePromotion(quote.next_tier).toLowerCase()}.
+                Chọn thêm {formatMoney(quote.next_tier.amount_needed)} để được {describePromotion(quote.next_tier).toLowerCase()}.
               </p>
             )}
             <p className="st-hint" style={{ marginTop: '0.5rem' }}>

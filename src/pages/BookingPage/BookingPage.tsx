@@ -116,10 +116,11 @@ export const BookingPage: React.FC<BookingPageProps> = ({ onBackToHome }) => {
 
       return {
         ...prev,
-        // Mỗi lượt khám chỉ một dịch vụ: chọn dịch vụ khác thì thay dịch vụ cũ, bấm lại thì bỏ chọn.
+        // Mỗi dịch vụ chỉ chọn một lần: bấm lại dịch vụ đang chọn thì bỏ chọn.
         selectedServices: alreadySelected
-          ? []
+          ? prev.selectedServices.filter((line) => line.serviceId !== service.service_id)
           : [
+              ...prev.selectedServices,
               {
                 serviceId: service.service_id,
                 name: service.service_name,

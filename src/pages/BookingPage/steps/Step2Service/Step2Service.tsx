@@ -88,7 +88,8 @@ export const Step2Service: React.FC<Step2ServiceProps> = ({
       <div className="step3-callout">
         <Info size={16} className="callout-icon" />
         <span>
-          Mỗi lượt khám chọn 1 dịch vụ. Thời gian của dịch vụ sẽ quyết định ca khám còn phù hợp ở bước sau.
+          Bạn có thể chọn nhiều dịch vụ cho cùng một buổi khám, mỗi dịch vụ một lần. Tổng thời gian sẽ quyết định ca
+          khám còn phù hợp ở bước sau.
         </span>
       </div>
 
@@ -118,14 +119,14 @@ export const Step2Service: React.FC<Step2ServiceProps> = ({
             Phòng khám chưa công bố bảng dịch vụ. Vui lòng liên hệ hotline để được tư vấn.
           </div>
         ) : (
-          <div className="services-grid" role="radiogroup" aria-label="Dịch vụ phòng khám">
+          <div className="services-grid">
             {services.map((service) => {
               const isSel = selectedIds.has(service.service_id);
 
               return (
                 <div
                   key={service.service_id}
-                  role="radio"
+                  role="checkbox"
                   tabIndex={0}
                   aria-checked={isSel}
                   className={`service-card ${isSel ? 'is-selected' : ''}`}
@@ -172,7 +173,7 @@ export const Step2Service: React.FC<Step2ServiceProps> = ({
         <section className="service-basket" aria-live="polite">
           <div className="basket-row">
             <span className="basket-label">
-              Đã chọn <strong>{selectedServices[0].name}</strong>
+              Đã chọn <strong>{selectedServices.length}</strong> dịch vụ
             </span>
             <span className="basket-value">{formatCurrency(subtotal)}</span>
           </div>
@@ -203,7 +204,7 @@ export const Step2Service: React.FC<Step2ServiceProps> = ({
 
           {quote?.next_tier && (
             <p className="basket-next-tier">
-              Dịch vụ từ {formatCurrency(subtotal + quote.next_tier.amount_needed)} được{' '}
+              Chọn thêm {formatCurrency(quote.next_tier.amount_needed)} để được{' '}
               {describePromotion(quote.next_tier).toLowerCase()}.
             </p>
           )}
@@ -220,8 +221,8 @@ export const Step2Service: React.FC<Step2ServiceProps> = ({
             <div className="account-alert error" role="alert">
               <AlertTriangle size={16} />
               <span>
-                Dịch vụ đã chọn cần {durationMinutes} phút, dài hơn một ca khám ({MAX_VISIT_MINUTES} phút).
-                Vui lòng chọn dịch vụ khác hoặc liên hệ phòng khám.
+                Các dịch vụ đã chọn cần {durationMinutes} phút, dài hơn một ca khám ({MAX_VISIT_MINUTES} phút).
+                Vui lòng bớt dịch vụ hoặc đặt thành nhiều buổi.
               </span>
             </div>
           )}
