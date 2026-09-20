@@ -314,6 +314,92 @@
   border-radius: 10px;
 }
 
+/* --------------------------------------------------------------------------
+   Thanh lọc danh mục dịch vụ
+   Ô chọn dùng lại .filter-group / .filter-select / .select-chevron của bước 1; ở đây chỉ cần xếp
+   chúng thành hàng ngang thay vì cột dọc như thanh bên.
+   -------------------------------------------------------------------------- */
+.service-filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.85rem;
+  margin-bottom: 0.9rem;
+}
+
+.service-filter-bar .filter-group {
+  flex: 1 1 11rem;
+  min-width: 0;
+}
+
+.service-filter-summary {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.9rem;
+  font-size: 0.82rem;
+  color: var(--text-muted, #64748b);
+}
+
+.service-filter-clear {
+  border: none;
+  background: none;
+  padding: 0;
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--primary, #1877f2);
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+/* --------------------------------------------------------------------------
+   Nút chuyển phạm vi lượt khám: 1 ca / 1 buổi
+   -------------------------------------------------------------------------- */
+.visit-scope-tabs {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.25rem;
+}
+
+.visit-scope-tab {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  padding: 0.4rem 0.95rem;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 999px;
+  background: #f8fafc;
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.visit-scope-tab small {
+  font-size: 0.72rem;
+  font-weight: 500;
+}
+
+.visit-scope-tab:hover:not(.active):not(:disabled) {
+  border-color: #bfdbfe;
+  color: #1e40af;
+}
+
+.visit-scope-tab.active {
+  border-color: var(--primary, #1877f2);
+  background: #eff6ff;
+  color: var(--primary, #1877f2);
+}
+
+/* Mờ đi nhưng không đổi màu chữ, để cái đang bật vẫn đọc được khi nó bị khoá. */
+.visit-scope-tab:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
 @media (max-width: 700px) {
   .step3-container .services-grid {
     grid-template-columns: 1fr;

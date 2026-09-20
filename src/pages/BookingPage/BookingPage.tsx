@@ -134,6 +134,21 @@ export const BookingPage: React.FC<BookingPageProps> = ({ onBackToHome }) => {
     });
   };
 
+  /**
+   * Giữ lại đúng những dịch vụ truyền vào, bỏ phần còn lại trong một lần. Dùng khi bệnh nhân muốn
+   * lượt khám gọn trong một ca; bỏ từng cái bằng handleToggleService thì mỗi cái là một lần render.
+   */
+  const handleKeepServices = (serviceIds: number[]) => {
+    const keep = new Set(serviceIds);
+
+    setState((prev) => ({
+      ...prev,
+      selectedServices: prev.selectedServices.filter((line) => keep.has(line.serviceId)),
+      // Tổng thời gian đổi thì ca đã chọn có thể không còn đủ chỗ, nên chọn lại ca.
+      selectedShift: null,
+    }));
+  };
+
   const handleSelectPatient = (patientId: number, info: PatientInfo) => {
     setState((prev) => ({ ...prev, selectedPatientId: patientId, patientInfo: info }));
   };
@@ -226,6 +241,7 @@ export const BookingPage: React.FC<BookingPageProps> = ({ onBackToHome }) => {
                 quoteError={quoteError}
                 patientId={state.selectedPatientId}
                 onToggleService={handleToggleService}
+                onKeepServices={handleKeepServices}
                 onPrevStep={() => goToStep(1)}
                 onNextStep={() => goToStep(3)}
               />
