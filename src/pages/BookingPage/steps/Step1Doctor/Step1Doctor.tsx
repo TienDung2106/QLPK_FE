@@ -3,7 +3,6 @@ import { Briefcase, ChevronDown, Info, Check, GraduationCap, Loader2, AlertCircl
 import type { BookingDoctor } from '../../../../types/booking';
 import { apiGetDoctors } from '../../../../api/functions/doctors';
 import type { DoctorListItem } from '../../../../api/types';
-import { formatCurrency } from '../../bookingFormat';
 import './Step1Doctor.css';
 
 interface Step1DoctorProps {
@@ -26,7 +25,6 @@ function toBookingDoctor(doctor: DoctorListItem): BookingDoctor {
     experienceYears: doctor.years_of_experience,
     degree: doctor.degree ?? undefined,
     avatar: doctor.avatar_url ?? FALLBACK_AVATAR,
-    price: doctor.consultation_fee,
   };
 }
 
@@ -232,8 +230,6 @@ export const Step1Doctor: React.FC<Step1DoctorProps> = ({
                           </span>
                         )}
                       </div>
-
-                      <p className="row-fee">Phí khám: {formatCurrency(doctor.price ?? 0)}</p>
                     </div>
 
                     <button

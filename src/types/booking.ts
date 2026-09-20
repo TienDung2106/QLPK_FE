@@ -15,8 +15,6 @@ export interface BookingDoctor {
   experienceYears?: number;
   degree?: string;
   avatar?: string;
-  /** consultation_fee — phí khám của bác sĩ, tách khỏi giá dịch vụ. */
-  price?: number;
 }
 
 export interface PatientInfo {

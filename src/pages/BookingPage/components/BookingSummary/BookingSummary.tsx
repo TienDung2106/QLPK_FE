@@ -199,7 +199,9 @@ export const BookingSummary: React.FC<BookingSummaryProps> = ({
           <div className="payment-row">
             <span>{discountLabel}</span>
             <span className="discount-tag">
-              {discountAmount > 0 ? `-${formatVND(discountAmount)}` : 'Chưa đủ điều kiện'}
+              {discountAmount > 0
+                ? `-${formatVND(discountAmount)}`
+                : subtotal > 0 ? 'Chưa đủ điều kiện' : '--'}
             </span>
           </div>
           {promotion && (

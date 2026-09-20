@@ -368,14 +368,6 @@
   }
 }
 
-/* Phí khám lấy thẳng từ consultation_fee của API — chỗ trước đây là điểm đánh giá. */
-.row-fee {
-  margin: 0.4rem 0 0;
-  font-size: 0.82rem;
-  font-weight: 700;
-  color: var(--primary);
-}
-
 .step1-next-btn:disabled {
   opacity: 0.55;
   cursor: not-allowed;
