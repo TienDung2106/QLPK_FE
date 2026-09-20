@@ -20,5 +20,4 @@ export const PERMISSION = {
   DoctorSchedulesManageOwn: 'doctor_schedules.manage_own',
   AppointmentsConfirmOwn: 'appointments.confirm_own',
   AppointmentsBookFollowUp: 'appointments.book_follow_up',
-  ContractsManage: 'contracts.manage',
 } as const;

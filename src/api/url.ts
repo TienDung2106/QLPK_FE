@@ -48,7 +48,6 @@ const url = {
   patientInvoiceById: (invoiceId: number) => `${root}/patient/invoices/${invoiceId}`,
   patientInvoicePdf: (invoiceId: number) => `${root}/patient/invoices/${invoiceId}/pdf`,
   patientMedicalRecords: `${root}/patient/medical-records`,
-  patientMedicalRecordById: (medicalRecordId: number) => `${root}/patient/medical-records/${medicalRecordId}`,
   checkIn: `${root}/patient/appointments/check-in`,
 
   // Thông báo — mọi tài khoản đã đăng nhập, kể cả nhân viên, dù nằm dưới /patient.
@@ -78,13 +77,10 @@ const url = {
   adminDoctorScheduleById: (doctorId: number, scheduleId: number) => `${root}/admin/doctors/${doctorId}/schedules/${scheduleId}`,
   adminDoctorScheduleStatus: (doctorId: number, scheduleId: number) =>
     `${root}/admin/doctors/${doctorId}/schedules/${scheduleId}/status`,
-  adminContracts: `${root}/admin/contracts`,
-  adminContractById: (contractId: number) => `${root}/admin/contracts/${contractId}`,
   adminClinicProfile: `${root}/admin/clinic/profile`,
   adminClinicHolidays: `${root}/admin/clinic/holidays`,
   adminClinicHolidayById: (holidayId: number) => `${root}/admin/clinic/holidays/${holidayId}`,
   adminClinicSettings: `${root}/admin/clinic/settings`,
-  adminJobRuns: `${root}/admin/clinic/job-runs`,
   adminSpecialties: `${root}/admin/specialties`,
   adminSpecialtyById: (specialtyId: number) => `${root}/admin/specialties/${specialtyId}`,
 
@@ -94,8 +90,6 @@ const url = {
   doctorAppointmentAction: (appointmentId: number, action: 'confirm' | 'decline' | 'follow-up') =>
     `${root}/doctor/appointments/${appointmentId}/${action}`,
   doctorWorkingHours: `${root}/doctor/working-hours`,
-  doctorWorkingHoursById: (scheduleId: number) => `${root}/doctor/working-hours/${scheduleId}`,
-  doctorWorkingHoursStatus: (scheduleId: number) => `${root}/doctor/working-hours/${scheduleId}/status`,
   doctorTimeOffById: (timeOffId: number) => `${root}/doctor/time-off/${timeOffId}`,
   doctorStartExamination: (appointmentId: number) => `${root}/doctor/appointments/${appointmentId}/start`,
   doctorMedicalRecord: (appointmentId: number) => `${root}/doctor/appointments/${appointmentId}/medical-record`,

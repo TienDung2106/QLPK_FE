@@ -15,13 +15,8 @@ import type {
   DoctorSchedule,
   DoctorSchedulePayload,
   DoctorScheduleQuery,
-  JobRun,
-  JobRunQuery,
   Specialty,
   SpecialtyPayload,
-  StaffContract,
-  StaffContractPayload,
-  StaffContractQuery,
   CreateStaffAccountPayload,
   Promotion,
   PromotionPayload,
@@ -89,8 +84,6 @@ export const apiSetPromotionStatus = (promotionId: number, isActive: boolean) =>
 
 export const apiListSettings = () => GetData<SystemSetting[]>(url.adminClinicSettings);
 
-export const apiGetSetting = (settingKey: string) => GetData<SystemSetting>(url.adminSettingByKey(settingKey));
-
 export const apiUpdateSetting = (settingKey: string, payload: UpdateSettingPayload) =>
   PutData<SystemSetting>(url.adminSettingByKey(settingKey), payload);
 
@@ -119,19 +112,6 @@ export const apiUpdateDoctorSchedule = (doctorId: number, scheduleId: number, pa
 export const apiSetDoctorScheduleStatus = (doctorId: number, scheduleId: number, isActive: boolean) =>
   PatchData<DoctorSchedule>(url.adminDoctorScheduleStatus(doctorId, scheduleId), { is_active: isActive });
 
-/* Hợp đồng — contracts.manage */
-
-export const apiSearchContracts = (query: StaffContractQuery = {}) =>
-  GetData<PagedResponse<StaffContract>>(url.adminContracts, query);
-
-export const apiCreateContract = (payload: StaffContractPayload) => PostData<StaffContract>(url.adminContracts, payload);
-
-export const apiUpdateContract = (contractId: number, payload: StaffContractPayload) =>
-  PutData<StaffContract>(url.adminContractById(contractId), payload);
-
-/** Chỉ cho hợp đồng nhập nhầm; hợp đồng đã chạy thì đổi trạng thái. */
-export const apiDeleteContract = (contractId: number) => DeleteData<void>(url.adminContractById(contractId));
-
 /* Phòng khám — settings.manage */
 
 export const apiGetClinicProfile = () => GetData<ClinicProfile>(url.adminClinicProfile);
@@ -149,8 +129,6 @@ export const apiUpdateHoliday = (holidayId: number, payload: ClinicHolidayPayloa
 
 /** Mở cửa lại ngày đó; bản ghi được giữ với is_active = false. */
 export const apiWithdrawHoliday = (holidayId: number) => DeleteData<ClinicHoliday>(url.adminClinicHolidayById(holidayId));
-
-export const apiSearchJobRuns = (query: JobRunQuery = {}) => GetData<PagedResponse<JobRun>>(url.adminJobRuns, query);
 
 /* Chuyên khoa — services.manage */
 

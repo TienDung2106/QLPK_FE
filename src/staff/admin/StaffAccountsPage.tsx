@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { FileText, KeyRound, Lock, LockOpen, UserPlus } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { KeyRound, Lock, LockOpen, UserPlus } from 'lucide-react';
 import useAuth from '../../hooks/useAuth';
 import {
   apiCreateStaffAccount,
@@ -159,7 +158,6 @@ const PASSWORD_RULE = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
 const StaffAccountsPage = () => {
   const toast = useToast();
   const { account: me, hasPermission } = useAuth();
-  const canContracts = hasPermission(PERMISSION.ContractsManage);
   const [resetting, setResetting] = useState<StaffAccountListItem | null>(null);
   const [tempPassword, setTempPassword] = useState('');
   const [resetError, setResetError] = useState<string | null>(null);
@@ -361,11 +359,6 @@ const StaffAccountsPage = () => {
                     </div>
                   </td>
                   <td className="st-num st-nowrap" onClick={(event) => event.stopPropagation()}>
-                    {canContracts && (
-                      <Link to={`/quan-tri/hop-dong?account=${item.account_id}`} className="st-btn st-btn-ghost st-btn-sm" title="Hợp đồng">
-                        <FileText size={14} /> Hợp đồng
-                      </Link>
-                    )}
                     {item.account_id !== me?.account_id && (
                       <Button
                         size="sm"

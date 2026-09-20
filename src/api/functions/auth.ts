@@ -28,9 +28,6 @@ export interface RegisterPayload {
 export const apiLogin = (payload: LoginPayload, captchaToken: string | null = null) =>
   PostWithCaptcha<AuthTokens>(url.login, payload, captchaToken, { skipAuth: true });
 
-export const apiRefresh = (refreshToken: string) =>
-  PostNonToken<AuthTokens>(url.refresh, { refresh_token: refreshToken });
-
 export const apiLogout = (refreshToken: string, allDevices = false) =>
   PostNonToken<void>(url.logout, { refresh_token: refreshToken, all_devices: allDevices });
 

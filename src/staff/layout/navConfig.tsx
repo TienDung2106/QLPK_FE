@@ -1,10 +1,8 @@
 import type { ReactNode } from 'react';
 import {
-  Activity,
   BadgePercent,
   Building,
   CalendarRange,
-  FileSignature,
   LayoutDashboard,
   Layers,
   BarChart3,
@@ -56,14 +54,12 @@ export const NAV_SECTIONS: NavSection[] = [
       { to: '/quan-tri/doanh-thu', label: 'Doanh thu', icon: <BarChart3 size={ICON} />, permission: PERMISSION.ReportsViewRevenue },
       { to: '/quan-tri/bao-cao-lich-hen', label: 'Báo cáo lịch hẹn', icon: <CalendarRange size={ICON} />, permission: PERMISSION.ReportsViewRevenue },
       { to: '/quan-tri/tai-khoan', label: 'Tài khoản nhân viên', icon: <UserCog size={ICON} />, permission: PERMISSION.AccountsManageStaff },
-      { to: '/quan-tri/hop-dong', label: 'Hợp đồng', icon: <FileSignature size={ICON} />, permission: PERMISSION.ContractsManage },
       { to: '/quan-tri/lich-lam-viec', label: 'Lịch làm việc bác sĩ', icon: <CalendarClock size={ICON} />, permission: PERMISSION.DoctorSchedulesManage },
       { to: '/quan-tri/dich-vu', label: 'Dịch vụ', icon: <ClipboardList size={ICON} />, permission: PERMISSION.ServicesManage },
       { to: '/quan-tri/chuyen-khoa', label: 'Chuyên khoa', icon: <Layers size={ICON} />, permission: PERMISSION.ServicesManage },
       { to: '/quan-tri/khuyen-mai', label: 'Khuyến mãi', icon: <BadgePercent size={ICON} />, permission: PERMISSION.PromotionsManage },
       { to: '/quan-tri/phong-kham', label: 'Phòng khám', icon: <Building size={ICON} />, permission: PERMISSION.SettingsManage },
       { to: '/quan-tri/cai-dat', label: 'Cài đặt hệ thống', icon: <Settings size={ICON} />, permission: PERMISSION.SettingsManage },
-      { to: '/quan-tri/tac-vu', label: 'Tác vụ nền', icon: <Activity size={ICON} />, permission: PERMISSION.SettingsManage },
     ],
   },
   {

@@ -1,11 +1,10 @@
-import { DeleteData, GetData, PatchData, PostData, PutData } from '../helpers';
+import { DeleteData, GetData, PostData, PutData } from '../helpers';
 import url from '../url';
 import type { Appointment, AppointmentListItem, PagedResponse } from '../types';
 import type {
   AppointmentQuery,
   DoctorDashboard,
   DoctorSchedule,
-  DoctorSchedulePayload,
   DoctorScheduleQuery,
   FollowUpPayload,
   ExaminationStatus,
@@ -27,15 +26,6 @@ export const apiGetDoctorSchedule = (query: AppointmentQuery = {}) =>
 /** Các con số đầu trang của bác sĩ: hôm nay, chờ xác nhận, đang chờ, người kế tiếp. */
 export const apiGetDoctorDashboard = () => GetData<DoctorDashboard>(url.doctorDashboard);
 
-/* Trả lời lịch đặt — appointments.confirm_own; chỉ lịch đặt với chính bác sĩ. */
-
-export const apiDoctorConfirmAppointment = (appointmentId: number) =>
-  PostData<Appointment>(url.doctorAppointmentAction(appointmentId, 'confirm'));
-
-/** Hoàn toàn bộ tiền đã trả trước: phòng khám từ chối, bệnh nhân không có lỗi. */
-export const apiDoctorDeclineAppointment = (appointmentId: number, reason: string) =>
-  PostData<Appointment>(url.doctorAppointmentAction(appointmentId, 'decline'), { reason });
-
 /** Hẹn tái khám — appointments.book_follow_up. Xác nhận luôn, mang theo liệu trình nếu có. */
 export const apiBookFollowUp = (appointmentId: number, payload: FollowUpPayload) =>
   PostData<Appointment>(url.doctorAppointmentAction(appointmentId, 'follow-up'), payload);
@@ -44,15 +34,6 @@ export const apiBookFollowUp = (appointmentId: number, payload: FollowUpPayload)
 
 export const apiGetOwnWorkingHours = (query: DoctorScheduleQuery = {}) =>
   GetData<DoctorSchedule[]>(url.doctorWorkingHours, query);
-
-export const apiCreateOwnWorkingHours = (payload: DoctorSchedulePayload) =>
-  PostData<DoctorSchedule>(url.doctorWorkingHours, payload);
-
-export const apiUpdateOwnWorkingHours = (scheduleId: number, payload: DoctorSchedulePayload) =>
-  PutData<DoctorSchedule>(url.doctorWorkingHoursById(scheduleId), payload);
-
-export const apiSetOwnWorkingHoursStatus = (scheduleId: number, isActive: boolean) =>
-  PatchData<DoctorSchedule>(url.doctorWorkingHoursStatus(scheduleId), { is_active: isActive });
 
 /* Khám bệnh — examinations.perform; backend chỉ cho khám lịch của chính mình. */
 

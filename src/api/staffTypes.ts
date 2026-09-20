@@ -867,43 +867,7 @@ export interface FollowUpPayload {
   session_number?: number | null;
 }
 
-/* ---------------------------------------------------------------- Admin: contracts, clinic */
-
-export interface StaffContract {
-  staff_contract_id: number;
-  account_id: number;
-  staff_full_name: string;
-  role_code: string;
-  contract_number: string;
-  contract_type: string;
-  start_date: string;
-  end_date: string | null;
-  base_salary: number;
-  status: string;
-  /** Âm khi đã quá hạn; null với hợp đồng không thời hạn. */
-  days_until_expiry: number | null;
-  notes: string | null;
-  created_by: number;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface StaffContractPayload {
-  account_id: number;
-  contract_number: string;
-  contract_type: string;
-  start_date: string;
-  end_date?: string | null;
-  base_salary: number;
-  status?: string | null;
-  notes?: string | null;
-}
-
-export interface StaffContractQuery extends PageQuery {
-  account_id?: number;
-  status?: string;
-  expiring_within_days?: number;
-}
+/* ---------------------------------------------------------------- Admin: clinic */
 
 export interface ClinicProfile {
   clinic_name: string;
@@ -949,22 +913,6 @@ export interface Specialty {
 export interface SpecialtyPayload {
   specialty_code: string;
   specialty_name: string;
-}
-
-export interface JobRun {
-  job_run_log_id: number;
-  job_name: string;
-  started_at: string;
-  finished_at: string | null;
-  status: string;
-  duration_seconds: number | null;
-  affected_count: number;
-  error_message: string | null;
-}
-
-export interface JobRunQuery extends PageQuery {
-  job_name?: string;
-  status?: string;
 }
 
 /* ---------------------------------------------------------------- Desk extras */

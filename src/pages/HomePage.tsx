@@ -9,7 +9,6 @@ import { DoctorsSection } from '../components/Doctors/DoctorsSection';
 import { ContactSection } from '../components/Contact/ContactSection';
 import { NewsSection } from '../components/News/NewsSection';
 import { Footer } from '../components/Footer/Footer';
-import type { DoctorItem, NewsItem } from '../types';
 
 interface HomePageProps {
   onNavigateToBooking: () => void;
@@ -25,16 +24,12 @@ export const HomePage: React.FC<HomePageProps> = ({
     section?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const handleSelectService = (_serviceTitle: string) => {
+  const handleSelectService = () => {
     onNavigateToBooking();
   };
 
-  const handleSelectDoctor = (_doctor: DoctorItem) => {
+  const handleSelectDoctor = () => {
     onNavigateToBooking();
-  };
-
-  const handleReadMoreNews = (_news: NewsItem) => {
-    // Navigate to blog detail
   };
 
   return (
@@ -68,7 +63,7 @@ export const HomePage: React.FC<HomePageProps> = ({
         <ContactSection />
 
         {/* 9. News Section (Một vài tin tức y tế hot) */}
-        <NewsSection onReadMore={handleReadMoreNews} />
+        <NewsSection />
       </main>
 
       {/* 10. Footer (Chân trang phong cách phòng khám) */}

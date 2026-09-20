@@ -2,10 +2,6 @@ import React from 'react';
 import { ArrowRight } from 'lucide-react';
 import type { NewsItem } from '../../types';
 
-interface NewsSectionProps {
-  onReadMore?: (news: NewsItem) => void;
-}
-
 const newsData: NewsItem[] = [
   {
     id: 'news-1',
@@ -69,7 +65,7 @@ const newsData: NewsItem[] = [
   },
 ];
 
-export const NewsSection: React.FC<NewsSectionProps> = ({ onReadMore }) => {
+export const NewsSection: React.FC = () => {
   return (
     <section id="news" className="news-section">
       <div className="container news-container">
@@ -84,7 +80,7 @@ export const NewsSection: React.FC<NewsSectionProps> = ({ onReadMore }) => {
           {/* Column 1 */}
           <div className="news-col">
             {/* Card 1 */}
-            <article className="news-card" onClick={() => onReadMore?.(newsData[0])}>
+            <article className="news-card">
               <div className="news-img-box">
                 <img
                   src={newsData[0].image}
@@ -107,7 +103,7 @@ export const NewsSection: React.FC<NewsSectionProps> = ({ onReadMore }) => {
             </article>
 
             {/* Card 4 (Bottom of Col 1) */}
-            <article className="news-card" onClick={() => onReadMore?.(newsData[3])}>
+            <article className="news-card">
               <div className="news-img-box">
                 <img
                   src={newsData[3].image}
@@ -132,7 +128,7 @@ export const NewsSection: React.FC<NewsSectionProps> = ({ onReadMore }) => {
           {/* Column 2 */}
           <div className="news-col">
             {/* Card 2 */}
-            <article className="news-card" onClick={() => onReadMore?.(newsData[1])}>
+            <article className="news-card">
               <div className="news-img-box">
                 <img
                   src={newsData[1].image}
@@ -155,7 +151,7 @@ export const NewsSection: React.FC<NewsSectionProps> = ({ onReadMore }) => {
             </article>
 
             {/* Card 5 */}
-            <article className="news-card" onClick={() => onReadMore?.(newsData[4])}>
+            <article className="news-card">
               <div className="news-img-box">
                 <img
                   src={newsData[4].image}
@@ -181,7 +177,7 @@ export const NewsSection: React.FC<NewsSectionProps> = ({ onReadMore }) => {
           {/* Column 3 */}
           <div className="news-col">
             {/* Card 3 */}
-            <article className="news-card" onClick={() => onReadMore?.(newsData[2])}>
+            <article className="news-card">
               <div className="news-img-box">
                 <img
                   src={newsData[2].image}
@@ -204,7 +200,7 @@ export const NewsSection: React.FC<NewsSectionProps> = ({ onReadMore }) => {
             </article>
 
             {/* Card 6 */}
-            <article className="news-card" onClick={() => onReadMore?.(newsData[5])}>
+            <article className="news-card">
               <div className="news-img-box">
                 <img
                   src={newsData[5].image}
