@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import {
   AlertCircle,
-  AlertTriangle,
   ArrowLeft,
   ArrowRight,
   Check,
@@ -19,10 +18,14 @@ import { describePromotion, formatCurrency } from '../../bookingFormat';
 import './Step2Service.css';
 
 /**
- * Độ dài một ca chuẩn của phòng khám. Lượt khám dài hơn thế không lọt vào ca nào, nên chặn ngay ở
- * đây thay vì để bệnh nhân sang bước chọn ca rồi mới thấy mọi ca đều báo không đủ thời gian.
+ * Độ dài một ca chuẩn của phòng khám. Lượt khám dài hơn thế vẫn đặt được: nó chiếm nhiều ca liền
+ * nhau trong cùng một buổi.
+ *
+ * ponytail: số này chỉ dùng để viết câu nhắc bên dưới. Chỗ trống thật do available-slots ở bước 3
+ * quyết định, nên admin có sửa độ dài ca thì cùng lắm là câu nhắc nói sai, không cho đặt sai. Cần chính
+ * xác thì trả thêm max_visit_minutes từ /api/booking/quote.
  */
-export const MAX_VISIT_MINUTES = 120;
+const SHIFT_MINUTES = 120;
 
 interface Step2ServiceProps {
   selectedServices: SelectedService[];
@@ -78,7 +81,7 @@ export const Step2Service: React.FC<Step2ServiceProps> = ({
   const localSubtotal = selectedServices.reduce((sum, service) => sum + service.price, 0);
   const subtotal = quote?.subtotal_amount ?? localSubtotal;
   const durationMinutes = quote?.duration_minutes ?? 0;
-  const tooLong = durationMinutes > MAX_VISIT_MINUTES;
+  const shiftsNeeded = Math.ceil(durationMinutes / SHIFT_MINUTES);
   const bufferMinutes = quote ? quote.duration_minutes - quote.service_minutes : 0;
 
   return (
@@ -217,12 +220,12 @@ export const Step2Service: React.FC<Step2ServiceProps> = ({
             </span>
           </div>
 
-          {tooLong && (
-            <div className="account-alert error" role="alert">
-              <AlertTriangle size={16} />
+          {shiftsNeeded > 1 && (
+            <div className="step3-callout">
+              <Info size={16} className="callout-icon" />
               <span>
-                Các dịch vụ đã chọn cần {durationMinutes} phút, dài hơn một ca khám ({MAX_VISIT_MINUTES} phút).
-                Vui lòng bớt dịch vụ hoặc đặt thành nhiều buổi.
+                Các dịch vụ này cần {durationMinutes} phút nên sẽ chiếm {shiftsNeeded} ca liền nhau trong cùng
+                một buổi. Ở bước sau bạn chọn ngày và buổi sáng hoặc buổi chiều, thay vì chọn từng ca.
               </span>
             </div>
           )}
@@ -245,7 +248,7 @@ export const Step2Service: React.FC<Step2ServiceProps> = ({
           type="button"
           className="btn btn-primary btn-next-step"
           onClick={onNextStep}
-          disabled={selectedServices.length === 0 || !quote || quoteLoading || tooLong}
+          disabled={selectedServices.length === 0 || !quote || quoteLoading}
         >
           <span>Tiếp tục</span>
           <ArrowRight size={18} />

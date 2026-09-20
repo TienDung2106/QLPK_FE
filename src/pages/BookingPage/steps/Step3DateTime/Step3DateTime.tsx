@@ -137,18 +137,28 @@ export const Step3DateTime: React.FC<Step3DateTimeProps> = ({
     };
   }, [selectedDoctor, selectedDate, durationMinutes]);
 
-  const grouped = useMemo(() => {
+  // Một lượt khám dài hơn một ca sẽ nuốt luôn ca kế tiếp, nên bày ca đó thành thẻ riêng chỉ tố bệnh
+  // nhân bấm vào một chỗ đã bị chiếm. Mỗi chuỗi chỉ để lại ca mở đầu, thành ra cả buổi gọn vào một thẻ.
+  const { grouped, byHalfDay } = useMemo(() => {
     const buckets: Record<'morning' | 'afternoon' | 'evening', AvailableSlot[]> = {
       morning: [],
       afternoon: [],
       evening: [],
     };
 
-    for (const slot of slots) {
+    const heads: AvailableSlot[] = [];
+
+    for (let index = 0; index < slots.length; index += Math.max(1, slots[index].shifts_used)) {
+      heads.push(slots[index]);
+    }
+
+    const spans = slots.some((slot) => slot.shifts_used > 1);
+
+    for (const slot of spans ? heads : slots) {
       buckets[partOfDay(slot.start_time)].push(slot);
     }
 
-    return buckets;
+    return { grouped: buckets, byHalfDay: spans };
   }, [slots]);
 
   const days = useMemo(() => monthGrid(viewYear, viewMonth), [viewYear, viewMonth]);
@@ -200,6 +210,10 @@ export const Step3DateTime: React.FC<Step3DateTimeProps> = ({
         <div className="shift-cards-row">
           {group.map((slot) => {
             const isSelected = selectedShift?.startTime === slot.start_time;
+            // Một lượt gọn trong một ca thì chuỗi chính là ca đó.
+            const spansShifts = slot.shifts_used > 1;
+            const shiftTitle = spansShifts ? `Cả ${label.toLowerCase()}` : slot.shift_name;
+            const shiftEnd = slot.span_end_time ?? slot.end_time;
             const usedPercent = Math.min(100, (slot.used_minutes / Math.max(1, slot.capacity_minutes)) * 100);
             const needPercent = slot.is_available
               ? Math.min(100 - usedPercent, (slot.required_minutes / Math.max(1, slot.capacity_minutes)) * 100)
@@ -211,16 +225,19 @@ export const Step3DateTime: React.FC<Step3DateTimeProps> = ({
                 type="button"
                 className={`shift-card ${isSelected ? 'is-selected' : ''} ${slot.is_available ? '' : 'is-disabled'}`}
                 onClick={() =>
-                  onSelectShift({ name: slot.shift_name, startTime: slot.start_time, endTime: slot.end_time })
+                  onSelectShift({ name: shiftTitle, startTime: slot.start_time, endTime: shiftEnd })
                 }
                 disabled={!slot.is_available}
                 aria-pressed={isSelected}
               >
                 <span className="shift-card-top">
-                  <span className="shift-name">{slot.shift_name}</span>
+                  <span className="shift-name">{shiftTitle}</span>
                   {isSelected && <Check size={14} strokeWidth={3} className="slot-check" />}
                 </span>
-                <span className="shift-range">{formatShiftRange(slot.start_time, slot.end_time)}</span>
+                <span className="shift-range">
+                  {formatShiftRange(slot.start_time, shiftEnd)}
+                  {spansShifts && <small> · {slot.shifts_used} ca liền nhau</small>}
+                </span>
 
                 <span className="shift-meter" aria-hidden="true">
                   <span className="shift-meter-used" style={{ width: `${usedPercent}%` }} />
@@ -382,10 +399,14 @@ export const Step3DateTime: React.FC<Step3DateTimeProps> = ({
 
         {/* Right: Shifts Card */}
         <div className="step2-times-card">
-          <h4 className="times-card-title">Chọn ca khám cho ngày {formatDateLabel(selectedDate)}</h4>
+          <h4 className="times-card-title">
+            Chọn {byHalfDay ? 'buổi' : 'ca'} khám cho ngày {formatDateLabel(selectedDate)}
+          </h4>
           <p className="times-card-hint">
-            Lượt khám của bạn cần khoảng <strong>{durationMinutes} phút</strong>. Bạn đến trong khung giờ của
-            ca và được khám theo số thứ tự nhận khi check-in.
+            Lượt khám của bạn cần khoảng <strong>{durationMinutes} phút</strong>.{' '}
+            {byHalfDay
+              ? 'Dài hơn một ca nên phải đặt trọn buổi; chỉ buổi nào còn đủ các ca liền nhau mới chọn được.'
+              : 'Bạn đến trong khung giờ của ca và được khám theo số thứ tự nhận khi check-in.'}
           </p>
 
           {error && (

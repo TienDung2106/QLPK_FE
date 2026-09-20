@@ -220,9 +220,16 @@ export const SlotPicker = ({ doctorId, date, value, onChange, durationMinutes }:
     return <Alert tone="warning">Bác sĩ không làm việc ngày {formatDate(date)}.</Alert>;
   }
 
+  // Một lượt khám dài hơn một ca nuốt luôn ca kế, nên chỉ bày ca mở đầu mỗi chuỗi: bấm vào ca đã
+  // bị chiếm thì chỉ tố thêm một lần bị từ chối.
+  const heads: DoctorAvailability['slots'] = [];
+  for (let index = 0; index < slots.length; index += Math.max(1, slots[index].shifts_used)) {
+    heads.push(slots[index]);
+  }
+
   return (
     <div className="st-chip-row" role="radiogroup" aria-label="Ca khám">
-      {slots.map((slot) => (
+      {heads.map((slot) => (
         <button
           key={slot.start_time}
           type="button"
@@ -233,8 +240,10 @@ export const SlotPicker = ({ doctorId, date, value, onChange, durationMinutes }:
           className={`st-slot ${value === slot.start_time ? 'active' : ''}`}
           onClick={() => onChange(value === slot.start_time ? null : slot.start_time)}
         >
-          {slot.shift_name} · {formatTime(slot.start_time)}–{formatTime(slot.end_time)}
+          {slot.shift_name} · {formatTime(slot.start_time)}–
+          {formatTime(slot.span_end_time ?? slot.end_time)}
           <span className="st-cell-sub" style={{ marginLeft: 6 }}>
+            {slot.shifts_used > 1 && `${slot.shifts_used} ca · `}
             {slot.is_available
               ? `còn ${slot.remaining_minutes}′`
               : SHIFT_UNAVAILABLE_LABEL[slot.unavailable_reason ?? ''] ?? 'không nhận'}

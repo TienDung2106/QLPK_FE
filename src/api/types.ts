@@ -67,13 +67,19 @@ export interface AvailableSlot {
   start_time: string;
   end_time: string;
   consultation_mode: string;
+  /** Tính cho cả chuỗi ca mà lượt khám này chiếm, không riêng ca này. */
   capacity_minutes: number;
   used_minutes: number;
   remaining_minutes: number;
+  /** Kể cả người có lượt khám tràn từ ca trước sang. */
   booked_count: number;
   max_patients: number;
   /** Số phút lượt khám đang chọn cần; 0 khi không truyền duration_minutes. */
   required_minutes: number;
+  /** Lượt khám này chiếm mấy ca tính từ đây; 1 trừ khi nó dài hơn một ca. */
+  shifts_used: number;
+  /** Giờ kết thúc ca cuối trong chuỗi, null khi lượt khám gọn trong một ca. */
+  span_end_time: string | null;
   is_available: boolean;
   unavailable_reason: ShiftUnavailableReason | null;
 }
