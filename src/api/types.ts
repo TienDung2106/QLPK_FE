@@ -200,6 +200,8 @@ export interface AppointmentListItem {
   appointment_date: string;
   appointment_time: string;
   duration_minutes: number;
+  /** Giờ cuối còn nhận phòng ('HH:mm:ss'); quá giờ này là quá hạn. Chỉ có ở danh sách lịch hẹn. */
+  check_in_deadline?: string | null;
   status: string;
   consultation_mode: string;
   queue_number: number | null;

@@ -24,7 +24,7 @@ const GROUPS: { title: string; description: string; settings: SettingDef[] }[] =
     settings: [
       { key: 'discount_approval_threshold_percent', label: 'Ngưỡng giảm giá không cần duyệt', unit: '%' },
       { key: 'checkin_window_before_minutes', label: 'Mở nhận phòng trước giờ hẹn', unit: 'phút' },
-      { key: 'checkin_window_after_minutes', label: 'Còn nhận phòng sau giờ hẹn', unit: 'phút' },
+      { key: 'checkin_window_after_minutes', label: 'Được đến muộn tối đa (không quá hết ca)', unit: 'phút' },
       { key: 'service_reduction_max_percent', label: 'Mức giảm dịch vụ tối đa', unit: '%' },
     ],
   },

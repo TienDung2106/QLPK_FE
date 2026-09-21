@@ -53,9 +53,13 @@ function formatTime(time: string): string {
 /** Lý do gửi kèm khi bệnh nhân huỷ một lịch đã quá giờ hẹn mà chưa khám. */
 const OVERDUE_CANCEL_REASON = 'Lịch hẹn đã quá hạn';
 
-/** Giờ hẹn đã trôi qua. Lịch như vậy huỷ được ngay, không bị giới hạn huỷ trước giờ hẹn. */
+/**
+ * Đã hết giờ nhận phòng (số phút được đến muộn, không quá hết ca 1). Lịch như vậy huỷ được ngay,
+ * không bị giới hạn huỷ trước giờ hẹn.
+ */
 function isOverdue(appointment: AppointmentListItem): boolean {
-  return new Date(`${appointment.appointment_date}T${appointment.appointment_time}`) <= new Date();
+  const deadline = appointment.check_in_deadline ?? appointment.appointment_time;
+  return new Date(`${appointment.appointment_date}T${deadline}`) < new Date();
 }
 
 export const MyAppointmentsPage = () => {
