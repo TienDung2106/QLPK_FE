@@ -1,4 +1,5 @@
-import { apiGetAppointmentReport } from '../../api/functions/admin';
+import { apiExportAppointmentReport, apiGetAppointmentReport } from '../../api/functions/admin';
+import { ExportButton } from '../components/ExportButton';
 import { useApiQuery } from '../hooks';
 import { formatDate, formatNumber, formatPercent } from '../format';
 import { APPOINTMENT_STATUS, labelOf } from '../labels';
@@ -18,7 +19,17 @@ const AppointmentReportPage = () => {
 
   return (
     <>
-      <PageHeader title="Báo cáo lịch hẹn" description="Số lịch theo ngày hẹn, gồm cả lịch đã huỷ và không đến." />
+      <PageHeader
+        title="Báo cáo lịch hẹn"
+        description="Số lịch theo ngày hẹn, gồm cả lịch đã huỷ và không đến."
+        actions={
+          <ExportButton
+            download={() => apiExportAppointmentReport(range.fromDate, range.toDate)}
+            fileName={`bao-cao-lich-hen-${range.fromDate}-${range.toDate}.xlsx`}
+            disabled={!range.valid}
+          />
+        }
+      />
       <DateRangeFilter state={range} />
 
       {!range.valid && <Alert tone="warning">Chọn ngày bắt đầu không muộn hơn ngày kết thúc.</Alert>}

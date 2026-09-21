@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { apiSearchStockMovements } from '../../api/functions/pharmacy';
+import { apiExportStockMovements, apiSearchStockMovements } from '../../api/functions/pharmacy';
+import { ExportButton } from '../components/ExportButton';
 import { useApiQuery } from '../hooks';
 import { todayIso } from '../format';
 import { INVENTORY_ACTION } from '../labels';
@@ -32,7 +33,22 @@ const StockHistoryPage = () => {
 
   return (
     <>
-      <PageHeader title="Lịch sử kho" description="Mọi biến động tồn kho, mới nhất trước. Không dòng nào sửa hay xoá được." />
+      <PageHeader
+        title="Lịch sử kho"
+        description="Mọi biến động tồn kho, mới nhất trước. Không dòng nào sửa hay xoá được."
+        actions={
+          <ExportButton
+            download={() =>
+              apiExportStockMovements({
+                action: action || undefined,
+                from_date: fromDate || undefined,
+                to_date: toDate || undefined,
+              })
+            }
+            fileName="nhat-ky-kho.xlsx"
+          />
+        }
+      />
       <section className="st-panel">
         <div className="st-toolbar">
           <Field label="Thao tác">

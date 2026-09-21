@@ -74,6 +74,8 @@ const url = {
   adminRevenueReport: `${root}/admin/reports/revenue`,
   adminAppointmentReport: `${root}/admin/reports/appointments`,
   adminDashboard: `${root}/admin/reports/dashboard`,
+  adminRevenueReportExport: `${root}/admin/reports/revenue/export`,
+  adminAppointmentReportExport: `${root}/admin/reports/appointments/export`,
   adminDoctorSchedules: (doctorId: number) => `${root}/admin/doctors/${doctorId}/schedules`,
   adminDoctorScheduleById: (doctorId: number, scheduleId: number) => `${root}/admin/doctors/${doctorId}/schedules/${scheduleId}`,
   adminDoctorScheduleStatus: (doctorId: number, scheduleId: number) =>
@@ -103,6 +105,7 @@ const url = {
 
   // Quầy lễ tân / thu ngân
   staffAppointments: `${root}/staff/appointments`,
+  staffAppointmentsExport: `${root}/staff/appointments/export`,
   staffAppointmentById: (appointmentId: number) => `${root}/staff/appointments/${appointmentId}`,
   staffAppointmentAction: (appointmentId: number, action: string) =>
     `${root}/staff/appointments/${appointmentId}/${action}`,
@@ -123,6 +126,7 @@ const url = {
   staffDispenseRequests: `${root}/staff/dispense-requests`,
   staffSettlementInvoice: (appointmentId: number) => `${root}/staff/appointments/${appointmentId}/settlement-invoice`,
   staffInvoices: `${root}/staff/invoices`,
+  staffInvoicesExport: `${root}/staff/invoices/export`,
   staffInvoiceById: (invoiceId: number) => `${root}/staff/invoices/${invoiceId}`,
   staffInvoicePayments: (invoiceId: number) => `${root}/staff/invoices/${invoiceId}/payments`,
   staffInvoiceRefunds: (invoiceId: number) => `${root}/staff/invoices/${invoiceId}/refunds`,
@@ -139,6 +143,8 @@ const url = {
   pharmacyExpiringBatches: `${root}/pharmacist/inventory/expiring-batches`,
   pharmacyStockLogs: `${root}/pharmacist/inventory/logs`,
   pharmacyInventoryReport: `${root}/pharmacist/inventory/report`,
+  pharmacyInventoryReportExport: `${root}/pharmacist/inventory/report/export`,
+  pharmacyStockLogsExport: `${root}/pharmacist/inventory/logs/export`,
   pharmacyBatchAction: (batchId: number, action: BatchAction) => `${root}/pharmacist/inventory/batches/${batchId}/${action}`,
   pharmacyPrescriptions: `${root}/pharmacist/prescriptions`,
   pharmacyPrescriptionById: (prescriptionId: number) => `${root}/pharmacist/prescriptions/${prescriptionId}`,

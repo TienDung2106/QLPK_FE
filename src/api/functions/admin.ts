@@ -1,4 +1,4 @@
-import { DeleteData, GetData, PatchData, PostData, PutData } from '../helpers';
+import { DeleteData, GetBlob, GetData, PatchData, PostData, PutData } from '../helpers';
 import url from '../url';
 import type { PagedResponse } from '../types';
 import type {
@@ -94,6 +94,12 @@ export const apiGetRevenueReport = (fromDate: string, toDate: string) =>
 
 export const apiGetAppointmentReport = (fromDate: string, toDate: string) =>
   GetData<AppointmentReport>(url.adminAppointmentReport, { from_date: fromDate, to_date: toDate });
+
+export const apiExportRevenueReport = (fromDate: string, toDate: string) =>
+  GetBlob(url.adminRevenueReportExport, { from_date: fromDate, to_date: toDate });
+
+export const apiExportAppointmentReport = (fromDate: string, toDate: string) =>
+  GetBlob(url.adminAppointmentReportExport, { from_date: fromDate, to_date: toDate });
 
 /** Bỏ trống ngày = hôm nay. */
 export const apiGetClinicDashboard = (date?: string) => GetData<ClinicDashboard>(url.adminDashboard, { date });

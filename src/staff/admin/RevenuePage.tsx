@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
-import { apiGetRevenueReport } from '../../api/functions/admin';
+import { apiExportRevenueReport, apiGetRevenueReport } from '../../api/functions/admin';
+import { ExportButton } from '../components/ExportButton';
 import { useApiQuery } from '../hooks';
 import { formatDate, formatMoney, formatNumber } from '../format';
 import { PAYMENT_METHOD, textOf } from '../labels';
@@ -19,7 +20,17 @@ const RevenuePage = () => {
 
   return (
     <>
-      <PageHeader title="Doanh thu" description="Tiền thực thu trừ tiền hoàn, theo ngày giờ phòng khám." />
+      <PageHeader
+        title="Doanh thu"
+        description="Tiền thực thu trừ tiền hoàn, theo ngày giờ phòng khám."
+        actions={
+          <ExportButton
+            download={() => apiExportRevenueReport(fromDate, toDate)}
+            fileName={`doanh-thu-${fromDate}-${toDate}.xlsx`}
+            disabled={!valid}
+          />
+        }
+      />
 
       <DateRangeFilter state={range} />
 

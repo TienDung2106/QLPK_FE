@@ -252,14 +252,25 @@ export function openFile(file: FileDownload, fallbackName: string) {
   const objectUrl = URL.createObjectURL(file.blob);
   const opened = window.open(objectUrl, '_blank');
   if (!opened) {
-    const link = document.createElement('a');
-    link.href = objectUrl;
-    link.download = file.fileName ?? fallbackName;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
+    download(objectUrl, file.fileName ?? fallbackName);
   }
   window.setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
+}
+
+/** Tải thẳng tệp xuống máy (Excel…), không mở tab. */
+export function saveFile(file: FileDownload, fallbackName: string) {
+  const objectUrl = URL.createObjectURL(file.blob);
+  download(objectUrl, file.fileName ?? fallbackName);
+  window.setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
+}
+
+function download(objectUrl: string, fileName: string) {
+  const link = document.createElement('a');
+  link.href = objectUrl;
+  link.download = fileName;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
 }
 
 /** POST không gắn Authorization: đăng nhập, đăng ký, quên mật khẩu. */

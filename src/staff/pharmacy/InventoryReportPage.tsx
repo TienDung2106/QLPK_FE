@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { RefreshCw } from 'lucide-react';
-import { apiGetInventoryReport, apiSearchExpiringBatches } from '../../api/functions/pharmacy';
+import { apiExportInventoryReport, apiGetInventoryReport, apiSearchExpiringBatches } from '../../api/functions/pharmacy';
+import { ExportButton } from '../components/ExportButton';
 import type { MedicineBatch } from '../../api/staffTypes';
 import { useApiQuery } from '../hooks';
 import { formatDate, formatNumber, todayIso } from '../format';
@@ -42,9 +43,15 @@ const InventoryReportPage = () => {
         title="Báo cáo kho"
         description={data ? `Số liệu tới ngày ${formatDate(data.as_of)}.` : 'Thuốc cần nhập thêm và lô cần dùng hoặc huỷ sớm.'}
         actions={
-          <Button icon={<RefreshCw size={15} />} onClick={reload}>
-            Làm mới
-          </Button>
+          <>
+            <ExportButton
+              download={() => apiExportInventoryReport({ expiring_within_days: Number(within) })}
+              fileName="bao-cao-kho.xlsx"
+            />
+            <Button icon={<RefreshCw size={15} />} onClick={reload}>
+              Làm mới
+            </Button>
+          </>
         }
       />
 

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { apiSearchInvoices } from '../../api/functions/desk';
+import { apiExportInvoices, apiSearchInvoices } from '../../api/functions/desk';
+import { ExportButton } from '../components/ExportButton';
 import { useApiQuery, useDebounced } from '../hooks';
 import { formatDateTime, formatMoney } from '../format';
 import { INVOICE_STATUS, labelOf, PAYMENT_STATUS } from '../labels';
@@ -39,7 +40,18 @@ const InvoicesPage = () => {
 
   return (
     <>
-      <PageHeader title="Hoá đơn" description="Tra cứu hoá đơn, thu phần còn nợ hoặc hoàn phần thu dư." />
+      <PageHeader
+        title="Hoá đơn"
+        description="Tra cứu hoá đơn, thu phần còn nợ hoặc hoàn phần thu dư."
+        actions={
+          <ExportButton
+            download={() =>
+              apiExportInvoices({ payment_status: paymentStatus, search: debounced, from_date: fromDate, to_date: toDate })
+            }
+            fileName="hoa-don.xlsx"
+          />
+        }
+      />
       <section className="st-panel">
         <div className="st-toolbar">
           <FilterTabs label="Trạng thái thanh toán" options={TABS} value={paymentStatus} onChange={(value) => { setPaymentStatus(value); setPage(1); }} />

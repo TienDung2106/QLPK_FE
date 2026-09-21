@@ -2,7 +2,8 @@ import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { CalendarPlus, DoorOpen, RefreshCw } from 'lucide-react';
-import { apiSearchStaffAppointments, apiStaffCheckIn } from '../../api/functions/desk';
+import { apiExportStaffAppointments, apiSearchStaffAppointments, apiStaffCheckIn } from '../../api/functions/desk';
+import { ExportButton } from '../components/ExportButton';
 import type { CheckInResult } from '../../api/types';
 import { useAction, useApiQuery } from '../hooks';
 import { formatDate, formatPercent, formatTime, todayIso } from '../format';
@@ -77,6 +78,17 @@ const DeskAppointmentsPage = () => {
         description="Nhận phòng, thu tiền trước, dời hoặc huỷ lịch cho bệnh nhân."
         actions={
           <>
+            <ExportButton
+              download={() =>
+                apiExportStaffAppointments({
+                  from_date: fromDate || undefined,
+                  to_date: toDate || undefined,
+                  doctor_id: doctorId ?? undefined,
+                  status: status || undefined,
+                })
+              }
+              fileName="lich-hen.xlsx"
+            />
             <Button icon={<RefreshCw size={15} />} onClick={query.reload}>
               Làm mới
             </Button>

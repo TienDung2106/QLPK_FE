@@ -36,6 +36,10 @@ import type {
 export const apiSearchStaffAppointments = (query: AppointmentQuery = {}) =>
   GetData<PagedResponse<AppointmentListItem>>(url.staffAppointments, query);
 
+/** Xuất Excel mọi lịch khớp bộ lọc, không chỉ trang đang xem. */
+export const apiExportStaffAppointments = (query: AppointmentQuery = {}) =>
+  GetBlob(url.staffAppointmentsExport, query);
+
 export const apiGetStaffAppointment = (appointmentId: number) =>
   GetData<StaffAppointment>(url.staffAppointmentById(appointmentId));
 
@@ -144,6 +148,9 @@ export const apiBuildSettlementInvoice = (appointmentId: number) =>
 
 export const apiSearchInvoices = (query: InvoiceQuery = {}) =>
   GetData<PagedResponse<InvoiceListItem>>(url.staffInvoices, query);
+
+/** Xuất Excel mọi hoá đơn khớp bộ lọc, để đối soát cuối ca. */
+export const apiExportInvoices = (query: InvoiceQuery = {}) => GetBlob(url.staffInvoicesExport, query);
 
 export const apiGetInvoice = (invoiceId: number) => GetData<Invoice>(url.staffInvoiceById(invoiceId));
 

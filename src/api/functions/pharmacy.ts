@@ -1,4 +1,4 @@
-import { GetData, PatchData, PostData, PutData } from '../helpers';
+import { GetBlob, GetData, PatchData, PostData, PutData } from '../helpers';
 import url from '../url';
 import type { BatchAction } from '../url';
 import type { PagedResponse } from '../types';
@@ -71,6 +71,14 @@ export const apiSearchStockMovements = (query: StockMovementQuery = {}) =>
 
 export const apiGetInventoryReport = (query: { expiring_within_days?: number; take?: number } = {}) =>
   GetData<InventoryReport>(url.pharmacyInventoryReport, query);
+
+/* Xuất Excel: cùng bộ lọc với màn hình, backend lấy hết các trang. */
+
+export const apiExportInventoryReport = (query: { expiring_within_days?: number } = {}) =>
+  GetBlob(url.pharmacyInventoryReportExport, query);
+
+export const apiExportStockMovements = (query: StockMovementQuery = {}) =>
+  GetBlob(url.pharmacyStockLogsExport, query);
 
 /* Nhà cung cấp — inventory.view_adjust */
 
