@@ -1,0 +1,55 @@
+.working-days {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.6rem;
+}
+
+.working-days-pills {
+  display: flex;
+  gap: 3px;
+}
+
+.working-day {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 20px;
+  padding: 0 3px;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  font-size: 0.66rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: default;
+}
+
+.working-day.main {
+  background: var(--primary, #1877f2);
+  color: #fff;
+}
+
+.working-day.other {
+  border-color: var(--primary, #1877f2);
+  background: var(--primary-light, #eff6ff);
+  color: var(--primary, #1877f2);
+}
+
+.working-day.off {
+  background: #f1f5f9;
+  color: #b6c0cc;
+}
+
+.working-days-hours {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #475569;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.working-days-empty {
+  font-size: 0.78rem;
+  color: #94a3b8;
+}

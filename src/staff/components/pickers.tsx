@@ -6,7 +6,7 @@ import type { DeskPatient } from '../../api/staffTypes';
 import { DESK_PAYMENT_METHODS, PAYMENT_METHOD } from '../labels';
 import { formatDate, formatTime } from '../format';
 import { useDoctorOptions } from './useDoctorOptions';
-import { formatWorkingHours } from '../../utils/workingHours';
+import { WorkingDays } from '../../components/WorkingDays/WorkingDays';
 import type { PaymentFormValue } from './payment';
 import { useApiQuery, useDebounced } from '../hooks';
 import { Alert, Field } from './ui';
@@ -69,8 +69,8 @@ export const DoctorSelect = ({ value, onChange, label = 'Bác sĩ', required, al
             </select>
           )}
           {selected?.working_hours && (
-            <div className="st-hint" style={{ marginTop: '0.35rem' }}>
-              Lịch làm việc: {formatWorkingHours(selected.working_hours)}
+            <div style={{ marginTop: '0.4rem' }}>
+              <WorkingDays rows={selected.working_hours} />
             </div>
           )}
         </>

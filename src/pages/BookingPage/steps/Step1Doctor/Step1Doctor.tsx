@@ -1,9 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Briefcase, ChevronDown, Info, Check, Clock, GraduationCap, Loader2, AlertCircle } from 'lucide-react';
+import { Briefcase, ChevronDown, Info, Check, GraduationCap, Loader2, AlertCircle } from 'lucide-react';
 import type { BookingDoctor } from '../../../../types/booking';
 import { apiGetDoctors } from '../../../../api/functions/doctors';
 import type { DoctorListItem } from '../../../../api/types';
-import { formatWorkingHours } from '../../../../utils/workingHours';
+import { WorkingDays } from '../../../../components/WorkingDays/WorkingDays';
 import './Step1Doctor.css';
 
 interface Step1DoctorProps {
@@ -232,10 +232,7 @@ export const Step1Doctor: React.FC<Step1DoctorProps> = ({
                         )}
                       </div>
                       <div className="row-meta">
-                        <span className="row-exp">
-                          <Clock size={13} className="exp-icon" />
-                          <span>{formatWorkingHours(item.working_hours ?? [])}</span>
-                        </span>
+                        <WorkingDays rows={item.working_hours ?? []} />
                       </div>
                     </div>
 
