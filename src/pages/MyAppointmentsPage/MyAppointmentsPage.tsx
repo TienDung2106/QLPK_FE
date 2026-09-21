@@ -50,12 +50,14 @@ function formatTime(time: string): string {
   return time.slice(0, 5);
 }
 
-/** Lý do gửi kèm khi bệnh nhân huỷ một lịch đã quá giờ hẹn mà chưa khám. */
-const OVERDUE_CANCEL_REASON = 'Lịch hẹn đã quá hạn';
+/** Đã tới giờ hẹn. Từ lúc này bệnh nhân không tự huỷ được nữa. */
+function hasStarted(appointment: AppointmentListItem): boolean {
+  return new Date(`${appointment.appointment_date}T${appointment.appointment_time}`) <= new Date();
+}
 
 /**
- * Đã hết giờ nhận phòng (số phút được đến muộn, không quá hết ca 1). Lịch như vậy huỷ được ngay,
- * không bị giới hạn huỷ trước giờ hẹn.
+ * Đã hết giờ nhận phòng (số phút được đến muộn, không quá hết ca 1). Hệ thống sẽ tự dời hoặc huỷ
+ * lịch trong vài phút; nhãn chỉ để bệnh nhân thấy trong lúc chờ.
  */
 function isOverdue(appointment: AppointmentListItem): boolean {
   const deadline = appointment.check_in_deadline ?? appointment.appointment_time;
@@ -318,7 +320,7 @@ export const MyAppointmentsPage = () => {
                   </button>
                 </div>
 
-                {CANCELLABLE.has(appointment.status) &&
+                {CANCELLABLE.has(appointment.status) && !hasStarted(appointment) &&
                   (cancelTargetId === appointment.appointment_id ? (
                     <div className="appointment-cancel-form">
                       <label className="form-label" htmlFor={`cancel-reason-${appointment.appointment_id}`}>
@@ -357,17 +359,6 @@ export const MyAppointmentsPage = () => {
                         </button>
                       </div>
                     </div>
-                  ) : isOverdue(appointment) ? (
-                    // Đã quá giờ hẹn mà chưa khám thì không còn gì để giữ: huỷ ngay, khỏi hỏi lý do.
-                    <button
-                      type="button"
-                      className="btn btn-outline appointment-cancel"
-                      onClick={() => handleCancel(appointment.appointment_id, OVERDUE_CANCEL_REASON)}
-                      disabled={busyId === appointment.appointment_id}
-                    >
-                      {busyId === appointment.appointment_id ? <Loader2 className="spin" size={16} /> : <X size={16} />}
-                      <span>Huỷ ngay</span>
-                    </button>
                   ) : (
                     <button
                       type="button"
