@@ -3,6 +3,7 @@ import { AlertCircle, ArrowLeft, ArrowRight, BarChart2, Loader2 } from 'lucide-r
 import type { PatientInfo } from '../../../../types/booking';
 import { apiGetMyProfiles } from '../../../../api/functions/patients';
 import type { PatientProfile } from '../../../../api/types';
+import { renderActions } from '../../components/stepActions';
 import './Step4PatientInfo.css';
 
 interface Step4PatientInfoProps {
@@ -14,6 +15,8 @@ interface Step4PatientInfoProps {
   onUpdatePatientInfo: (info: Partial<PatientInfo>) => void;
   onChangeReason: (reason: string) => void;
   onPrevStep: () => void;
+  /** Có thì nút Quay lại / Tiếp tục được đưa sang cột tóm tắt bên phải. */
+  actionsSlot?: HTMLElement | null;
   onNextStep: () => void;
 }
 
@@ -46,6 +49,7 @@ export const Step4PatientInfo: React.FC<Step4PatientInfoProps> = ({
   onUpdatePatientInfo,
   onChangeReason,
   onPrevStep,
+  actionsSlot,
   onNextStep,
 }) => {
   const [profiles, setProfiles] = useState<PatientProfile[]>([]);
@@ -292,22 +296,25 @@ export const Step4PatientInfo: React.FC<Step4PatientInfoProps> = ({
         </p>
       </div>
 
-      {/* ── Bottom Action Buttons ── */}
-      <div className="step4-bottom-actions">
-        <button type="button" className="btn-back-step" onClick={onPrevStep}>
-          <ArrowLeft size={15} />
-          <span>Quay lại</span>
-        </button>
-        <button
-          type="button"
-          className="btn-next-step"
-          onClick={onNextStep}
-          disabled={selectedPatientId === null || patientInfo.fullName.trim().length < 2}
-        >
-          <span>Tiếp tục</span>
-          <ArrowRight size={15} />
-        </button>
-      </div>
+      {/* Nút điều hướng nằm ở cột tóm tắt, dưới ô hỗ trợ; chưa có chỗ đó thì hiện tại đây. */}
+      {renderActions(
+        <div className="step4-bottom-actions">
+          <button type="button" className="btn-back-step" onClick={onPrevStep}>
+            <ArrowLeft size={15} />
+            <span>Quay lại</span>
+          </button>
+          <button
+            type="button"
+            className="btn-next-step"
+            onClick={onNextStep}
+            disabled={selectedPatientId === null || patientInfo.fullName.trim().length < 2}
+          >
+            <span>Tiếp tục</span>
+            <ArrowRight size={15} />
+          </button>
+        </div>,
+        actionsSlot,
+      )}
     </div>
   );
 };

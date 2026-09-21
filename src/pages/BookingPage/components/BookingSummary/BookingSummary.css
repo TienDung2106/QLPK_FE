@@ -351,3 +351,22 @@
 .discount-amount {
   color: #059669;
 }
+
+/* ── Nút Quay lại / Tiếp tục của bước 2–4, đặt dưới ô hỗ trợ ── */
+.summary-step-actions:empty {
+  display: none;
+}
+
+.summary-step-actions > div {
+  display: flex;
+  gap: 0.6rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.summary-step-actions .btn-back-step,
+.summary-step-actions .btn-next-step {
+  flex: 1;
+  justify-content: center;
+}

@@ -13,6 +13,8 @@ interface BookingSummaryProps {
   selectedServices?: SelectedService[];
   quote?: BookingQuote | null;
   currentStep?: number;
+  /** Chỗ các bước 2–4 đặt nút Quay lại / Tiếp tục, ngay dưới ô hỗ trợ. */
+  actionsRef?: (element: HTMLDivElement | null) => void;
 }
 
 export const BookingSummary: React.FC<BookingSummaryProps> = ({
@@ -22,6 +24,7 @@ export const BookingSummary: React.FC<BookingSummaryProps> = ({
   selectedServices = [],
   quote = null,
   currentStep = 1,
+  actionsRef,
 }) => {
   const localSubtotal = selectedServices.reduce((sum, service) => sum + service.price, 0);
   const subtotal = quote?.subtotal_amount ?? localSubtotal;
@@ -258,6 +261,8 @@ export const BookingSummary: React.FC<BookingSummaryProps> = ({
           </>
         )}
       </div>
+
+      <div ref={actionsRef} className="summary-step-actions" />
     </aside>
   );
 };

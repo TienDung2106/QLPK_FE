@@ -16,6 +16,7 @@ import type { BookingQuote, ClinicService } from '../../../../api/types';
 import type { SelectedService } from '../../../../types/booking';
 import { VoucherStrip } from '../../components/VoucherStrip';
 import { describePromotion, formatCurrency } from '../../bookingFormat';
+import { renderActions } from '../../components/stepActions';
 import './Step2Service.css';
 
 /**
@@ -69,6 +70,8 @@ interface Step2ServiceProps {
   /** Bỏ mọi dịch vụ ngoài danh sách này trong một lần; dùng cho nút "1 ca". */
   onKeepServices: (serviceIds: number[]) => void;
   onPrevStep: () => void;
+  /** Có thì nút Quay lại / Tiếp tục được đưa sang cột tóm tắt bên phải. */
+  actionsSlot?: HTMLElement | null;
   onNextStep: () => void;
 }
 
@@ -81,6 +84,7 @@ export const Step2Service: React.FC<Step2ServiceProps> = ({
   onToggleService,
   onKeepServices,
   onPrevStep,
+  actionsSlot,
   onNextStep,
 }) => {
   const [services, setServices] = useState<ClinicService[]>([]);
@@ -511,21 +515,25 @@ export const Step2Service: React.FC<Step2ServiceProps> = ({
         </section>
       )}
 
-      <div className="step3-bottom-bar">
-        <button type="button" className="btn-back-step" onClick={onPrevStep}>
-          <ArrowLeft size={16} />
-          <span>Quay lại</span>
-        </button>
-        <button
-          type="button"
-          className="btn btn-primary btn-next-step"
-          onClick={onNextStep}
-          disabled={selectedServices.length === 0 || !quote || quoteLoading}
-        >
-          <span>Tiếp tục</span>
-          <ArrowRight size={18} />
-        </button>
-      </div>
+      {/* Nút điều hướng nằm ở cột tóm tắt, dưới ô hỗ trợ; chưa có chỗ đó thì hiện tại đây. */}
+      {renderActions(
+        <div className="step3-bottom-bar">
+          <button type="button" className="btn-back-step" onClick={onPrevStep}>
+            <ArrowLeft size={16} />
+            <span>Quay lại</span>
+          </button>
+          <button
+            type="button"
+            className="btn btn-primary btn-next-step"
+            onClick={onNextStep}
+            disabled={selectedServices.length === 0 || !quote || quoteLoading}
+          >
+            <span>Tiếp tục</span>
+            <ArrowRight size={18} />
+          </button>
+        </div>,
+        actionsSlot,
+      )}
     </div>
   );
 };

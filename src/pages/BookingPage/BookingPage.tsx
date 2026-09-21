@@ -41,6 +41,8 @@ export const BookingPage: React.FC<BookingPageProps> = ({ onBackToHome }) => {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [alternatives, setAlternatives] = useState<DoctorAvailability[]>([]);
+  // Chỗ ở cột tóm tắt, dưới ô hỗ trợ, nơi bước 2–4 đặt nút Quay lại / Tiếp tục.
+  const [actionsSlot, setActionsSlot] = useState<HTMLDivElement | null>(null);
 
   const [state, setState] = useState<BookingState>({
     currentStep: 1,
@@ -260,6 +262,7 @@ export const BookingPage: React.FC<BookingPageProps> = ({ onBackToHome }) => {
                 onToggleService={handleToggleService}
                 onKeepServices={handleKeepServices}
                 onPrevStep={() => goToStep(1)}
+                actionsSlot={actionsSlot}
                 onNextStep={() => goToStep(3)}
               />
             )}
@@ -322,6 +325,7 @@ export const BookingPage: React.FC<BookingPageProps> = ({ onBackToHome }) => {
                 }
                 onSelectShift={(shift) => setState((prev) => ({ ...prev, selectedShift: shift }))}
                 onPrevStep={() => goToStep(2)}
+                actionsSlot={actionsSlot}
                 onNextStep={() => goToStep(4)}
                 onChangeDoctor={() => goToStep(1)}
               />
@@ -336,6 +340,7 @@ export const BookingPage: React.FC<BookingPageProps> = ({ onBackToHome }) => {
                 onUpdatePatientInfo={handleUpdatePatientInfo}
                 onChangeReason={(reason) => setState((prev) => ({ ...prev, reasonForVisit: reason }))}
                 onPrevStep={() => goToStep(3)}
+                actionsSlot={actionsSlot}
                 onNextStep={() => goToStep(5)}
               />
             )}
@@ -370,6 +375,7 @@ export const BookingPage: React.FC<BookingPageProps> = ({ onBackToHome }) => {
             selectedServices={state.selectedServices}
             quote={quote}
             currentStep={state.currentStep}
+            actionsRef={setActionsSlot}
           />
         </div>
       </main>

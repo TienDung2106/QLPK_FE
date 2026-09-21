@@ -19,6 +19,7 @@ import { apiGetDoctorCalendar, apiGetDoctorSlots } from '../../../../api/functio
 import type { DoctorCalendarDay } from '../../../../api/staffTypes';
 import type { AvailableSlot, ShiftUnavailableReason } from '../../../../api/types';
 import { formatDateLabel, formatShiftRange, monthGrid, todayIso, toIsoDate } from '../../bookingFormat';
+import { renderActions } from '../../components/stepActions';
 import './Step3DateTime.css';
 
 interface Step3DateTimeProps {
@@ -31,6 +32,8 @@ interface Step3DateTimeProps {
   onSelectDate: (date: string) => void;
   onSelectShift: (shift: SelectedShift) => void;
   onPrevStep: () => void;
+  /** Có thì nút Quay lại / Tiếp tục được đưa sang cột tóm tắt bên phải. */
+  actionsSlot?: HTMLElement | null;
   onNextStep: () => void;
   onChangeDoctor?: () => void;
 }
@@ -69,6 +72,7 @@ export const Step3DateTime: React.FC<Step3DateTimeProps> = ({
   onSelectDate,
   onSelectShift,
   onPrevStep,
+  actionsSlot,
   onNextStep,
   onChangeDoctor,
 }) => {
@@ -437,22 +441,25 @@ export const Step3DateTime: React.FC<Step3DateTimeProps> = ({
         </div>
       </div>
 
-      {/* ── Bottom Action Buttons ── */}
-      <div className="step2-bottom-actions">
-        <button type="button" className="btn-back-step" onClick={onPrevStep}>
-          <ArrowLeft size={15} />
-          <span>Quay lại</span>
-        </button>
-        <button
-          type="button"
-          className="btn-next-step"
-          onClick={onNextStep}
-          disabled={!selectedShift}
-        >
-          <span>Tiếp tục</span>
-          <ArrowRight size={15} />
-        </button>
-      </div>
+      {/* Nút điều hướng nằm ở cột tóm tắt, dưới ô hỗ trợ; chưa có chỗ đó thì hiện tại đây. */}
+      {renderActions(
+        <div className="step2-bottom-actions">
+          <button type="button" className="btn-back-step" onClick={onPrevStep}>
+            <ArrowLeft size={15} />
+            <span>Quay lại</span>
+          </button>
+          <button
+            type="button"
+            className="btn-next-step"
+            onClick={onNextStep}
+            disabled={!selectedShift}
+          >
+            <span>Tiếp tục</span>
+            <ArrowRight size={15} />
+          </button>
+        </div>,
+        actionsSlot,
+      )}
     </div>
   );
 };
