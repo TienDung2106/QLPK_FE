@@ -25,6 +25,20 @@ export const apiGetDoctors = (query: DoctorQuery = {}) =>
 export const apiGetDoctorSlots = (doctorId: number, date: string, durationMinutes?: number) =>
   GetData<DoctorAvailability>(url.doctorAvailableSlots(doctorId), { date, duration_minutes: durationMinutes });
 
+export interface AlternativesQuery {
+  specialty_id: number;
+  /** 'yyyy-MM-dd'. */
+  date: string;
+  /** 'HH:mm:ss' — chỉ lấy ca bao trùm giờ này. */
+  time?: string;
+  duration_minutes?: number;
+  exclude_doctor_id?: number;
+}
+
+/** Bác sĩ khác cùng chuyên khoa còn ca trống ngày đó — dùng khi ca đã chọn vừa kín (409 slot_taken). */
+export const apiGetDoctorAlternatives = (query: AlternativesQuery) =>
+  GetData<DoctorAvailability[]>(url.doctorAlternatives, query);
+
 /** Cả tháng chứa `month` ('yyyy-MM-dd' bất kỳ trong tháng): ngày còn ca nhận được lượt khám, kín, nghỉ. */
 export const apiGetDoctorCalendar = (doctorId: number, month: string, durationMinutes?: number) =>
   GetData<DoctorCalendar>(url.doctorCalendar(doctorId), { month, duration_minutes: durationMinutes });

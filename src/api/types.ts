@@ -51,6 +51,16 @@ export interface DoctorListItem {
   average_rating: number;
   review_count: number;
   is_accepting_appointments: boolean;
+  /** Ca đang mở trong tuần, xếp theo thứ rồi giờ bắt đầu. */
+  working_hours: DoctorWorkingHours[];
+}
+
+export interface DoctorWorkingHours {
+  /** 1 = thứ Hai … 7 = Chủ nhật. */
+  day_of_week: number;
+  /** 'HH:mm:ss'. */
+  start_time: string;
+  end_time: string;
 }
 
 /** Lý do một ca không nhận thêm được lượt khám đang chọn. */

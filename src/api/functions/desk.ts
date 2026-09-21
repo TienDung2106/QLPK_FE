@@ -1,6 +1,7 @@
 import { DeleteData, GetBlob, GetData, PatchData, PostData, PutData } from '../helpers';
 import url from '../url';
-import type { AppointmentListItem, CheckInResult, DoctorAvailability, PagedResponse } from '../types';
+import type { AppointmentListItem, CheckInResult, DoctorAvailability, DoctorListItem, PagedResponse } from '../types';
+import type { AlternativesQuery } from './doctors';
 import type {
   ApplyDiscountPayload,
   ApplyDiscountResult,
@@ -82,6 +83,14 @@ export const apiConfirmAppointmentPayment = (appointmentId: number, payload: Pay
   PostData<ConfirmPaymentResult>(url.staffAppointmentAction(appointmentId, 'confirm-payment'), payload);
 
 /* Bác sĩ, nhìn từ quầy */
+
+/** Bác sĩ đang nhận lịch, kèm ca làm việc trong tuần — cho ô chọn bác sĩ ở quầy. */
+export const apiGetStaffDoctors = () =>
+  GetData<PagedResponse<DoctorListItem>>(url.staffDoctors, { page_size: 100 });
+
+/** Bác sĩ khác cùng chuyên khoa còn ca trống — khi ca đã chọn vừa kín (409 slot_taken). */
+export const apiGetStaffDoctorAlternatives = (query: AlternativesQuery) =>
+  GetData<DoctorAvailability[]>(url.staffDoctorAlternatives, query);
 
 export const apiGetStaffDoctorSlots = (doctorId: number, date: string, durationMinutes?: number) =>
   GetData<DoctorAvailability>(url.staffDoctorSlots(doctorId), { date, duration_minutes: durationMinutes });

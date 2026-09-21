@@ -154,3 +154,32 @@
   background: var(--primary-light);
   color: var(--primary);
 }
+
+/* Ca vừa kín lúc xác nhận: báo lỗi và gợi ý bác sĩ khác còn trống. */
+.booking-conflict-title {
+  margin-top: 0.5rem;
+  color: var(--text-main, inherit);
+}
+
+.booking-conflict-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.4rem;
+}
+
+.booking-conflict-option {
+  padding: 0.35rem 0.75rem;
+  border: 1px solid var(--primary);
+  border-radius: 999px;
+  background: var(--primary-light);
+  color: var(--primary);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.booking-conflict-option:hover {
+  background: var(--primary);
+  color: #fff;
+}

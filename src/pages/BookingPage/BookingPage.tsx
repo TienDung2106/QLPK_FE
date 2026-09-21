@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CheckCircle2, Clock3 } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Clock3 } from 'lucide-react';
 import { TopBar } from '../../components/Header/TopBar';
 import { Footer } from '../../components/Footer/Footer';
 import { BookingStepper } from './components/BookingStepper';
@@ -12,8 +12,9 @@ import { Step3DateTime } from './steps/Step3DateTime';
 import { Step4PatientInfo } from './steps/Step4PatientInfo';
 import { Step5Confirm } from './steps/Step5Confirm';
 import { apiBookAppointment } from '../../api/functions/appointments';
+import { apiGetDoctorAlternatives } from '../../api/functions/doctors';
 import { apiGetBookingQuote } from '../../api/functions/services';
-import type { Appointment, BookingQuote, ClinicService } from '../../api/types';
+import type { Appointment, BookingQuote, ClinicService, DoctorAvailability } from '../../api/types';
 import { APPOINTMENT_STATUS } from '../../api/types';
 import type { BookingDoctor, BookingState, PatientInfo } from '../../types/booking';
 import { formatCurrency, formatDateLabel, formatShiftRange, formatTimeLabel, todayIso } from './bookingFormat';
@@ -39,6 +40,7 @@ export const BookingPage: React.FC<BookingPageProps> = ({ onBackToHome }) => {
   const [booked, setBooked] = useState<Appointment | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [alternatives, setAlternatives] = useState<DoctorAvailability[]>([]);
 
   const [state, setState] = useState<BookingState>({
     currentStep: 1,
@@ -170,6 +172,7 @@ export const BookingPage: React.FC<BookingPageProps> = ({ onBackToHome }) => {
 
     setSubmitting(true);
     setSubmitError(null);
+    setAlternatives([]);
 
     const result = await apiBookAppointment(
       {
@@ -192,6 +195,20 @@ export const BookingPage: React.FC<BookingPageProps> = ({ onBackToHome }) => {
       // chứ không để họ bấm lại vào một ca đã đầy.
       if (result.status === 409) {
         setSubmitError(`${result.error} Vui lòng chọn một ca khác.`);
+
+        // Ca vừa kín: gợi ý bác sĩ cùng chuyên khoa còn trống đúng giờ đó.
+        const doctor = state.selectedDoctor;
+        if (result.errorCode === 'slot_taken' && doctor.specialtyId) {
+          const found = await apiGetDoctorAlternatives({
+            specialty_id: doctor.specialtyId,
+            date: state.selectedDate,
+            time: state.selectedShift.startTime,
+            duration_minutes: quote?.duration_minutes,
+            exclude_doctor_id: doctor.doctorId,
+          });
+          setAlternatives(found.data ?? []);
+        }
+
         setState((prev) => ({ ...prev, selectedShift: null }));
         goToStep(3);
         return;
@@ -245,6 +262,53 @@ export const BookingPage: React.FC<BookingPageProps> = ({ onBackToHome }) => {
                 onPrevStep={() => goToStep(1)}
                 onNextStep={() => goToStep(3)}
               />
+            )}
+
+            {state.currentStep === 3 && submitError && (
+              <div className="account-alert error booking-conflict" role="alert">
+                <AlertCircle size={16} />
+                <div>
+                  <span>{submitError}</span>
+                  {alternatives.length > 0 && (
+                    <>
+                      <div className="booking-conflict-title">Bác sĩ khác cùng chuyên khoa còn trống ca này:</div>
+                      <div className="booking-conflict-options">
+                        {alternatives.flatMap((doctor) =>
+                          doctor.slots.map((slot) => (
+                            <button
+                              key={`${doctor.doctor_id}-${slot.start_time}`}
+                              type="button"
+                              className="booking-conflict-option"
+                              onClick={() => {
+                                setState((prev) => ({
+                                  ...prev,
+                                  selectedDoctor: {
+                                    id: `doc-${doctor.doctor_id}`,
+                                    doctorId: doctor.doctor_id,
+                                    name: doctor.doctor_full_name,
+                                    specialty: doctor.specialty_name,
+                                    specialtyId: prev.selectedDoctor?.specialtyId,
+                                  },
+                                  selectedShift: {
+                                    name: slot.shift_name,
+                                    startTime: slot.start_time,
+                                    endTime: slot.span_end_time ?? slot.end_time,
+                                  },
+                                }));
+                                setAlternatives([]);
+                                setSubmitError(null);
+                                goToStep(5);
+                              }}
+                            >
+                              {doctor.doctor_full_name} · {formatShiftRange(slot.start_time, slot.span_end_time ?? slot.end_time)}
+                            </button>
+                          )),
+                        )}
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
             )}
 
             {state.currentStep === 3 && (

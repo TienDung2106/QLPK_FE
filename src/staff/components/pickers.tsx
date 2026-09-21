@@ -6,6 +6,7 @@ import type { DeskPatient } from '../../api/staffTypes';
 import { DESK_PAYMENT_METHODS, PAYMENT_METHOD } from '../labels';
 import { formatDate, formatTime } from '../format';
 import { useDoctorOptions } from './useDoctorOptions';
+import { formatWorkingHours } from '../../utils/workingHours';
 import type { PaymentFormValue } from './payment';
 import { useApiQuery, useDebounced } from '../hooks';
 import { Alert, Field } from './ui';
@@ -26,6 +27,7 @@ export const DoctorSelect = ({ value, onChange, label = 'Bác sĩ', required, al
   const { options, loading } = useDoctorOptions();
   const [manual, setManual] = useState(false);
   const known = value === null || options.some((option) => option.doctor_id === value);
+  const selected = compact ? undefined : options.find((option) => option.doctor_id === value);
 
   return (
     <Field
@@ -37,35 +39,42 @@ export const DoctorSelect = ({ value, onChange, label = 'Bác sĩ', required, al
         </button>
       }
     >
-      {(id) =>
-        manual || !known ? (
-          <input
-            id={id}
-            className="st-input"
-            type="number"
-            min={1}
-            placeholder="Mã bác sĩ"
-            value={value ?? ''}
-            onChange={(event) => onChange(event.target.value ? Number(event.target.value) : null)}
-          />
-        ) : (
-          <select
-            id={id}
-            className="st-select"
-            value={value ?? ''}
-            disabled={loading}
-            onChange={(event) => onChange(event.target.value ? Number(event.target.value) : null)}
-          >
-            <option value="">{loading ? 'Đang tải…' : allowAll ? 'Tất cả bác sĩ' : 'Chọn bác sĩ'}</option>
-            {options.map((option) => (
-              <option key={option.doctor_id} value={option.doctor_id}>
-                {option.full_name}
-                {option.detail ? ` — ${option.detail}` : ''}
-              </option>
-            ))}
-          </select>
-        )
-      }
+      {(id) => (
+        <>
+          {manual || !known ? (
+            <input
+              id={id}
+              className="st-input"
+              type="number"
+              min={1}
+              placeholder="Mã bác sĩ"
+              value={value ?? ''}
+              onChange={(event) => onChange(event.target.value ? Number(event.target.value) : null)}
+            />
+          ) : (
+            <select
+              id={id}
+              className="st-select"
+              value={value ?? ''}
+              disabled={loading}
+              onChange={(event) => onChange(event.target.value ? Number(event.target.value) : null)}
+            >
+              <option value="">{loading ? 'Đang tải…' : allowAll ? 'Tất cả bác sĩ' : 'Chọn bác sĩ'}</option>
+              {options.map((option) => (
+                <option key={option.doctor_id} value={option.doctor_id}>
+                  {option.full_name}
+                  {option.detail ? ` — ${option.detail}` : ''}
+                </option>
+              ))}
+            </select>
+          )}
+          {selected?.working_hours && (
+            <div className="st-hint" style={{ marginTop: '0.35rem' }}>
+              Lịch làm việc: {formatWorkingHours(selected.working_hours)}
+            </div>
+          )}
+        </>
+      )}
     </Field>
   );
 };

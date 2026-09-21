@@ -2,14 +2,15 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CalendarPlus, Footprints, X } from 'lucide-react';
 import { apiGetBookingQuote, apiGetServices } from '../../api/functions/services';
-import type { BookingQuote } from '../../api/types';
-import { apiBookOnBehalf, apiBookWalkIn } from '../../api/functions/desk';
+import type { BookingQuote, DoctorAvailability } from '../../api/types';
+import { apiBookOnBehalf, apiBookWalkIn, apiGetStaffDoctorAlternatives } from '../../api/functions/desk';
 import type { DeskPatient } from '../../api/staffTypes';
 import { useAction, useApiQuery } from '../hooks';
-import { formatMoney, todayIso } from '../format';
+import { formatMoney, formatTime, todayIso } from '../format';
 import { CONSULTATION_MODE_LABEL, VISIT_TYPE_LABEL } from '../labels';
 import { useToast } from '../components/toastContext';
 import { DoctorSelect, PatientPicker, SlotPicker } from '../components/pickers';
+import { useDoctorOptions } from '../components/useDoctorOptions';
 import { DoctorMonthCalendar } from '../components/DoctorMonthCalendar';
 import { Alert, Button, Field, FilterTabs, PageHeader, Panel } from '../components/ui';
 import { VoucherStrip } from '../../pages/BookingPage/components/VoucherStrip';
@@ -37,6 +38,8 @@ const DeskBookingPage = () => {
   const [consultationMode, setConsultationMode] = useState('in_clinic');
   const [reason, setReason] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [alternatives, setAlternatives] = useState<DoctorAvailability[]>([]);
+  const { options: doctorOptions } = useDoctorOptions();
 
   const services = useApiQuery(() => apiGetServices({ page_size: 100 }), []);
   const serviceList = services.data?.items ?? [];
@@ -91,6 +94,7 @@ const DeskBookingPage = () => {
       return;
     }
     setError(null);
+    setAlternatives([]);
 
     const common = {
       patient_id: patient.patient_id,
@@ -110,6 +114,18 @@ const DeskBookingPage = () => {
 
     if (!result.ok || !result.data) {
       setError(result.error);
+      // Ca vừa kín: gợi ý bác sĩ cùng chuyên khoa còn trống đúng giờ đó.
+      const specialtyId = doctorOptions.find((option) => option.doctor_id === doctorId)?.specialty_id;
+      if (result.errorCode === 'slot_taken' && mode === 'booking' && specialtyId && time) {
+        const found = await apiGetStaffDoctorAlternatives({
+          specialty_id: specialtyId,
+          date,
+          time,
+          duration_minutes: quote?.duration_minutes,
+          exclude_doctor_id: doctorId,
+        });
+        setAlternatives(found.data ?? []);
+      }
       return;
     }
 
@@ -149,6 +165,30 @@ const DeskBookingPage = () => {
       </div>
 
       {error && <Alert tone="danger" className="st-alert-gap">{error}</Alert>}
+      {alternatives.length > 0 && (
+        <Alert tone="info" className="st-alert-gap">
+          <strong>Bác sĩ khác còn trống ca này:</strong>
+          <div className="st-chip-row" style={{ marginTop: '0.4rem' }}>
+            {alternatives.flatMap((doctor) =>
+              doctor.slots.map((slot) => (
+                <button
+                  key={`${doctor.doctor_id}-${slot.start_time}`}
+                  type="button"
+                  className="st-slot"
+                  onClick={() => {
+                    setDoctorId(doctor.doctor_id);
+                    setTime(slot.start_time);
+                    setAlternatives([]);
+                    setError(null);
+                  }}
+                >
+                  {doctor.doctor_full_name} · {formatTime(slot.start_time)}–{formatTime(slot.span_end_time ?? slot.end_time)}
+                </button>
+              )),
+            )}
+          </div>
+        </Alert>
+      )}
 
       <div className="st-grid-main">
         <div className="st-stack">
