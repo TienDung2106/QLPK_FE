@@ -36,11 +36,6 @@
   color: var(--primary, #1877f2);
 }
 
-.working-day.off {
-  background: #f1f5f9;
-  color: #b6c0cc;
-}
-
 .working-days-hours {
   font-size: 0.78rem;
   font-weight: 600;
