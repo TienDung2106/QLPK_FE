@@ -367,13 +367,14 @@
   transition: width 0.3s ease;
 }
 
+/* Xanh lá như dấu "ngày có thể đặt" ở lịch bên trái. */
 .shift-meter-need {
-  background: #60a5fa;
+  background: #22c55e;
   transition: width 0.3s ease;
 }
 
 .shift-card.is-selected .shift-meter-need {
-  background: var(--primary, #1877f2);
+  background: #16a34a;
 }
 
 .shift-meta {
