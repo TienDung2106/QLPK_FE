@@ -1,5 +1,6 @@
 import React from 'react';
 import { Calendar, FileText, CheckCircle2 } from 'lucide-react';
+import { fallbackTo } from '../../utils/imageFallback';
 
 interface HeroSectionProps {
   onOpenBooking?: () => void;
@@ -74,11 +75,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               src="/images/hero_doctors.jpg"
               alt="Đội ngũ bác sĩ da liễu"
               className="hero-image"
-              onError={(e) => {
-                // Fallback high-quality medical image if local image not yet loaded
-                (e.target as HTMLImageElement).src =
-                  'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=1000&q=80';
-              }}
+              onError={fallbackTo('https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=1000&q=80')}
             />
           </div>
         </div>

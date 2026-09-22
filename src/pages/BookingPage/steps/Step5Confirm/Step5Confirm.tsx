@@ -8,6 +8,7 @@ import { CAPTCHA_PURPOSE } from '../../../../api/functions/captcha';
 import { describePromotion, formatCurrency, formatDateLabel, formatShiftRange } from '../../bookingFormat';
 import { CLINIC_TERMS, CLINIC_TERMS_UPDATED_AT } from './clinicTerms';
 import './Step5Confirm.css';
+import { fallbackTo } from '../../../../utils/imageFallback';
 
 interface Step5ConfirmProps {
   selectedDoctor: BookingDoctor | null;
@@ -107,9 +108,7 @@ export const Step5Confirm: React.FC<Step5ConfirmProps> = ({
                 src={doctor.avatar ?? FALLBACK_AVATAR}
                 alt={doctor.name}
                 className="step5-doc-avatar"
-                onError={(event) => {
-                  (event.target as HTMLImageElement).src = FALLBACK_AVATAR;
-                }}
+                onError={fallbackTo(FALLBACK_AVATAR)}
               />
               <div className="step5-doc-info">
                 <h4 className="step5-doc-name">{doctor.name}</h4>

@@ -1,6 +1,7 @@
 import React from 'react';
 import { ArrowRight } from 'lucide-react';
 import type { NewsItem } from '../../types';
+import { fallbackTo } from '../../utils/imageFallback';
 
 const newsData: NewsItem[] = [
   {
@@ -86,10 +87,7 @@ export const NewsSection: React.FC = () => {
                   src={newsData[0].image}
                   alt={newsData[0].title}
                   className="news-img"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src =
-                      'https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&w=600&q=80';
-                  }}
+                  onError={fallbackTo('https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&w=600&q=80')}
                 />
               </div>
               <div className="news-content">
@@ -109,10 +107,7 @@ export const NewsSection: React.FC = () => {
                   src={newsData[3].image}
                   alt={newsData[3].title}
                   className="news-img"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src =
-                      'https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?auto=format&fit=crop&w=600&q=80';
-                  }}
+                  onError={fallbackTo('https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?auto=format&fit=crop&w=600&q=80')}
                 />
               </div>
               <div className="news-content">
@@ -134,10 +129,7 @@ export const NewsSection: React.FC = () => {
                   src={newsData[1].image}
                   alt={newsData[1].title}
                   className="news-img"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src =
-                      'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=600&q=80';
-                  }}
+                  onError={fallbackTo('https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=600&q=80')}
                 />
               </div>
               <div className="news-content">
@@ -157,10 +149,7 @@ export const NewsSection: React.FC = () => {
                   src={newsData[4].image}
                   alt={newsData[4].title}
                   className="news-img"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src =
-                      'https://images.unsplash.com/photo-1584467735815-f778f274e296?auto=format&fit=crop&w=600&q=80';
-                  }}
+                  onError={fallbackTo('https://images.unsplash.com/photo-1584467735815-f778f274e296?auto=format&fit=crop&w=600&q=80')}
                 />
               </div>
               <div className="news-content">
@@ -183,10 +172,7 @@ export const NewsSection: React.FC = () => {
                   src={newsData[2].image}
                   alt={newsData[2].title}
                   className="news-img"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src =
-                      'https://images.unsplash.com/photo-1505751172876-fa1923c5c528?auto=format&fit=crop&w=600&q=80';
-                  }}
+                  onError={fallbackTo('https://images.unsplash.com/photo-1505751172876-fa1923c5c528?auto=format&fit=crop&w=600&q=80')}
                 />
               </div>
               <div className="news-content">
@@ -206,10 +192,7 @@ export const NewsSection: React.FC = () => {
                   src={newsData[5].image}
                   alt={newsData[5].title}
                   className="news-img"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src =
-                      'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=600&q=80';
-                  }}
+                  onError={fallbackTo('https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=600&q=80')}
                 />
               </div>
               <div className="news-content">

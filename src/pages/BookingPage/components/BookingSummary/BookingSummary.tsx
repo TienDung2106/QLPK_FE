@@ -4,6 +4,7 @@ import type { BookingQuote } from '../../../../api/types';
 import type { BookingDoctor, SelectedService } from '../../../../types/booking';
 import { describePromotion, formatCurrency as formatVND } from '../../bookingFormat';
 import './BookingSummary.css';
+import { fallbackTo } from '../../../../utils/imageFallback';
 
 interface BookingSummaryProps {
   selectedDoctor: BookingDoctor | null;
@@ -117,10 +118,7 @@ export const BookingSummary: React.FC<BookingSummaryProps> = ({
                 src={selectedDoctor.avatar}
                 alt={selectedDoctor.name}
                 className="mini-doc-avatar"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src =
-                    'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=300&q=80';
-                }}
+                onError={fallbackTo('https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=300&q=80')}
               />
               <div className="mini-doc-info">
                 <strong className="mini-doc-name">{selectedDoctor.name}</strong>

@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { Header } from '../../components/Header';
 import { Footer } from '../../components/Footer/Footer';
 import './ClinicDetailPage.css';
+import { fallbackTo } from '../../utils/imageFallback';
 
 interface ClinicDetailPageProps {
   onBackToHome: () => void;
@@ -75,7 +76,7 @@ export const ClinicDetailPage: React.FC<ClinicDetailPageProps> = ({
       name: 'BS. Lê Hoàng Nam',
       title: 'Chuyên khoa da liễu tổng quát',
       exp: 'Kinh nghiệm 12 năm',
-      image: 'https://images.unsplash.com/photo-1594824813515-78335025d2c4?auto=format&fit=crop&w=600&q=80',
+      image: 'https://images.unsplash.com/photo-1651008376811-b90baee60c1f?auto=format&fit=crop&w=600&q=80',
     },
     {
       name: 'BS. Phạm Quỳnh Trang',
@@ -193,10 +194,7 @@ export const ClinicDetailPage: React.FC<ClinicDetailPageProps> = ({
                   src="https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=800&q=80"
                   alt="Đội ngũ bác sĩ da liễu hội chẩn"
                   className="figma-team-img"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src =
-                      'https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=800&q=80';
-                  }}
+                  onError={fallbackTo('https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=800&q=80')}
                 />
               </div>
             </div>
@@ -252,10 +250,7 @@ export const ClinicDetailPage: React.FC<ClinicDetailPageProps> = ({
                     src={doc.image}
                     alt={doc.name}
                     className="figma-doctor-img"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src =
-                        'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=600&q=80';
-                    }}
+                    onError={fallbackTo('https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=600&q=80')}
                   />
                 </div>
                 <div className="figma-doctor-info">

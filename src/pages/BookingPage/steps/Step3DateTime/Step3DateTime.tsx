@@ -21,6 +21,7 @@ import type { AvailableSlot, ShiftUnavailableReason } from '../../../../api/type
 import { formatDateLabel, formatShiftRange, monthGrid, todayIso, toIsoDate } from '../../bookingFormat';
 import { renderActions } from '../../components/stepActions';
 import './Step3DateTime.css';
+import { fallbackTo } from '../../../../utils/imageFallback';
 
 interface Step3DateTimeProps {
   selectedDoctor: BookingDoctor | null;
@@ -285,9 +286,7 @@ export const Step3DateTime: React.FC<Step3DateTimeProps> = ({
             src={doctor.avatar ?? FALLBACK_AVATAR}
             alt={doctor.name}
             className="step2-doc-avatar"
-            onError={(event) => {
-              (event.target as HTMLImageElement).src = FALLBACK_AVATAR;
-            }}
+            onError={fallbackTo(FALLBACK_AVATAR)}
           />
           <div className="step2-doc-info">
             <h3 className="step2-doc-name">{doctor.name}</h3>

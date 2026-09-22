@@ -5,6 +5,7 @@ import { apiGetDoctors } from '../../../../api/functions/doctors';
 import type { DoctorListItem } from '../../../../api/types';
 import { WorkingDays } from '../../../../components/WorkingDays/WorkingDays';
 import './Step1Doctor.css';
+import { fallbackTo } from '../../../../utils/imageFallback';
 
 interface Step1DoctorProps {
   selectedDoctor: BookingDoctor | null;
@@ -207,9 +208,7 @@ export const Step1Doctor: React.FC<Step1DoctorProps> = ({
                         src={doctor.avatar}
                         alt={doctor.name}
                         className="row-avatar"
-                        onError={(event) => {
-                          (event.target as HTMLImageElement).src = FALLBACK_AVATAR;
-                        }}
+                        onError={fallbackTo(FALLBACK_AVATAR)}
                       />
                     </div>
 

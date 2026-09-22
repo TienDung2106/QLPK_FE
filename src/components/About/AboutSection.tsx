@@ -1,6 +1,7 @@
 import React from 'react';
 import { UserCheck, Building2, ShieldCheck, Clock } from 'lucide-react';
 import type { StatItem } from '../../types';
+import { fallbackTo } from '../../utils/imageFallback';
 
 const statsData: StatItem[] = [
   { value: '15+', label: 'Năm kinh nghiệm' },
@@ -43,10 +44,7 @@ export const AboutSection: React.FC = () => {
               src="/images/treatment_room.jpg"
               alt="Phòng khám và chăm sóc da"
               className="about-image"
-              onError={(e) => {
-                (e.target as HTMLImageElement).src =
-                  'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=1000&q=80';
-              }}
+              onError={fallbackTo('https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=1000&q=80')}
             />
 
             {/* Floating Stats Card */}

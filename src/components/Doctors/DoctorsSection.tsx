@@ -1,5 +1,6 @@
 import React from 'react';
 import type { DoctorItem } from '../../types';
+import { fallbackTo } from '../../utils/imageFallback';
 
 interface DoctorsSectionProps {
   onSelectDoctor?: (doctor: DoctorItem) => void;
@@ -18,7 +19,7 @@ const doctorsList: DoctorItem[] = [
     name: 'BS. Nguyễn Thị D',
     specialty: 'Chuyên khoa Điều trị Laser',
     image:
-      'https://images.unsplash.com/photo-1594824813515-78335025d2c4?auto=format&fit=crop&w=600&q=80',
+      'https://images.unsplash.com/photo-1651008376811-b90baee60c1f?auto=format&fit=crop&w=600&q=80',
   },
   {
     id: 'doc-3',
@@ -62,10 +63,7 @@ export const DoctorsSection: React.FC<DoctorsSectionProps> = ({ onSelectDoctor }
                   src={doctorsList[0].image}
                   alt={doctorsList[0].name}
                   className="doctor-img"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src =
-                      'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=600&q=80';
-                  }}
+                  onError={fallbackTo('https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=600&q=80')}
                 />
               </div>
               <div className="doctor-info">
@@ -84,10 +82,7 @@ export const DoctorsSection: React.FC<DoctorsSectionProps> = ({ onSelectDoctor }
                   src={doctorsList[1].image}
                   alt={doctorsList[1].name}
                   className="doctor-img"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src =
-                      'https://images.unsplash.com/photo-1594824813515-78335025d2c4?auto=format&fit=crop&w=600&q=80';
-                  }}
+                  onError={fallbackTo('https://images.unsplash.com/photo-1651008376811-b90baee60c1f?auto=format&fit=crop&w=600&q=80')}
                 />
               </div>
               <div className="doctor-info">
@@ -108,10 +103,7 @@ export const DoctorsSection: React.FC<DoctorsSectionProps> = ({ onSelectDoctor }
                   src={doctorsList[2].image}
                   alt={doctorsList[2].name}
                   className="doctor-img"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src =
-                      'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=600&q=80';
-                  }}
+                  onError={fallbackTo('https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=600&q=80')}
                 />
               </div>
               <div className="doctor-info">
@@ -132,10 +124,7 @@ export const DoctorsSection: React.FC<DoctorsSectionProps> = ({ onSelectDoctor }
                   src={doctorsList[3].image}
                   alt={doctorsList[3].name}
                   className="doctor-img"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src =
-                      'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&w=600&q=80';
-                  }}
+                  onError={fallbackTo('https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&w=600&q=80')}
                 />
               </div>
               <div className="doctor-info">
