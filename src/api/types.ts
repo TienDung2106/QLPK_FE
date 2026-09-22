@@ -233,7 +233,6 @@ export interface CheckInResult {
   specialty_name: string;
   appointment_time: string;
   checked_in_at: string;
-  self_check_in: boolean;
 }
 
 /** Giá trị của appointments.status (QLPK.DataBaseAccess/Constants/AppointmentStatuses.cs). */

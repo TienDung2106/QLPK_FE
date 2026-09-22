@@ -20,7 +20,8 @@ export const AppointmentDetail = ({ appointmentId, onChanged }: Props) => {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [choosing, setChoosing] = useState(false);
-  const [date, setDate] = useState(todayIso());
+  // bệnh nhân chỉ chọn được từ ngày mai, khám trong ngày đăng ký tại quầy
+  const [date, setDate] = useState(todayIso(1));
   const [time, setTime] = useState<string | null>(null);
   const [slots, setSlots] = useState<AvailableSlot[] | null>(null);
 
@@ -32,7 +33,7 @@ export const AppointmentDetail = ({ appointmentId, onChanged }: Props) => {
       }
       if (result.ok && result.data) {
         setAppointment(result.data);
-        setDate(result.data.appointment_date >= todayIso() ? result.data.appointment_date : todayIso());
+        setDate(result.data.appointment_date > todayIso() ? result.data.appointment_date : todayIso(1));
       } else {
         setError(result.error);
       }
@@ -143,7 +144,7 @@ export const AppointmentDetail = ({ appointmentId, onChanged }: Props) => {
                 id={`reschedule-date-${appointmentId}`}
                 className="form-input"
                 type="date"
-                min={todayIso()}
+                min={todayIso(1)}
                 value={date}
                 onChange={(event) => {
                   setDate(event.target.value);

@@ -15,7 +15,7 @@ import { apiGetServices } from '../../../../api/functions/services';
 import type { BookingQuote, ClinicService } from '../../../../api/types';
 import type { SelectedService } from '../../../../types/booking';
 import { VoucherStrip } from '../../components/VoucherStrip';
-import { describePromotion, formatCurrency } from '../../bookingFormat';
+import { describePromotion, formatCurrency, MIN_COMBO_SERVICES } from '../../bookingFormat';
 import { renderActions } from '../../components/stepActions';
 import './Step2Service.css';
 
@@ -28,6 +28,15 @@ import './Step2Service.css';
  * xác thì trả thêm max_visit_minutes từ /api/booking/quote.
  */
 const SHIFT_MINUTES = 120;
+
+/** Một buổi chỉ có 2 ca liền nhau, nên lượt khám dài hơn thế không còn ca nào nhận. */
+const MAX_VISIT_MINUTES = 2 * SHIFT_MINUTES;
+
+/**
+ * ponytail: đệm kê đơn mặc định (BookingSettingDefaults.AppointmentBufferMinutes), chỉ dùng khi giỏ
+ * rỗng chưa có quote. Có quote thì lấy số thật từ quote.
+ */
+const DEFAULT_BUFFER_MINUTES = 10;
 
 /**
  * Mốc lọc viết cứng, đủ dùng cho bảng giá hiện tại của phòng khám.
@@ -131,6 +140,14 @@ export const Step2Service: React.FC<Step2ServiceProps> = ({
   const shiftsNeeded = Math.ceil(durationMinutes / SHIFT_MINUTES);
   const bufferMinutes = quote ? quote.duration_minutes - quote.service_minutes : 0;
 
+  // Phút đã dùng tính tại chỗ để khoá thẻ ngay, không đợi quote trả về.
+  const usedMinutes =
+    (quote ? bufferMinutes : DEFAULT_BUFFER_MINUTES) +
+    selectedServices.reduce((sum, service) => sum + service.durationMinutes, 0);
+  const overLimit = usedMinutes > MAX_VISIT_MINUTES;
+  const wouldOverflow = (service: ClinicService) =>
+    !selectedIds.has(service.service_id) && usedMinutes + service.duration_minutes > MAX_VISIT_MINUTES;
+
   // Chế độ đang bật suy thẳng từ tổng thời gian, không lưu thành state: chọn quá một ca là nút tự
   // nhảy sang "1 buổi", nên không bao giờ có cảnh nút nói một đằng giỏ hàng một nẻo.
   const spansHalfDay = shiftsNeeded > 1;
@@ -167,6 +184,10 @@ export const Step2Service: React.FC<Step2ServiceProps> = ({
 
   // Bệnh nhân tự đổi giỏ thì lời nhắc cũ hết đúng.
   const handleToggleService = (service: ClinicService) => {
+    if (wouldOverflow(service)) {
+      return;
+    }
+
     setDroppedNames([]);
     onToggleService(service);
   };
@@ -357,6 +378,7 @@ export const Step2Service: React.FC<Step2ServiceProps> = ({
           <div className="services-grid">
             {filtered.map((service) => {
               const isSel = selectedIds.has(service.service_id);
+              const blocked = wouldOverflow(service);
 
               return (
                 <div
@@ -364,7 +386,9 @@ export const Step2Service: React.FC<Step2ServiceProps> = ({
                   role="checkbox"
                   tabIndex={0}
                   aria-checked={isSel}
-                  className={`service-card ${isSel ? 'is-selected' : ''}`}
+                  aria-disabled={blocked}
+                  title={blocked ? `Tổng thời gian sẽ vượt 2 ca (${MAX_VISIT_MINUTES} phút)` : undefined}
+                  className={`service-card ${isSel ? 'is-selected' : ''} ${blocked ? 'is-disabled' : ''}`}
                   onClick={() => handleToggleService(service)}
                   onKeyDown={(event) => {
                     if (event.key === ' ' || event.key === 'Enter') {
@@ -389,6 +413,10 @@ export const Step2Service: React.FC<Step2ServiceProps> = ({
                   </div>
 
                   {service.description && <p className="service-desc">{service.description}</p>}
+
+                  {blocked && (
+                    <p className="service-blocked-note">Vượt quá 2 ca ({MAX_VISIT_MINUTES} phút) nếu chọn thêm</p>
+                  )}
 
                   <div className="card-bottom">
                     <div className="service-duration">
@@ -436,7 +464,7 @@ export const Step2Service: React.FC<Step2ServiceProps> = ({
                   : 'Chọn thêm dịch vụ thì lượt khám mới chiếm cả buổi'
               }
             >
-              1 buổi <small>&gt; {SHIFT_MINUTES} phút</small>
+              1 buổi <small>≤ {MAX_VISIT_MINUTES} phút</small>
             </button>
           </div>
 
@@ -471,11 +499,17 @@ export const Step2Service: React.FC<Step2ServiceProps> = ({
             </div>
           ) : null}
 
-          {quote?.next_tier && (
+          {selectedIds.size < MIN_COMBO_SERVICES ? (
             <p className="basket-next-tier">
-              Chọn thêm {formatCurrency(quote.next_tier.amount_needed)} để được{' '}
-              {describePromotion(quote.next_tier).toLowerCase()}.
+              Chọn từ {MIN_COMBO_SERVICES} dịch vụ trở lên để được giảm giá.
             </p>
+          ) : (
+            quote?.next_tier && (
+              <p className="basket-next-tier">
+                Chọn thêm {formatCurrency(quote.next_tier.amount_needed)} để được{' '}
+                {describePromotion(quote.next_tier).toLowerCase()}.
+              </p>
+            )
           )}
 
           <div className="basket-row basket-total">
@@ -506,6 +540,16 @@ export const Step2Service: React.FC<Step2ServiceProps> = ({
             </div>
           )}
 
+          {overLimit && (
+            <div className="account-alert error" role="alert">
+              <AlertCircle size={16} />
+              <span>
+                Tổng thời gian vượt quá 2 ca ({MAX_VISIT_MINUTES} phút), không còn ca nào nhận được. Vui lòng bỏ bớt
+                dịch vụ.
+              </span>
+            </div>
+          )}
+
           {quoteError && (
             <div className="account-alert error" role="alert">
               <AlertCircle size={16} />
@@ -526,7 +570,7 @@ export const Step2Service: React.FC<Step2ServiceProps> = ({
             type="button"
             className="btn btn-primary btn-next-step"
             onClick={onNextStep}
-            disabled={selectedServices.length === 0 || !quote || quoteLoading}
+            disabled={selectedServices.length === 0 || !quote || quoteLoading || overLimit}
           >
             <span>Tiếp tục</span>
             <ArrowRight size={18} />

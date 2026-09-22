@@ -229,6 +229,12 @@
   font-weight: 700;
 }
 
+.calendar-note {
+  margin: 0.5rem 0 0;
+  font-size: 0.78rem;
+  color: #64748b;
+}
+
 .calendar-legend {
   display: flex;
   align-items: center;

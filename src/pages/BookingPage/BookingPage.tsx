@@ -48,7 +48,7 @@ export const BookingPage: React.FC<BookingPageProps> = ({ onBackToHome }) => {
     currentStep: 1,
     selectedDoctor: null,
     selectedPatientId: null,
-    selectedDate: todayIso(),
+    selectedDate: todayIso(1),
     selectedShift: null,
     selectedServices: [],
     reasonForVisit: '',
@@ -411,8 +411,8 @@ export const BookingPage: React.FC<BookingPageProps> = ({ onBackToHome }) => {
               ) : (
                 <>
                   Cảm ơn bạn đã lựa chọn phòng khám. Mã nhận phòng của bạn là{' '}
-                  <strong className="text-primary-code">{booked.check_in_code}</strong>. Hãy đưa mã
-                  này khi tới khám để tự nhận số thứ tự.
+                  <strong className="text-primary-code">{booked.check_in_code}</strong>. Khi tới khám,
+                  hãy đưa mã này cho quầy lễ tân để nhận số thứ tự.
                 </>
               )}
             </p>

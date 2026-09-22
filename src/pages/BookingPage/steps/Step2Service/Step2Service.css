@@ -85,6 +85,20 @@
   box-shadow: 0 4px 18px rgba(24, 119, 242, 0.11);
 }
 
+.step3-container .service-card.is-disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  border-color: #edf2f7;
+  box-shadow: none;
+}
+
+.service-blocked-note {
+  margin: 0;
+  font-size: 0.75rem;
+  color: #c2410c;
+}
+
 /* Card Top Row */
 .card-top {
   display: flex;

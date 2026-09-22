@@ -17,10 +17,9 @@ import { Header } from '../../components/Header';
 import { Footer } from '../../components/Footer/Footer';
 import {
   apiCancelAppointment,
-  apiCheckIn,
   apiGetMyAppointments,
 } from '../../api/functions/appointments';
-import type { AppointmentListItem, CheckInResult } from '../../api/types';
+import type { AppointmentListItem } from '../../api/types';
 import { APPOINTMENT_STATUS, APPOINTMENT_STATUS_LABEL } from '../../api/types';
 import { AppointmentDetail } from './AppointmentDetail';
 import './MyAppointmentsPage.css';
@@ -79,11 +78,7 @@ export const MyAppointmentsPage = () => {
   const [cancelTargetId, setCancelTargetId] = useState<number | null>(null);
   const [cancelReason, setCancelReason] = useState('');
 
-  const [checkInCode, setCheckInCode] = useState('');
-  const [checkInResult, setCheckInResult] = useState<CheckInResult | null>(null);
-  const [checkingIn, setCheckingIn] = useState(false);
-
-  // Tăng lên để buộc nạp lại sau khi huỷ hoặc nhận phòng. Một con số thay vì gọi thẳng
+  // Tăng lên để buộc nạp lại sau khi huỷ hoặc dời lịch. Một con số thay vì gọi thẳng
   // hàm nạp, để mọi thao tác với state đều nằm trong effect bên dưới.
   const [reloadToken, setReloadToken] = useState(0);
   const reload = useCallback(() => setReloadToken((token) => token + 1), []);
@@ -148,30 +143,6 @@ export const MyAppointmentsPage = () => {
     reload();
   };
 
-  const handleCheckIn = async () => {
-    setError(null);
-    setNotice(null);
-    setCheckInResult(null);
-
-    if (!checkInCode.trim()) {
-      setError('Vui lòng nhập mã nhận phòng.');
-      return;
-    }
-
-    setCheckingIn(true);
-    const result = await apiCheckIn(checkInCode.trim());
-    setCheckingIn(false);
-
-    if (!result.ok || !result.data) {
-      setError(result.error);
-      return;
-    }
-
-    setCheckInResult(result.data);
-    setCheckInCode('');
-    reload();
-  };
-
   return (
     <div className="account-page">
       <Header />
@@ -181,7 +152,7 @@ export const MyAppointmentsPage = () => {
           <div>
             <h1 className="account-title">Lịch hẹn của tôi</h1>
             <p className="account-subtitle">
-              Xem, huỷ và tự nhận phòng cho các lịch khám bạn đã đặt.
+              Xem, huỷ và dời các lịch khám bạn đã đặt.
             </p>
           </div>
 
@@ -191,43 +162,13 @@ export const MyAppointmentsPage = () => {
           </button>
         </div>
 
-        {/* Tự nhận phòng: bệnh nhân nhập mã trên lịch hẹn và nhận số thứ tự, không cần
-            qua quầy lễ tân (FR-BOOK-14). */}
+        {/* Nhận phòng chỉ làm tại quầy: bệnh nhân đưa mã, lễ tân nhập và in số thứ tự. */}
         <section className="checkin-card">
           <div className="checkin-card-head">
             <QrCode size={18} />
-            <h2>Tự nhận phòng khi tới khám</h2>
+            <h2>Khi tới khám</h2>
           </div>
-
-          <div className="checkin-card-body">
-            <input
-              className="form-input"
-              type="text"
-              placeholder="Nhập mã nhận phòng trên lịch hẹn"
-              value={checkInCode}
-              onChange={(event) => setCheckInCode(event.target.value.toUpperCase())}
-              disabled={checkingIn}
-            />
-            <button
-              type="button"
-              className="btn btn-primary"
-              onClick={handleCheckIn}
-              disabled={checkingIn}
-            >
-              {checkingIn ? <Loader2 className="spin" size={18} /> : <CheckCircle2 size={18} />}
-              <span>Nhận phòng</span>
-            </button>
-          </div>
-
-          {checkInResult && (
-            <div className="checkin-result">
-              <strong>Số thứ tự của bạn: {checkInResult.queue_number}</strong>
-              <span>
-                {checkInResult.doctor_full_name} · {checkInResult.specialty_name} ·{' '}
-                {formatTime(checkInResult.appointment_time)}
-              </span>
-            </div>
-          )}
+          <p>Đưa mã nhận phòng (trong phần chi tiết lịch hẹn) cho quầy lễ tân để nhận số thứ tự.</p>
         </section>
 
         {error && (

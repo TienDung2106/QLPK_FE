@@ -101,6 +101,8 @@ const DeskAppointmentDetailPage = () => {
 
   const status = appointment.status;
   const canDiscount = hasPermission(PERMISSION.DiscountApplyWithinThreshold) || hasPermission(PERMISSION.DiscountApproveOverThreshold);
+  // backend chỉ cho giảm giá lịch có từ 2 dịch vụ khác nhau trở lên (DiscountService.MinComboServices)
+  const isBelowCombo = new Set(appointment.services.map((service) => service.service_id)).size < 2;
   const canApprove = hasPermission(PERMISSION.DiscountApproveOverThreshold);
   const canPay = hasPermission(PERMISSION.PaymentsManage);
 
@@ -300,7 +302,12 @@ const DeskAppointmentDetailPage = () => {
           <Panel title="Thao tác khác">
             <div className="st-actions">
               {canDiscount && status !== 'cancelled' && status !== 'completed' && status !== 'no_show' && (
-                <Button icon={<BadgePercent size={16} />} onClick={() => openSheet('discount')}>
+                <Button
+                  icon={<BadgePercent size={16} />}
+                  onClick={() => openSheet('discount')}
+                  disabled={isBelowCombo}
+                  title={isBelowCombo ? 'Giảm giá chỉ áp dụng khi lịch có từ 2 dịch vụ trở lên' : undefined}
+                >
                   Áp giảm giá
                 </Button>
               )}

@@ -49,7 +49,6 @@ const url = {
   patientInvoiceById: (invoiceId: number) => `${root}/patient/invoices/${invoiceId}`,
   patientInvoicePdf: (invoiceId: number) => `${root}/patient/invoices/${invoiceId}/pdf`,
   patientMedicalRecords: `${root}/patient/medical-records`,
-  checkIn: `${root}/patient/appointments/check-in`,
 
   // Thông báo — mọi tài khoản đã đăng nhập, kể cả nhân viên, dù nằm dưới /patient.
   notifications: `${root}/patient/notifications`,

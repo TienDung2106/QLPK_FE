@@ -7,9 +7,14 @@
 
 const WEEKDAY_LABELS = ['Chủ nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'];
 
-/** 'yyyy-MM-dd' của hôm nay theo giờ máy người dùng. */
-export function todayIso(): string {
-  return toIsoDate(new Date());
+/** Giảm giá chỉ áp cho combo từ chừng này dịch vụ khác nhau (DiscountService.MinComboServices). */
+export const MIN_COMBO_SERVICES = 2;
+
+/** 'yyyy-MM-dd' của hôm nay (cộng thêm offsetDays ngày) theo giờ máy người dùng. */
+export function todayIso(offsetDays = 0): string {
+  const date = new Date();
+  date.setDate(date.getDate() + offsetDays);
+  return toIsoDate(date);
 }
 
 /**

@@ -5,7 +5,7 @@ import type { BookingDoctor, PatientInfo, SelectedService, SelectedShift } from 
 import { CaptchaField } from '../../../../components/Captcha/CaptchaField';
 import useCaptcha from '../../../../hooks/useCaptcha';
 import { CAPTCHA_PURPOSE } from '../../../../api/functions/captcha';
-import { describePromotion, formatCurrency, formatDateLabel, formatShiftRange } from '../../bookingFormat';
+import { describePromotion, formatCurrency, formatDateLabel, formatShiftRange, MIN_COMBO_SERVICES } from '../../bookingFormat';
 import { CLINIC_TERMS, CLINIC_TERMS_UPDATED_AT } from './clinicTerms';
 import './Step5Confirm.css';
 import { fallbackTo } from '../../../../utils/imageFallback';
@@ -67,6 +67,7 @@ export const Step5Confirm: React.FC<Step5ConfirmProps> = ({
 
   const subtotal = quote?.subtotal_amount ?? selectedServices.reduce((sum, service) => sum + service.price, 0);
   const promotion = quote?.promotion ?? null;
+  const belowCombo = new Set(selectedServices.map((service) => service.serviceId)).size < MIN_COMBO_SERVICES;
 
   const handleConfirm = async () => {
     const exchanged = await captcha.exchange();
@@ -260,11 +261,15 @@ export const Step5Confirm: React.FC<Step5ConfirmProps> = ({
             ) : (
               <div className="step5-promo-msg">
                 <span className="promo-info-dot">ⓘ</span>
-                <span>Lịch khám chưa đạt mức của voucher nào.</span>
+                <span>
+                  {belowCombo
+                    ? `Chọn từ ${MIN_COMBO_SERVICES} dịch vụ trở lên để được giảm giá.`
+                    : 'Lịch khám chưa đạt mức của voucher nào.'}
+                </span>
               </div>
             )}
 
-            {quote?.next_tier && (
+            {quote?.next_tier && !belowCombo && (
               <div className="step5-promo-msg">
                 <Sparkles size={14} className="promo-info-dot" />
                 <span>

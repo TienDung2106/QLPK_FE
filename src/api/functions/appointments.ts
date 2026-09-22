@@ -1,6 +1,6 @@
 import { GetData, PostData, PostWithCaptcha } from '../helpers';
 import url from '../url';
-import type { Appointment, AppointmentListItem, CheckInResult, PagedResponse } from '../types';
+import type { Appointment, AppointmentListItem, PagedResponse } from '../types';
 
 export interface AppointmentQuery {
   doctor_id?: number;
@@ -51,6 +51,3 @@ export const apiAcceptReschedule = (appointmentId: number) =>
 export const apiChooseRescheduleSlot = (appointmentId: number, newDate: string, newTime: string) =>
   PostData<Appointment>(url.patientAppointmentAction(appointmentId, 'choose-slot'), { new_date: newDate, new_time: newTime });
 
-/** Tự nhận phòng bằng mã check-in, trả về số thứ tự hàng đợi (FR-BOOK-14). */
-export const apiCheckIn = (checkInCode: string) =>
-  PostData<CheckInResult>(url.checkIn, { check_in_code: checkInCode });

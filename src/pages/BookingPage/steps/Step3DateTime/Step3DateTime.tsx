@@ -353,9 +353,9 @@ export const Step3DateTime: React.FC<Step3DateTimeProps> = ({
               const iso = toIsoDate(new Date(viewYear, viewMonth - 1, day));
               const isSelected = iso === selectedDate;
 
-              // Ngày đã qua không đặt được; backend cũng sẽ từ chối, nhưng chặn ở đây thì
-              // người dùng không phải bấm mới biết.
-              const isPast = iso < today;
+              // Ngày đã qua và hôm nay không đặt được (khám trong ngày đăng ký tại quầy); backend
+              // cũng sẽ từ chối, nhưng chặn ở đây thì người dùng không phải bấm mới biết.
+              const isPast = iso <= today;
               const known = monthDays[iso];
               const unbookable = Boolean(known && known.status !== 'available');
 
@@ -367,7 +367,9 @@ export const Step3DateTime: React.FC<Step3DateTimeProps> = ({
                   onClick={() => onSelectDate(iso)}
                   disabled={isPast || unbookable}
                   title={
-                    known?.status === 'available'
+                    iso === today
+                      ? 'Khám trong ngày vui lòng đăng ký tại quầy lễ tân'
+                      : known?.status === 'available'
                       ? `Còn ${known.available_slots} ca nhận được lượt khám này`
                       : known?.status === 'full'
                         ? 'Đã kín lịch'
@@ -398,6 +400,7 @@ export const Step3DateTime: React.FC<Step3DateTimeProps> = ({
               <span>Nghỉ / đã qua</span>
             </div>
           </div>
+          <p className="calendar-note">Muốn khám trong ngày? Vui lòng đến quầy lễ tân để được xếp lịch.</p>
         </div>
 
         {/* Right: Shifts Card */}
