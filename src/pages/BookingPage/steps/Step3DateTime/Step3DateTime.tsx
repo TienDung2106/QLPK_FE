@@ -244,7 +244,11 @@ export const Step3DateTime: React.FC<Step3DateTimeProps> = ({
                   {spansShifts && <small> · {slot.shifts_used} ca liền nhau</small>}
                 </span>
 
-                <span className="shift-meter" aria-hidden="true">
+                <span
+                  className="shift-meter"
+                  aria-hidden="true"
+                  title={`Lượt khám của bạn ${slot.required_minutes} phút · đã đặt ${slot.used_minutes}/${slot.capacity_minutes} phút`}
+                >
                   <span className="shift-meter-used" style={{ width: `${usedPercent}%` }} />
                   <span className="shift-meter-need" style={{ width: `${needPercent}%` }} />
                 </span>
@@ -435,6 +439,20 @@ export const Step3DateTime: React.FC<Step3DateTimeProps> = ({
             </div>
           ) : (
             <>
+              <div className="shift-meter-legend">
+                <span className="legend-item">
+                  <span className="legend-bar bar-need" />
+                  Lượt khám của bạn ({durationMinutes} phút)
+                </span>
+                <span className="legend-item">
+                  <span className="legend-bar bar-used" />
+                  Đã có người đặt
+                </span>
+                <span className="legend-item">
+                  <span className="legend-bar bar-free" />
+                  Còn trống
+                </span>
+              </div>
               {renderShiftGroup('morning', 'BUỔI SÁNG', <Sun size={14} className="time-icon-morning" />, 'label-morning')}
               {renderShiftGroup('afternoon', 'BUỔI CHIỀU', <Cloud size={14} className="time-icon-afternoon" />, 'label-afternoon')}
               {renderShiftGroup('evening', 'BUỔI TỐI', <Moon size={14} className="time-icon-evening" />, 'label-evening')}

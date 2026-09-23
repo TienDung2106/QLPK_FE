@@ -290,6 +290,35 @@
   color: #1e293b;
 }
 
+.shift-meter-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.9rem;
+  margin: -0.4rem 0 0.9rem;
+  font-size: 0.72rem;
+  color: #64748b;
+}
+
+.legend-bar {
+  width: 14px;
+  height: 5px;
+  border-radius: 999px;
+  display: inline-block;
+}
+
+.bar-need {
+  background: #22c55e;
+}
+
+.bar-used {
+  background: #f59e0b;
+}
+
+.bar-free {
+  background: #eef2f7;
+  box-shadow: inset 0 0 0 1px #e2e8f0;
+}
+
 .shift-cards-row {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -369,11 +398,11 @@
 }
 
 .shift-meter-used {
-  background: #94a3b8;
+  background: #f59e0b;
   transition: width 0.3s ease;
 }
 
-/* Xanh lá như dấu "ngày có thể đặt" ở lịch bên trái. */
+/* Thời gian lượt khám của bạn (tổng dịch vụ đã chọn); chú thích ở .shift-meter-legend. */
 .shift-meter-need {
   background: #22c55e;
   transition: width 0.3s ease;
