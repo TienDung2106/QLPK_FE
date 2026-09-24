@@ -15,7 +15,7 @@ import '../staff.css';
  * Khung chung của mọi khu nhân viên: sidebar theo quyền, topbar, vùng nội dung.
  *
  * Menu dựng từ `account.permissions` chứ không từ vai trò, nên admin — vốn mang cả quyền
- * thu ngân lẫn nhà thuốc — tự thấy thêm hai nhóm đó mà không cần danh sách riêng.
+ * lễ tân — tự thấy thêm nhóm đó mà không cần danh sách riêng.
  */
 export const StaffLayout = () => {
   const { account, hasPermission, logout } = useAuth();

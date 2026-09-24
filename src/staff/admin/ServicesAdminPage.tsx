@@ -107,7 +107,7 @@ const ServicesAdminPage = () => {
     <>
       <PageHeader
         title="Dịch vụ"
-        description="Danh mục và bảng giá. Giá ở đây là giá tính vào lịch hẹn và hoá đơn mới."
+        description="Danh mục và bảng giá. Giá ở đây là giá tính vào lịch hẹn mới."
         actions={
           <Button variant="primary" icon={<Plus size={16} />} onClick={() => open('new')}>
             Thêm dịch vụ

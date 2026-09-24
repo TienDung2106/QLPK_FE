@@ -35,7 +35,6 @@ const FollowUpSheetBody = ({ appointmentId, patientName, suggestedDate, onClose,
   const [mode, setMode] = useState('in_clinic');
   const [reason, setReason] = useState('Tái khám');
   const [serviceIds, setServiceIds] = useState<number[]>([]);
-  const [session, setSession] = useState('');
   const [error, setError] = useState<string | null>(null);
 
   const canReadHours = hasPermission(PERMISSION.DoctorSchedulesManageOwn);
@@ -67,7 +66,6 @@ const FollowUpSheetBody = ({ appointmentId, patientName, suggestedDate, onClose,
         reason_for_visit: nullIfBlank(reason),
         services: serviceIds.map((service_id) => ({ service_id, quantity: 1 })),
         primary_service_id: serviceIds[0] ?? null,
-        session_number: session ? Number(session) : null,
       }),
     );
     if (!result.ok || !result.data) {
@@ -150,9 +148,6 @@ const FollowUpSheetBody = ({ appointmentId, patientName, suggestedDate, onClose,
               ))}
             </select>
           )}
-        </Field>
-        <Field label="Buổi thứ (liệu trình)" hint="Chỉ điền nếu lượt khám thuộc một liệu trình.">
-          {(id) => <input id={id} type="number" min={1} className="st-input" value={session} onChange={(e) => setSession(e.target.value)} />}
         </Field>
         <Field label="Lý do tái khám" className="st-span-2">
           {(id) => <textarea id={id} className="st-textarea" maxLength={1000} value={reason} onChange={(e) => setReason(e.target.value)} />}

@@ -3,11 +3,9 @@ import { Loader2, UserRound } from 'lucide-react';
 import { apiGetStaffDoctorSlots, apiSearchDeskPatients } from '../../api/functions/desk';
 import type { DoctorAvailability } from '../../api/types';
 import type { DeskPatient } from '../../api/staffTypes';
-import { DESK_PAYMENT_METHODS, PAYMENT_METHOD } from '../labels';
 import { formatDate, formatTime } from '../format';
 import { useDoctorOptions } from './useDoctorOptions';
 import { WorkingDays } from '../../components/WorkingDays/WorkingDays';
-import type { PaymentFormValue } from './payment';
 import { useApiQuery, useDebounced } from '../hooks';
 import { Alert, Field } from './ui';
 
@@ -262,48 +260,3 @@ export const SlotPicker = ({ doctorId, date, value, onChange, durationMinutes }:
     </div>
   );
 };
-
-/* ---------------------------------------------------------------- Payment */
-
-export const PaymentMethodFields = ({
-  value,
-  onChange,
-}: {
-  value: PaymentFormValue;
-  onChange: (value: PaymentFormValue) => void;
-}) => (
-  <div className="st-form-grid">
-    <Field label="Phương thức" required>
-      {(id) => (
-        <select
-          id={id}
-          className="st-select"
-          value={value.payment_method}
-          onChange={(event) => onChange({ ...value, payment_method: event.target.value })}
-        >
-          {DESK_PAYMENT_METHODS.map((method) => (
-            <option key={method} value={method}>
-              {PAYMENT_METHOD[method]}
-            </option>
-          ))}
-        </select>
-      )}
-    </Field>
-    <Field
-      label="Mã giao dịch ngân hàng"
-      required={value.payment_method === 'bank_transfer'}
-      hint={value.payment_method === 'bank_transfer' ? 'Bắt buộc để đối soát.' : 'Không bắt buộc.'}
-    >
-      {(id) => (
-        <input
-          id={id}
-          className="st-input"
-          value={value.external_reference}
-          maxLength={100}
-          onChange={(event) => onChange({ ...value, external_reference: event.target.value })}
-        />
-      )}
-    </Field>
-  </div>
-);
-

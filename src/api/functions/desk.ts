@@ -7,23 +7,16 @@ import type {
   ApplyDiscountResult,
   AppointmentQuery,
   BookOnBehalfPayload,
-  ConfirmPaymentResult,
   DeskPatient,
   DoctorCalendar,
   LinkPatientAccountPayload,
   StaffPromotion,
   DeskPatientPayload,
   DeskPatientQuery,
-  Invoice,
-  InvoiceListItem,
-  InvoiceQuery,
   NewSlotPayload,
   PageQuery,
-  PaymentPayload,
   PostponePayload,
   RegisterDeskPatientPayload,
-  SettlementQueueItem,
-  SettlementQueueQuery,
   StaffAppointment,
   TimeOff,
   TimeOffPayload,
@@ -31,7 +24,7 @@ import type {
   WalkInPayload,
 } from '../staffTypes';
 
-/* Lịch hẹn — appointments.manage (lễ tân / thu ngân, admin) */
+/* Lịch hẹn — appointments.manage (lễ tân, admin) */
 
 export const apiSearchStaffAppointments = (query: AppointmentQuery = {}) =>
   GetData<PagedResponse<AppointmentListItem>>(url.staffAppointments, query);
@@ -83,8 +76,6 @@ export const apiApplyDiscount = (appointmentId: number, payload: ApplyDiscountPa
 export const apiApproveDiscount = (appointmentId: number) =>
   PostData<ApplyDiscountResult>(url.staffAppointmentAction(appointmentId, 'approve-discount'));
 
-export const apiConfirmAppointmentPayment = (appointmentId: number, payload: PaymentPayload) =>
-  PostData<ConfirmPaymentResult>(url.staffAppointmentAction(appointmentId, 'confirm-payment'), payload);
 
 /* Bác sĩ, nhìn từ quầy */
 
@@ -136,31 +127,3 @@ export const apiRequestLinkPatientCode = (patientId: number, payload: LinkPatien
 /** Chuyển hồ sơ tạo tại quầy sang tài khoản bệnh nhân tự đăng ký sau này. */
 export const apiLinkPatientAccount = (patientId: number, payload: LinkPatientAccountPayload) =>
   PatchData<DeskPatient>(url.staffPatientLinkAccount(patientId), payload);
-
-/* Thanh toán — payments.manage */
-
-export const apiSearchSettlementQueue = (query: SettlementQueueQuery = {}) =>
-  GetData<PagedResponse<SettlementQueueItem>>(url.staffDispenseRequests, query);
-
-/** Lập (hoặc lập lại) hoá đơn quyết toán cho một lượt khám đã xong. */
-export const apiBuildSettlementInvoice = (appointmentId: number) =>
-  PostData<Invoice>(url.staffSettlementInvoice(appointmentId));
-
-export const apiSearchInvoices = (query: InvoiceQuery = {}) =>
-  GetData<PagedResponse<InvoiceListItem>>(url.staffInvoices, query);
-
-/** Xuất Excel mọi hoá đơn khớp bộ lọc, để đối soát cuối ca. */
-export const apiExportInvoices = (query: InvoiceQuery = {}) => GetBlob(url.staffInvoicesExport, query);
-
-export const apiGetInvoice = (invoiceId: number) => GetData<Invoice>(url.staffInvoiceById(invoiceId));
-
-/** Không gửi số tiền: backend thu đúng phần còn nợ. */
-export const apiCollectPayment = (invoiceId: number, payload: PaymentPayload) =>
-  PostData<Invoice>(url.staffInvoicePayments(invoiceId), payload);
-
-/** Không gửi số tiền: backend hoàn đúng phần thu dư. */
-export const apiRefundInvoice = (invoiceId: number, payload: PaymentPayload) =>
-  PostData<Invoice>(url.staffInvoiceRefunds(invoiceId), payload);
-
-/** Hoá đơn PDF có đầu trang là hồ sơ phòng khám. */
-export const apiGetInvoicePdf = (invoiceId: number) => GetBlob(url.staffInvoicePdf(invoiceId));

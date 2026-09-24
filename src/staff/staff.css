@@ -1157,23 +1157,6 @@
   color: #fff;
 }
 
-.st-line-items {
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-}
-
-.st-line-item {
-  display: grid;
-  grid-template-columns: minmax(0, 2fr) 90px minmax(0, 1fr) minmax(0, 1fr) 90px auto;
-  gap: 0.5rem;
-  align-items: end;
-  padding: 0.7rem;
-  border: 1px solid var(--st-line);
-  border-radius: var(--radius-sm);
-  background: var(--st-surface-sunken);
-}
-
 .st-picker {
   position: relative;
 }
@@ -1207,36 +1190,6 @@
 .st-picker-option:hover,
 .st-picker-option:focus-visible {
   background: var(--primary-light);
-}
-
-.st-bars {
-  display: flex;
-  align-items: flex-end;
-  gap: 3px;
-  height: 180px;
-  padding: 0.5rem 0 0;
-}
-
-.st-bar {
-  position: relative;
-  flex: 1;
-  min-width: 4px;
-  border-radius: 3px 3px 0 0;
-  background: var(--primary);
-  opacity: 0.85;
-  transition: opacity 140ms var(--st-ease);
-}
-
-.st-bar:hover {
-  opacity: 1;
-}
-
-.st-bar-axis {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 0.4rem;
-  font-size: 0.72rem;
-  color: var(--st-text-3);
 }
 
 .st-meter {
@@ -1415,9 +1368,6 @@ button.st-stat:hover {
   opacity: 0.55;
 }
 
-.st-days-left.danger { color: var(--st-danger); font-weight: 700; }
-.st-days-left.warning { color: var(--st-warning); font-weight: 600; }
-
 .st-cal {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
@@ -1519,14 +1469,6 @@ button.st-stat:hover {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .st-line-item {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .st-line-item > :first-child {
-    grid-column: 1 / -1;
-  }
-
   /* Bảng nhiều cột cuộn ngang thay vì bóp chữ thành từng dòng một từ. */
   .st-table-wrap > .st-table {
     min-width: 720px;
@@ -1566,10 +1508,39 @@ button.st-stat:hover {
   }
 }
 
+/* Ảnh bệnh nhân gửi kèm lịch hẹn */
+.st-photo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+  gap: 0.5rem;
+}
+
+.st-photo-thumb {
+  aspect-ratio: 1;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--st-line);
+  border-radius: 8px;
+  background: var(--st-surface-sunken);
+  cursor: zoom-in;
+}
+
+.st-photo-thumb:focus-visible {
+  outline: none;
+  box-shadow: var(--st-focus);
+}
+
+.st-photo-thumb img,
+.st-photo-thumb .st-skel {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
 @media print {
   .st-rail,
-  .st-topbar,
-  .st-no-print {
+  .st-topbar {
     display: none !important;
   }
 
@@ -1660,194 +1631,3 @@ button.st-stat:hover {
   box-shadow: var(--st-focus);
 }
 
-/* Thanh các bước */
-.st-steps {
-  display: flex;
-  align-items: center;
-  margin: 0 0 1rem;
-  padding: 0.7rem 1rem;
-  list-style: none;
-  background: var(--st-surface);
-  border: 1px solid var(--st-line);
-  border-radius: var(--radius-md, 10px);
-}
-
-.st-step {
-  display: flex;
-  align-items: center;
-  flex: 1;
-}
-
-.st-step:last-child {
-  flex: 0 0 auto;
-}
-
-.st-step:not(:last-child)::after {
-  content: '';
-  flex: 1;
-  height: 2px;
-  margin: 0 0.75rem;
-  background: var(--st-line);
-  border-radius: 2px;
-}
-
-.st-step.done:not(:last-child)::after {
-  background: var(--primary);
-}
-
-.st-step button {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.25rem 0.35rem;
-  border: none;
-  border-radius: var(--radius-sm);
-  background: none;
-  color: var(--st-text-3);
-  font-weight: 600;
-  font-size: 0.85rem;
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.st-step button:disabled {
-  cursor: not-allowed;
-  opacity: 0.55;
-}
-
-.st-step button:focus-visible {
-  outline: none;
-  box-shadow: var(--st-focus);
-}
-
-.st-step-bubble {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  border: 2px solid var(--st-line-strong);
-  background: var(--st-surface);
-  font-size: 0.78rem;
-  font-variant-numeric: tabular-nums;
-}
-
-.st-step.done .st-step-bubble {
-  border-color: var(--primary);
-  background: var(--primary);
-  color: #fff;
-}
-
-.st-step.active button {
-  color: var(--st-text);
-}
-
-.st-step.active .st-step-bubble {
-  border-color: var(--primary);
-  background: var(--primary);
-  color: #fff;
-  box-shadow: 0 0 0 4px rgba(24, 119, 242, 0.15);
-}
-
-.st-step-nav {
-  display: flex;
-  justify-content: space-between;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-  margin-top: 1.1rem;
-  padding-top: 0.9rem;
-  border-top: 1px solid var(--st-line);
-}
-
-.st-step-nav > div {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-@media (max-width: 600px) {
-  .st-step-label {
-    display: none;
-  }
-  .st-step.active .st-step-label {
-    display: inline;
-  }
-}
-
-/* Danh mục thuốc khi kê đơn */
-.st-catalog {
-  border: 1px solid var(--st-line);
-  border-radius: var(--radius-md);
-  overflow: hidden;
-}
-
-.st-catalog-filters {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  flex-wrap: wrap;
-  padding: 0.7rem 0.8rem;
-  background: var(--st-surface-sunken);
-  border-bottom: 1px solid var(--st-line);
-}
-
-.st-catalog-filters .st-select {
-  width: auto;
-  min-width: 190px;
-  max-width: 260px;
-}
-
-.st-catalog-count {
-  margin-left: auto;
-}
-
-.st-catalog-list {
-  max-height: 340px;
-  overflow: auto;
-}
-
-.st-catalog-list .st-table th {
-  z-index: 1;
-}
-
-.st-catalog .st-empty {
-  padding: 1.5rem 1rem;
-}
-
-.st-catalog-heading {
-  margin: 0 0 0.6rem;
-  font-size: 0.9rem;
-  font-weight: 700;
-  color: var(--st-text);
-}
-
-/* Ảnh bệnh nhân gửi kèm lịch hẹn */
-.st-photo-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
-  gap: 0.5rem;
-}
-
-.st-photo-thumb {
-  aspect-ratio: 1;
-  padding: 0;
-  overflow: hidden;
-  border: 1px solid var(--st-line);
-  border-radius: 8px;
-  background: var(--st-surface-sunken);
-  cursor: zoom-in;
-}
-
-.st-photo-thumb:focus-visible {
-  outline: none;
-  box-shadow: var(--st-focus);
-}
-
-.st-photo-thumb img,
-.st-photo-thumb .st-skel {
-  width: 100%;
-  height: 100%;
-  display: block;
-  object-fit: cover;
-}

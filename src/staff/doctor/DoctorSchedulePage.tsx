@@ -1,14 +1,20 @@
 import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, RefreshCw, Stethoscope } from 'lucide-react';
-import { apiGetDoctorDashboard, apiGetDoctorSchedule } from '../../api/functions/doctorWork';
+import { CalendarPlus, CheckCircle2, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react';
+import { apiCompleteAppointment, apiGetDoctorDashboard, apiGetDoctorSchedule } from '../../api/functions/doctorWork';
 import type { AppointmentListItem } from '../../api/types';
-import { useApiQuery } from '../hooks';
+import useAuth from '../../hooks/useAuth';
+import { PERMISSION } from '../permissions';
+import { useAction, useApiQuery } from '../hooks';
 import { formatDate, formatTime, todayIso } from '../format';
 import { APPOINTMENT_STATUS, CONSULTATION_MODE_LABEL, labelOf, textOf } from '../labels';
+import { useToast } from '../components/toastContext';
 import { Button, Field, FilterTabs, PageHeader, StatusBadge, TableState } from '../components/ui';
+import { FollowUpSheet } from './FollowUpSheet';
+import { VisitReasonSheet } from './VisitReasonSheet';
 
-const ACTIVE = ['confirmed', 'checked_in', 'in_progress', 'pending', 'pending_approval'];
+const ACTIVE = ['confirmed', 'checked_in', 'pending', 'pending_approval'];
+
+const truncate = (text: string, max: number) => (text.length > max ? `${text.slice(0, max).trimEnd()}…` : text);
 
 function shiftDate(iso: string, days: number) {
   const date = new Date(`${iso}T00:00:00`);
@@ -21,13 +27,19 @@ function shiftDate(iso: string, days: number) {
 
 /**
  * Hàng đợi của bác sĩ trong một ngày. Người đã nhận phòng xếp lên đầu theo số thứ tự,
- * vì đó là người đang ngồi chờ ngoài cửa. Việc xác nhận/từ chối lịch bệnh nhân tự đặt thuộc về
- * lễ tân hoặc admin, bác sĩ chỉ xem.
+ * vì đó là người đang ngồi chờ ngoài cửa. Khám xong thì bác sĩ bấm "Hoàn thành khám", sau đó
+ * mới hẹn tái khám được. Bấm vào một dòng để xem lý do khám và ảnh bệnh nhân gửi kèm. Việc xác nhận/từ chối lịch bệnh nhân tự đặt thuộc về lễ tân hoặc admin.
  */
 const DoctorSchedulePage = () => {
-  const navigate = useNavigate();
+  const toast = useToast();
+  const { hasPermission } = useAuth();
+  const { run, isPending } = useAction();
   const [date, setDate] = useState(todayIso());
   const [tab, setTab] = useState('active');
+  const [followUpFor, setFollowUpFor] = useState<AppointmentListItem | null>(null);
+  const [viewing, setViewing] = useState<AppointmentListItem | null>(null);
+  const canComplete = hasPermission(PERMISSION.ExaminationsPerform);
+  const canFollowUp = hasPermission(PERMISSION.AppointmentsBookFollowUp);
 
   const tabs = [
     { value: 'active', label: 'Cần khám' },
@@ -50,7 +62,7 @@ const DoctorSchedulePage = () => {
 
   const rows = useMemo(() => {
     const items = (query.data?.items ?? []).filter((item) => tab !== 'active' || ACTIVE.includes(item.status));
-    const rank = (status: string) => (status === 'in_progress' ? 0 : status === 'checked_in' ? 1 : 2);
+    const rank = (status: string) => (status === 'checked_in' ? 0 : 1);
     return [...items].sort(
       (a, b) =>
         rank(a.status) - rank(b.status) ||
@@ -68,8 +80,15 @@ const DoctorSchedulePage = () => {
     dashboard.reload();
   };
 
-  const openRow = (item: AppointmentListItem) =>
-    navigate(`/bac-si/kham/${item.appointment_id}`, { state: { appointment: item } });
+  const complete = async (item: AppointmentListItem) => {
+    const result = await run(`complete-${item.appointment_id}`, () => apiCompleteAppointment(item.appointment_id));
+    if (result.ok) {
+      toast.success(`Đã khám xong: ${item.patient_full_name}.`);
+      reloadAll();
+    } else {
+      toast.error(result.error);
+    }
+  };
 
   return (
     <>
@@ -106,10 +125,10 @@ const DoctorSchedulePage = () => {
           >
             <div className="st-stat-label">Đang chờ khám</div>
             <div className={`st-stat-value ${stats.waiting_to_be_seen > 0 ? 'progress' : ''}`}>{stats.waiting_to_be_seen}</div>
-            <div className="st-stat-sub">{stats.in_progress} đang trong phòng khám</div>
+            <div className="st-stat-sub">đã nhận phòng</div>
           </button>
           {stats.next_appointment ? (
-            <button type="button" className="st-stat" onClick={() => openRow(stats.next_appointment!)}>
+            <div className="st-stat">
               <div className="st-stat-label">Bệnh nhân kế tiếp</div>
               <div className="st-stat-value" style={{ fontSize: '1.05rem', marginTop: '0.3rem' }}>
                 {stats.next_appointment.patient_full_name}
@@ -118,7 +137,7 @@ const DoctorSchedulePage = () => {
                 {formatTime(stats.next_appointment.appointment_time)}
                 {stats.next_appointment.queue_number ? ` · STT ${stats.next_appointment.queue_number}` : ''}
               </div>
-            </button>
+            </div>
           ) : (
             <div className="st-stat">
               <div className="st-stat-label">Bệnh nhân kế tiếp</div>
@@ -170,9 +189,8 @@ const DoctorSchedulePage = () => {
                 emptyText={tab === 'active' ? 'Không còn bệnh nhân nào cần khám trong ngày này.' : 'Không có lịch hẹn khớp bộ lọc.'}
               />
               {rows.map((item) => {
-                const canExamine = ['checked_in', 'in_progress'].includes(item.status);
                 return (
-                  <tr key={item.appointment_id} className="st-row-link" onClick={() => openRow(item)}>
+                  <tr key={item.appointment_id} className="st-row-link" onClick={() => setViewing(item)}>
                     <td>
                       <span className={`st-queue ${item.queue_number ? '' : 'empty'}`}>{item.queue_number ?? '—'}</span>
                     </td>
@@ -182,16 +200,41 @@ const DoctorSchedulePage = () => {
                     </td>
                     <td>
                       <div className="st-cell-main">{item.patient_full_name}</div>
-                      <div className="st-cell-sub">Lượt khám #{item.appointment_id}</div>
+                      <div className="st-cell-sub">
+                        {item.reason_for_visit ? truncate(item.reason_for_visit, 60) : `Lượt khám #${item.appointment_id}`}
+                      </div>
                     </td>
                     <td>{textOf(CONSULTATION_MODE_LABEL, item.consultation_mode)}</td>
                     <td>
                       <StatusBadge value={labelOf(APPOINTMENT_STATUS, item.status)} />
                     </td>
                     <td className="st-num st-nowrap">
-                      <Button size="sm" variant={canExamine ? 'primary' : 'ghost'} icon={canExamine ? <Stethoscope size={14} /> : undefined}>
-                        {item.status === 'in_progress' ? 'Tiếp tục khám' : item.status === 'checked_in' ? 'Khám' : 'Xem'}
-                      </Button>
+                      {canComplete && item.status === 'checked_in' && (
+                        <Button
+                          size="sm"
+                          variant="primary"
+                          icon={<CheckCircle2 size={14} />}
+                          loading={isPending(`complete-${item.appointment_id}`)}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            complete(item);
+                          }}
+                        >
+                          Hoàn thành khám
+                        </Button>
+                      )}
+                      {canFollowUp && item.status === 'completed' && (
+                        <Button
+                          size="sm"
+                          icon={<CalendarPlus size={14} />}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            setFollowUpFor(item);
+                          }}
+                        >
+                          Hẹn tái khám
+                        </Button>
+                      )}
                     </td>
                   </tr>
                 );
@@ -200,6 +243,21 @@ const DoctorSchedulePage = () => {
           </table>
         </div>
       </section>
+
+      <VisitReasonSheet appointment={viewing} onClose={() => setViewing(null)} />
+
+      <FollowUpSheet
+        open={followUpFor !== null}
+        appointmentId={followUpFor?.appointment_id ?? 0}
+        patientName={followUpFor?.patient_full_name ?? ''}
+        suggestedDate=""
+        onClose={() => setFollowUpFor(null)}
+        onBooked={(booked) => {
+          setFollowUpFor(null);
+          toast.success(`Đã hẹn tái khám ${formatDate(booked.appointment_date)} lúc ${formatTime(booked.appointment_time)}.`);
+          reloadAll();
+        }}
+      />
     </>
   );
 };

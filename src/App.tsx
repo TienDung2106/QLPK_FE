@@ -10,8 +10,6 @@ import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
 import { ChangePasswordPage } from './pages/ChangePasswordPage';
 import { MyAppointmentsPage } from './pages/MyAppointmentsPage';
 import { ProfilePage } from './pages/ProfilePage';
-import { MyInvoicesPage } from './pages/MyRecords/MyInvoicesPage';
-import { MyMedicalRecordsPage } from './pages/MyRecords/MyMedicalRecordsPage';
 import { staffRoutes } from './staff/StaffRoutes';
 
 /**
@@ -132,26 +130,6 @@ function App() {
               }
             />
             <Route
-              path="/hoa-don-cua-toi"
-              element={
-                <AuthGuard>
-                  <PublicSiteGuard>
-                    <MyInvoicesPage />
-                  </PublicSiteGuard>
-                </AuthGuard>
-              }
-            />
-            <Route
-              path="/benh-an-cua-toi"
-              element={
-                <AuthGuard>
-                  <PublicSiteGuard>
-                    <MyMedicalRecordsPage />
-                  </PublicSiteGuard>
-                </AuthGuard>
-              }
-            />
-            <Route
               path="/doi-mat-khau"
               element={
                 <AuthGuard allowWhenPasswordChangeRequired>
@@ -160,7 +138,7 @@ function App() {
               }
             />
 
-            {/* Khu nhân viên: admin /quan-tri, bác sĩ /bac-si, thu ngân /thu-ngan, nhà thuốc /nha-thuoc. */}
+            {/* Khu nhân viên: admin /quan-tri, bác sĩ /bac-si, lễ tân /thu-ngan. */}
             {staffRoutes()}
 
             <Route path="*" element={<Navigate to="/" replace />} />

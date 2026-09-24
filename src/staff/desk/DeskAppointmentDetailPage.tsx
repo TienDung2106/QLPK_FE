@@ -1,14 +1,12 @@
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { BadgePercent, CalendarClock, Check, CheckCheck, DoorOpen, Receipt, UserX, Wallet, X, XCircle } from 'lucide-react';
+import { BadgePercent, CalendarClock, Check, CheckCheck, DoorOpen, UserX, X, XCircle } from 'lucide-react';
 import useAuth from '../../hooks/useAuth';
 import {
   apiAcceptReschedule,
   apiApplyDiscount,
   apiApproveDiscount,
-  apiBuildSettlementInvoice,
   apiChooseRescheduleSlot,
-  apiConfirmAppointmentPayment,
   apiGetStaffAppointment,
   apiMarkNoShow,
   apiSearchStaffPromotions,
@@ -25,16 +23,13 @@ import { useAction, useApiQuery } from '../hooks';
 import { formatDate, formatDateTime, formatMoney, formatNumber, formatPercent, formatTime, todayIso } from '../format';
 import { APPOINTMENT_STATUS, BOOKING_SOURCE_LABEL, CONSULTATION_MODE_LABEL, labelOf, textOf } from '../labels';
 import { useToast } from '../components/toastContext';
-import { PaymentMethodFields, SlotPicker } from '../components/pickers';
+import { SlotPicker } from '../components/pickers';
 import { DoctorMonthCalendar } from '../components/DoctorMonthCalendar';
-import { emptyPayment, paymentInvalid, paymentPayload } from '../components/payment';
-import type { PaymentFormValue } from '../components/payment';
 import { Alert, Button, ConfirmDialog, Field, PageHeader, Panel, Sheet, StatusBadge } from '../components/ui';
 
-type SheetKind = 'pay' | 'discount' | 'postpone' | 'choose-slot' | null;
+type SheetKind = 'discount' | 'postpone' | 'choose-slot' | null;
 type ConfirmKind = 'cancel' | 'no-show' | 'accept' | 'confirm' | 'decline' | null;
 
-const PREPAYABLE = ['pending', 'pending_approval', 'confirmed'];
 const POSTPONABLE = ['pending', 'pending_approval', 'confirmed', 'checked_in'];
 const CANCELLABLE = ['pending', 'pending_approval', 'confirmed', 'checked_in'];
 
@@ -54,7 +49,6 @@ const DeskAppointmentDetailPage = () => {
   });
   const [confirm, setConfirm] = useState<ConfirmKind>(null);
   const [error, setError] = useState<string | null>(null);
-  const [payment, setPayment] = useState<PaymentFormValue>(emptyPayment);
   const [discount, setDiscount] = useState({ mode: 'code', promotion_code: '', discount_percent: '', notes: '' });
   const [slotDate, setSlotDate] = useState(todayIso());
   const [slotTime, setSlotTime] = useState<string | null>(null);
@@ -104,7 +98,6 @@ const DeskAppointmentDetailPage = () => {
   // backend chỉ cho giảm giá lịch có từ 2 dịch vụ khác nhau trở lên (DiscountService.MinComboServices)
   const isBelowCombo = new Set(appointment.services.map((service) => service.service_id)).size < 2;
   const canApprove = hasPermission(PERMISSION.DiscountApproveOverThreshold);
-  const canPay = hasPermission(PERMISSION.PaymentsManage);
 
   const checkIn = async () => {
     if (!appointment.check_in_code) {
@@ -116,22 +109,6 @@ const DeskAppointmentDetailPage = () => {
       query.reload();
     } else {
       toast.error(result.error);
-    }
-  };
-
-  const pay = async () => {
-    if (paymentInvalid(payment)) {
-      setError('Nhập mã giao dịch cho khoản chuyển khoản.');
-      return;
-    }
-    const result = await run('pay', () => apiConfirmAppointmentPayment(appointmentId, paymentPayload(payment)));
-    if (result.ok && result.data) {
-      setSheet(null);
-      setPayment(emptyPayment);
-      toast.success(`Đã thu ${formatMoney(result.data.amount_collected)} — hoá đơn ${result.data.invoice_number}.`);
-      query.reload();
-    } else {
-      setError(result.error);
     }
   };
 
@@ -168,15 +145,6 @@ const DeskAppointmentDetailPage = () => {
     }
   };
 
-  const settle = async () => {
-    const result = await run('settle', () => apiBuildSettlementInvoice(appointmentId));
-    if (result.ok && result.data) {
-      navigate(`/thu-ngan/hoa-don/${result.data.invoice_id}`);
-    } else {
-      toast.error(result.error);
-    }
-  };
-
   return (
     <>
       <PageHeader
@@ -203,16 +171,6 @@ const DeskAppointmentDetailPage = () => {
             {status === 'confirmed' && appointment.check_in_code && (
               <Button variant="primary" icon={<DoorOpen size={16} />} loading={isPending('checkin')} onClick={checkIn}>
                 Nhận phòng
-              </Button>
-            )}
-            {canPay && PREPAYABLE.includes(status) && (
-              <Button variant={status === 'confirmed' ? 'secondary' : 'primary'} icon={<Wallet size={16} />} onClick={() => openSheet('pay')}>
-                Thu tiền trước
-              </Button>
-            )}
-            {status === 'completed' && canPay && (
-              <Button variant="primary" icon={<Receipt size={16} />} loading={isPending('settle')} onClick={settle}>
-                Lập hoá đơn quyết toán
               </Button>
             )}
           </>
@@ -287,12 +245,6 @@ const DeskAppointmentDetailPage = () => {
                 <dd>{formatMoney(appointment.subtotal_amount)}</dd>
                 <dt>Giảm giá</dt>
                 <dd>{appointment.discount_percent > 0 ? formatPercent(appointment.discount_percent) : '—'}</dd>
-                {appointment.compensation_percent > 0 && (
-                  <>
-                    <dt>Bù dời lịch{appointment.compensation_reason ? ` (${appointment.compensation_reason})` : ''}</dt>
-                    <dd>{formatPercent(appointment.compensation_percent)}</dd>
-                  </>
-                )}
                 <dt className="st-total-row">Tổng cộng</dt>
                 <dd className="st-total-row">{formatMoney(appointment.total_amount)}</dd>
               </dl>
@@ -374,30 +326,6 @@ const DeskAppointmentDetailPage = () => {
           </dl>
         </Panel>
       </div>
-
-      {/* Thu tiền trước */}
-      <Sheet
-        open={sheet === 'pay'}
-        title="Thu tiền trước"
-        subtitle={`${appointment.patient_full_name} · ${formatMoney(appointment.total_amount)}`}
-        onClose={() => setSheet(null)}
-        footer={
-          <>
-            <Button variant="ghost" onClick={() => setSheet(null)}>
-              Huỷ
-            </Button>
-            <Button variant="primary" loading={isPending('pay')} onClick={pay}>
-              Xác nhận đã thu {formatMoney(appointment.total_amount)}
-            </Button>
-          </>
-        }
-      >
-        {error && <Alert tone="danger" className="st-alert-gap">{error}</Alert>}
-        <Alert tone="info" className="st-alert-gap">
-          Hệ thống thu đúng tổng tiền của lịch hẹn. Sau khi khám, tiền thuốc được quyết toán trên cùng hoá đơn.
-        </Alert>
-        <PaymentMethodFields value={payment} onChange={setPayment} />
-      </Sheet>
 
       {/* Giảm giá */}
       <Sheet
@@ -534,7 +462,7 @@ const DeskAppointmentDetailPage = () => {
             />
           </div>
           {sheet === 'postpone' && (
-            <Field label="Lý do (gửi cho bệnh nhân)" required className="st-span-2" hint="Mức bù cho bệnh nhân tự tính theo thời gian báo trước.">
+            <Field label="Lý do (gửi cho bệnh nhân)" required className="st-span-2">
               {(id) => <textarea id={id} className="st-textarea" maxLength={255} value={postponeReason} onChange={(e) => setPostponeReason(e.target.value)} />}
             </Field>
           )}
@@ -544,7 +472,7 @@ const DeskAppointmentDetailPage = () => {
       <ConfirmDialog
         open={confirm === 'cancel'}
         title="Huỷ lịch hẹn?"
-        text="Khoản đã thu (nếu có) được hoàn theo chính sách huỷ của phòng khám."
+        text="Khung giờ được mở lại cho bệnh nhân khác."
         reasonLabel="Lý do huỷ"
         confirmLabel="Huỷ lịch"
         tone="danger-solid"
@@ -564,7 +492,7 @@ const DeskAppointmentDetailPage = () => {
       <ConfirmDialog
         open={confirm === 'decline'}
         title="Từ chối lịch hẹn?"
-        text="Khung giờ được mở lại. Khác với huỷ muộn, tiền trả trước (nếu có) được hoàn đủ."
+        text="Khung giờ được mở lại cho bệnh nhân khác."
         reasonLabel="Lý do (bệnh nhân sẽ thấy)"
         confirmLabel="Từ chối lịch"
         tone="danger-solid"

@@ -13,7 +13,7 @@ const STEPS = [
   { number: 2, label: 'Dịch vụ' },
   { number: 3, label: 'Ngày & ca' },
   { number: 4, label: 'Thông tin' },
-  { number: 5, label: 'Xác nhận & thanh toán' },
+  { number: 5, label: 'Xác nhận' },
 ];
 
 export const BookingStepper: React.FC<BookingStepperProps> = ({

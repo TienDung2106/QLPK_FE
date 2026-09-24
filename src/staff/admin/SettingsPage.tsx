@@ -25,27 +25,13 @@ const GROUPS: { title: string; description: string; settings: SettingDef[] }[] =
       { key: 'discount_approval_threshold_percent', label: 'Ngưỡng giảm giá không cần duyệt', unit: '%' },
       { key: 'checkin_window_before_minutes', label: 'Mở nhận phòng trước giờ hẹn', unit: 'phút' },
       { key: 'checkin_window_after_minutes', label: 'Được đến muộn tối đa (không quá hết ca)', unit: 'phút' },
-      { key: 'service_reduction_max_percent', label: 'Mức giảm dịch vụ tối đa', unit: '%' },
     ],
   },
   {
-    title: 'Huỷ lịch & hoàn tiền',
-    description: 'Chính sách khi bệnh nhân huỷ hoặc không đến.',
+    title: 'Huỷ lịch',
+    description: 'Chính sách khi bệnh nhân tự huỷ lịch.',
     settings: [
       { key: 'patient_cancel_min_hours_before', label: 'Bệnh nhân được tự huỷ trước giờ hẹn', unit: 'giờ' },
-      { key: 'late_cancel_service_refund_percent', label: 'Hoàn tiền dịch vụ khi huỷ muộn', unit: '%' },
-      { key: 'no_show_service_refund_percent', label: 'Hoàn tiền dịch vụ khi không đến', unit: '%' },
-    ],
-  },
-  {
-    title: 'Bù cho bệnh nhân khi phòng khám dời lịch',
-    description: 'Mức bù theo thời gian báo trước.',
-    settings: [
-      { key: 'reschedule_compensation_notice_24h_percent', label: 'Báo trước từ 24 giờ', unit: '%' },
-      { key: 'reschedule_compensation_notice_2h_percent', label: 'Báo trước từ 2 giờ', unit: '%' },
-      { key: 'reschedule_compensation_under_2h_percent', label: 'Báo trước dưới 2 giờ', unit: '%' },
-      { key: 'reschedule_compensation_step_percent', label: 'Cộng thêm mỗi lần bị dời tiếp', unit: '%' },
-      { key: 'reschedule_compensation_max_percent', label: 'Mức bù tối đa', unit: '%' },
     ],
   },
   {
@@ -61,21 +47,6 @@ const GROUPS: { title: string; description: string; settings: SettingDef[] }[] =
       { key: 'registration_otp_ttl_minutes', label: 'Thời hạn mã OTP đăng ký', unit: 'phút' },
       { key: 'registration_otp_max_attempts', label: 'Số lần nhập sai OTP', unit: 'lần' },
       { key: 'otp_resend_cooldown_seconds', label: 'Giãn cách gửi lại OTP', unit: 'giây' },
-    ],
-  },
-  {
-    title: 'Kho thuốc',
-    description: 'Cách hệ thống phân loại tốc độ bán và tính ngưỡng tồn.',
-    settings: [
-      { key: 'inventory_velocity_window_days', label: 'Số ngày lấy mẫu mức bán', unit: 'ngày' },
-      { key: 'inventory_velocity_fast_daily_usage', label: 'Bán nhanh khi mỗi ngày từ', unit: 'đơn vị' },
-      { key: 'inventory_velocity_medium_daily_usage', label: 'Bán trung bình khi mỗi ngày từ', unit: 'đơn vị' },
-      { key: 'inventory_coverage_percent_fast', label: 'Hệ số dự trữ thuốc bán nhanh', unit: '%' },
-      { key: 'inventory_coverage_percent_medium', label: 'Hệ số dự trữ thuốc bán trung bình', unit: '%' },
-      { key: 'inventory_coverage_percent_slow', label: 'Hệ số dự trữ thuốc bán chậm', unit: '%' },
-      { key: 'inventory_critical_multiplier', label: 'Hệ số nhân cho thuốc thiết yếu', unit: '×' },
-      { key: 'inventory_critical_floor_units', label: 'Tồn tối thiểu của thuốc thiết yếu', unit: 'đơn vị' },
-      { key: 'inventory_reorder_coverage_days', label: 'Số ngày dự trữ khi gợi ý nhập', unit: 'ngày' },
     ],
   },
 ];

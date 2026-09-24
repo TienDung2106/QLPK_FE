@@ -8,7 +8,6 @@ const LANDING_BY_ROLE: Record<string, string> = {
   [ROLE.Patient]: '/',
   [ROLE.Doctor]: '/bac-si',
   [ROLE.Receptionist]: '/thu-ngan',
-  [ROLE.Pharmacist]: '/nha-thuoc',
   [ROLE.Admin]: '/quan-tri',
 };
 
@@ -39,11 +38,11 @@ export function resolveLandingPath(
 const GUEST_PATHS = ['/login', '/dang-ky', '/quen-mat-khau'];
 
 /** Các khu làm việc của nhân viên — mỗi vai trò chỉ thuộc về một khu. */
-const STAFF_AREAS = ['/quan-tri', '/bac-si', '/thu-ngan', '/nha-thuoc'];
+const STAFF_AREAS = ['/quan-tri', '/bac-si', '/thu-ngan'];
 
 /**
  * `redirectTo` được ghi lại lúc phiên *trước* bị xoá (đăng xuất, hết hạn), nên có thể là
- * trang của một tài khoản khác: admin đăng xuất ở `/quan-tri/cai-dat`, thu ngân đăng nhập
+ * trang của một tài khoản khác: admin đăng xuất ở `/quan-tri/cai-dat`, lễ tân đăng nhập
  * tiếp thì bị đưa vào đó và chỉ thấy "Không có quyền truy cập". Chỉ tin nó khi nó nằm
  * trong khu của chính vai trò đang đăng nhập.
  */

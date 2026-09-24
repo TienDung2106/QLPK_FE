@@ -1,5 +1,5 @@
 /**
- * Shape DTO của khu nhân viên (admin, bác sĩ, thu ngân, nhà thuốc), chép từ QLPK.DataDto.
+ * Shape DTO của khu nhân viên (admin, bác sĩ, lễ tân), chép từ QLPK.DataDto.
  *
  * Giữ snake_case như types.ts. Ngày (`DateOnly`) là 'yyyy-MM-dd', giờ (`TimeOnly`) là
  * 'HH:mm:ss', thời điểm (`DateTimeOffset`) là ISO 8601; `decimal` đi trên dây là number.
@@ -19,8 +19,6 @@ export interface SetActiveStatusPayload {
 /* ---------------------------------------------------------------- Appointments (desk) */
 
 export interface StaffAppointment extends Appointment {
-  compensation_percent: number;
-  compensation_reason: string | null;
   rescheduled_from_appointment_id: number | null;
   postponed_at: string | null;
   awaiting_reschedule_response: boolean;
@@ -77,24 +75,6 @@ export interface ApplyDiscountResult {
   discount_approved_by: number | null;
   subtotal_amount: number;
   total_amount: number;
-}
-
-export interface PaymentPayload {
-  /** 'cash' | 'bank_transfer' | 'internal_support'. */
-  payment_method: string;
-  /** Bắt buộc với bank_transfer. */
-  external_reference?: string;
-}
-
-export interface ConfirmPaymentResult {
-  appointment_id: number;
-  invoice_id: number;
-  invoice_number: string;
-  appointment_status: string;
-  payment_status: string;
-  total_amount: number;
-  amount_collected: number;
-  paid_at: string;
 }
 
 export interface NewSlotPayload {
@@ -167,338 +147,6 @@ export interface DeskPatientPayload {
 export interface RegisterDeskPatientPayload extends DeskPatientPayload {
   /** Bắt buộc khi không có email. */
   phone_number?: string | null;
-}
-
-/* ---------------------------------------------------------------- Billing */
-
-export interface SettlementQueueItem {
-  dispense_request_id: number;
-  appointment_id: number;
-  appointment_date: string;
-  patient_id: number;
-  patient_full_name: string;
-  patient_code: string;
-  doctor_full_name: string;
-  status: string;
-  has_prescription: boolean;
-  prescription_status: string | null;
-  ready_to_settle: boolean;
-  invoice_id: number | null;
-  total_amount: number | null;
-  amount_collected: number | null;
-  created_at: string;
-}
-
-export interface SettlementQueueQuery extends PageQuery {
-  status?: string;
-  search?: string;
-}
-
-export interface InvoiceListItem {
-  invoice_id: number;
-  invoice_number: string;
-  appointment_id: number;
-  patient_id: number;
-  patient_full_name: string;
-  patient_code: string;
-  invoice_status: string;
-  payment_status: string;
-  total_amount: number;
-  amount_collected: number;
-  paid_at: string | null;
-  created_at: string;
-}
-
-export interface InvoiceQuery extends PageQuery {
-  payment_status?: string;
-  from_date?: string;
-  to_date?: string;
-  search?: string;
-}
-
-export interface InvoiceItem {
-  invoice_item_id: number;
-  item_type: string;
-  reference_id: number | null;
-  description: string;
-  quantity: number;
-  unit_price: number;
-  line_total: number;
-}
-
-export interface PaymentTransaction {
-  payment_transaction_id: number;
-  transaction_type: string;
-  payment_method: string;
-  amount: number;
-  external_reference: string | null;
-  transaction_status: string;
-  created_by: number;
-  paid_at: string | null;
-}
-
-export interface Invoice {
-  invoice_id: number;
-  invoice_number: string;
-  appointment_id: number;
-  appointment_date: string;
-  patient_id: number;
-  patient_full_name: string;
-  patient_code: string;
-  doctor_full_name: string;
-  invoice_status: string;
-  payment_status: string;
-  services_subtotal: number;
-  medicines_subtotal: number;
-  subtotal_amount: number;
-  discount_amount: number;
-  discount_reason: string | null;
-  support_amount: number;
-  cancellation_refund_percent: number | null;
-  total_amount: number;
-  amount_collected: number;
-  amount_outstanding: number;
-  refund_due: number;
-  paid_at: string | null;
-  created_at: string;
-  items: InvoiceItem[];
-  transactions: PaymentTransaction[];
-}
-
-/* ---------------------------------------------------------------- Examinations */
-
-export interface ExaminationStatus {
-  appointment_id: number;
-  status: string;
-  examination_started_at: string | null;
-  completed_at: string | null;
-  dispense_request_id: number | null;
-  prescription_id: number | null;
-  treatment_sessions_completed: number | null;
-  treatment_total_sessions: number | null;
-}
-
-export interface PrescriptionAllocation {
-  medicine_batch_id: number;
-  batch_number: string;
-  expiry_date: string | null;
-  quantity_reserved: number;
-  quantity_delivered: number;
-}
-
-export interface PrescriptionItem {
-  prescription_item_id: number;
-  medicine_id: number;
-  medicine_name: string;
-  unit_of_measure: string;
-  /** Quy cách một đơn vị, vd "Hộp 3 vỉ × 10 viên". */
-  packaging: string | null;
-  quantity_prescribed: number;
-  quantity_reserved: number;
-  quantity_delivered: number;
-  dosage: string;
-  frequency: string;
-  duration_days: number | null;
-  usage_instructions: string | null;
-  unit_price: number;
-  allocations: PrescriptionAllocation[];
-}
-
-export interface Prescription {
-  prescription_id: number;
-  medical_record_id: number;
-  appointment_id: number;
-  patient_id: number;
-  patient_full_name: string;
-  doctor_id: number;
-  doctor_full_name: string;
-  status: string;
-  /** Tiến độ ở quầy thu ngân: awaiting_payment / invoiced / paid; null khi bác sĩ chưa hoàn tất lượt khám. */
-  settlement_status?: string | null;
-  notes: string | null;
-  created_at: string;
-  prepared_at: string | null;
-  delivered_at: string | null;
-  reserved_amount: number;
-  items: PrescriptionItem[];
-}
-
-export interface MedicalRecord {
-  medical_record_id: number;
-  appointment_id: number;
-  appointment_date: string;
-  appointment_time: string;
-  patient_id: number;
-  patient_full_name: string;
-  doctor_id: number;
-  doctor_full_name: string;
-  symptoms: string | null;
-  examination_findings: string | null;
-  diagnosis: string;
-  icd10_code: string | null;
-  treatment_plan: string | null;
-  follow_up_date: string | null;
-  follow_up_notes: string | null;
-  doctor_notes: string | null;
-  created_at: string;
-  updated_at: string;
-  prescription: Prescription | null;
-}
-
-export interface MedicalRecordPayload {
-  symptoms?: string | null;
-  examination_findings?: string | null;
-  diagnosis: string;
-  icd10_code?: string | null;
-  treatment_plan?: string | null;
-  follow_up_date?: string | null;
-  follow_up_notes?: string | null;
-  doctor_notes?: string | null;
-}
-
-export interface PrescriptionItemPayload {
-  medicine_id: number;
-  quantity: number;
-  dosage: string;
-  frequency: string;
-  duration_days?: number | null;
-  usage_instructions?: string | null;
-}
-
-export interface WritePrescriptionPayload {
-  items: PrescriptionItemPayload[];
-  notes?: string | null;
-}
-
-export interface PrescribableMedicine {
-  medicine_id: number;
-  medicine_name: string;
-  active_ingredient: string | null;
-  medicine_group: string | null;
-  unit_of_measure: string;
-  /** Quy cách một đơn vị, vd "Hộp 3 vỉ × 10 viên". */
-  packaging: string | null;
-  unit_price: number;
-  available_stock: number;
-  /** Số lô chưa hết hạn còn hàng; nhà thuốc xuất lô hết hạn sớm nhất trước. */
-  batch_count: number;
-  earliest_expiry_date: string | null;
-}
-
-/* ---------------------------------------------------------------- Pharmacy */
-
-export interface PrescriptionQuery extends PageQuery {
-  status?: string;
-  from_date?: string;
-  to_date?: string;
-  search?: string;
-}
-
-export interface PrescriptionShortfall {
-  prescription_item_id: number;
-  medicine_id: number;
-  medicine_name: string;
-  quantity_prescribed: number;
-  quantity_reserved: number;
-}
-
-export interface PrescriptionPreparation {
-  prescription: Prescription;
-  shortfalls: PrescriptionShortfall[];
-}
-
-export interface MedicineStock {
-  medicine_id: number;
-  medicine_name: string;
-  active_ingredient: string | null;
-  medicine_group: string | null;
-  unit_of_measure: string;
-  /** Quy cách một đơn vị, vd "Hộp 3 vỉ × 10 viên". */
-  packaging: string | null;
-  current_stock: number;
-  usable_stock: number;
-  reserved_stock: number;
-  available_stock: number;
-  earliest_expiry_date: string | null;
-  velocity_class: string;
-  criticality_level: string;
-  avg_daily_usage: number;
-  velocity_computed_at: string | null;
-  low_stock_threshold: number;
-  low_stock_threshold_is_manual: boolean;
-  is_below_threshold: boolean;
-  suggested_reorder_quantity: number;
-}
-
-export interface MedicineStockQuery extends PageQuery {
-  search?: string;
-  medicine_group?: string;
-  velocity_class?: string;
-  criticality_level?: string;
-  below_threshold_only?: boolean;
-}
-
-export interface MedicineBatch {
-  medicine_batch_id: number;
-  medicine_id: number;
-  batch_number: string;
-  expiry_date: string | null;
-  quantity_imported: number;
-  quantity_remaining: number;
-  quantity_reserved: number;
-  quantity_available: number;
-  import_unit_price: number;
-  imported_at: string;
-  supplier_id: number | null;
-  supplier_name: string | null;
-  is_active: boolean;
-}
-
-export interface ImportBatchPayload {
-  batch_number: string;
-  expiry_date?: string | null;
-  quantity_imported: number;
-  import_unit_price: number;
-  supplier_id?: number | null;
-}
-
-export interface ImportBatchResult {
-  batch: MedicineBatch;
-  stock: MedicineStock;
-}
-
-export interface MedicineClassificationPayload {
-  criticality_level: string;
-  low_stock_threshold_is_manual: boolean;
-  low_stock_threshold?: number | null;
-}
-
-export interface Supplier {
-  supplier_id: number;
-  supplier_name: string;
-  contact_person: string | null;
-  phone_number: string | null;
-  email: string | null;
-  address: string | null;
-  notes: string | null;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface SupplierQuery extends PageQuery {
-  search?: string;
-  is_active?: boolean;
-}
-
-export interface SupplierPayload {
-  supplier_name: string;
-  contact_person?: string | null;
-  phone_number?: string | null;
-  email?: string | null;
-  address?: string | null;
-  notes?: string | null;
-  is_active: boolean;
 }
 
 /* ---------------------------------------------------------------- Admin */
@@ -692,42 +340,6 @@ export interface UpdateSettingPayload {
   description?: string | null;
 }
 
-export interface RevenueByDay {
-  date: string;
-  collected: number;
-  refunded: number;
-  net: number;
-}
-
-export interface RevenueByPaymentMethod {
-  payment_method: string;
-  collected: number;
-  refunded: number;
-  net: number;
-}
-
-export interface RevenueByDoctor {
-  doctor_id: number;
-  doctor_full_name: string;
-  net: number;
-  visit_count: number;
-}
-
-export interface RevenueReport {
-  from_date: string;
-  to_date: string;
-  total_collected: number;
-  total_refunded: number;
-  net_revenue: number;
-  services_revenue: number;
-  medicines_revenue: number;
-  payment_count: number;
-  refund_count: number;
-  by_day: RevenueByDay[];
-  by_payment_method: RevenueByPaymentMethod[];
-  by_doctor: RevenueByDoctor[];
-}
-
 /* ---------------------------------------------------------------- Notifications (mọi tài khoản) */
 
 export interface Notification {
@@ -756,24 +368,9 @@ export interface DoctorDashboard {
   awaiting_confirmation: number;
   awaiting_discount_approval: number;
   waiting_to_be_seen: number;
-  in_progress: number;
   completed_today: number;
   next_appointment: AppointmentListItem | null;
   unread_notifications: number;
-}
-
-export interface ClinicDashboard {
-  date: string;
-  appointments_today: number;
-  awaiting_confirmation: number;
-  awaiting_discount_approval: number;
-  waiting_to_be_seen: number;
-  in_progress: number;
-  completed_today: number;
-  net_revenue_today: number;
-  awaiting_settlement: number;
-  medicines_below_threshold: number;
-  active_doctors: number;
 }
 
 export interface AppointmentReportByDoctor {
@@ -795,16 +392,6 @@ export interface AppointmentReport {
   no_show: number;
   attrition_percent: number;
   by_doctor: AppointmentReportByDoctor[];
-}
-
-export interface InventoryReport {
-  as_of: string;
-  medicine_count: number;
-  below_threshold_count: number;
-  expiring_batch_count: number;
-  expiring_within_days: number;
-  below_threshold: MedicineStock[];
-  expiring_batches: MedicineBatch[];
 }
 
 /* ---------------------------------------------------------------- Working hours */
@@ -871,7 +458,6 @@ export interface FollowUpPayload {
   reason_for_visit?: string | null;
   services: AppointmentServicePayload[];
   primary_service_id?: number | null;
-  session_number?: number | null;
 }
 
 /* ---------------------------------------------------------------- Admin: clinic */
@@ -884,7 +470,6 @@ export interface ClinicProfile {
   email: string | null;
   logo_url: string | null;
   business_hours_note: string | null;
-  invoice_footer_note: string | null;
   updated_by: number | null;
   updated_at: string;
 }
@@ -942,60 +527,4 @@ export interface LinkPatientAccountPayload {
   relationship_to_account?: string | null;
   /** Mã chủ tài khoản nhận qua email (bước request-code); bắt buộc khi liên kết. */
   code?: string;
-}
-
-/* ---------------------------------------------------------------- Pharmacy extras */
-
-export interface MedicinePayload {
-  medicine_name: string;
-  active_ingredient?: string | null;
-  medicine_group?: string | null;
-  unit_of_measure: string;
-  /** Quy cách một đơn vị, vd "Hộp 3 vỉ × 10 viên". */
-  packaging?: string | null;
-  unit_price: number;
-  manufacturer?: string | null;
-  storage_condition?: string | null;
-  description?: string | null;
-}
-
-export interface AdjustBatchPayload {
-  counted_quantity: number;
-  notes: string;
-}
-
-export interface RemoveStockPayload {
-  /** Bỏ trống ở write-off = huỷ toàn bộ phần còn lại. */
-  quantity?: number | null;
-  notes: string;
-}
-
-export interface ExpiringBatchQuery extends PageQuery {
-  within_days?: number;
-}
-
-export interface StockMovement {
-  inventory_log_id: number;
-  medicine_id: number;
-  medicine_name: string;
-  medicine_batch_id: number | null;
-  batch_number: string | null;
-  account_id: number | null;
-  account_name: string | null;
-  action: string;
-  quantity_changed: number;
-  quantity_before: number;
-  quantity_after: number;
-  reference_type: string | null;
-  reference_id: number | null;
-  notes: string | null;
-  created_at: string;
-}
-
-export interface StockMovementQuery extends PageQuery {
-  medicine_id?: number;
-  medicine_batch_id?: number;
-  action?: string;
-  from_date?: string;
-  to_date?: string;
 }

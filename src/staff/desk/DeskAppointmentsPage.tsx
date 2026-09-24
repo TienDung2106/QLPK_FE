@@ -18,7 +18,6 @@ const STATUS_TABS = [
   { value: 'pending_approval', label: 'Chờ duyệt' },
   { value: 'confirmed', label: 'Đã xác nhận' },
   { value: 'checked_in', label: 'Đã nhận phòng' },
-  { value: 'in_progress', label: 'Đang khám' },
   { value: 'completed', label: 'Hoàn thành' },
   { value: 'cancelled', label: 'Đã huỷ' },
   { value: 'no_show', label: 'Không đến' },

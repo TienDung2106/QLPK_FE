@@ -66,7 +66,7 @@ const NotificationsPage = () => {
     <>
       <PageHeader
         title="Thông báo"
-        description="Lịch hẹn, đơn thuốc, hoá đơn và thông báo hệ thống gửi tới tài khoản của bạn."
+        description="Lịch hẹn và thông báo hệ thống gửi tới tài khoản của bạn."
         actions={
           <Button icon={<CheckCheck size={15} />} loading={isPending('all')} onClick={markAll}>
             Đánh dấu đã đọc hết

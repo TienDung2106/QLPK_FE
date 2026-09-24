@@ -25,7 +25,6 @@ const toProfileForm = (profile: ClinicProfile): ProfileForm => ({
   email: profile.email ?? '',
   logo_url: profile.logo_url ?? '',
   business_hours_note: profile.business_hours_note ?? '',
-  invoice_footer_note: profile.invoice_footer_note ?? '',
 });
 
 const ProfilePanel = () => {
@@ -63,7 +62,6 @@ const ProfilePanel = () => {
         email: nullIfBlank(form.email),
         logo_url: nullIfBlank(form.logo_url),
         business_hours_note: nullIfBlank(form.business_hours_note),
-        invoice_footer_note: nullIfBlank(form.invoice_footer_note),
       }),
     );
     if (!result.ok || !result.data) {
@@ -77,7 +75,7 @@ const ProfilePanel = () => {
   return (
     <Panel
       title="Thông tin phòng khám"
-      subtitle={query.data ? `In ở đầu mọi hoá đơn · sửa lần cuối ${formatDateTime(query.data.updated_at)}` : 'In ở đầu mọi hoá đơn'}
+      subtitle={query.data ? `Thông tin liên hệ · sửa lần cuối ${formatDateTime(query.data.updated_at)}` : 'Thông tin liên hệ'}
       actions={
         form && (
           <Button variant="primary" size="sm" icon={<Save size={14} />} loading={isPending('profile')} onClick={save}>
@@ -117,9 +115,6 @@ const ProfilePanel = () => {
           </Field>
           <Field label="Giờ mở cửa" className="st-span-2" hint="Ví dụ: Thứ Hai – Thứ Bảy, 8:00 – 20:00">
             {(id) => <input id={id} className="st-input" value={form.business_hours_note} onChange={set('business_hours_note')} />}
-          </Field>
-          <Field label="Chú thích cuối hoá đơn" className="st-span-2">
-            {(id) => <textarea id={id} className="st-textarea" value={form.invoice_footer_note} onChange={set('invoice_footer_note')} />}
           </Field>
         </div>
       )}
@@ -310,10 +305,10 @@ const HolidaysPanel = () => {
   );
 };
 
-/** Phòng khám như một đơn vị: tên trên hoá đơn và những ngày đóng cửa. */
+/** Phòng khám như một đơn vị: thông tin liên hệ và những ngày đóng cửa. */
 const ClinicPage = () => (
   <>
-    <PageHeader title="Phòng khám" description="Thông tin in trên hoá đơn và lịch nghỉ lễ của cả phòng khám." />
+    <PageHeader title="Phòng khám" description="Thông tin phòng khám và lịch nghỉ lễ của cả phòng khám." />
     <div className="st-stack">
       <ProfilePanel />
       <HolidaysPanel />

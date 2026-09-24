@@ -6,7 +6,6 @@ import type {
   AdminServicePayload,
   AdminServiceQuery,
   AppointmentReport,
-  ClinicDashboard,
   ClinicHoliday,
   ClinicHolidayPayload,
   ClinicHolidayQuery,
@@ -21,7 +20,6 @@ import type {
   Promotion,
   PromotionPayload,
   PromotionQuery,
-  RevenueReport,
   StaffAccount,
   StaffAccountListItem,
   StaffAccountQuery,
@@ -87,22 +85,13 @@ export const apiListSettings = () => GetData<SystemSetting[]>(url.adminClinicSet
 export const apiUpdateSetting = (settingKey: string, payload: UpdateSettingPayload) =>
   PutData<SystemSetting>(url.adminSettingByKey(settingKey), payload);
 
-/* Báo cáo — reports.view_revenue. Cả hai ngày bắt buộc, tối đa 366 ngày. */
-
-export const apiGetRevenueReport = (fromDate: string, toDate: string) =>
-  GetData<RevenueReport>(url.adminRevenueReport, { from_date: fromDate, to_date: toDate });
+/* Báo cáo lịch hẹn — reports.view. Cả hai ngày bắt buộc, tối đa 366 ngày. */
 
 export const apiGetAppointmentReport = (fromDate: string, toDate: string) =>
   GetData<AppointmentReport>(url.adminAppointmentReport, { from_date: fromDate, to_date: toDate });
 
-export const apiExportRevenueReport = (fromDate: string, toDate: string) =>
-  GetBlob(url.adminRevenueReportExport, { from_date: fromDate, to_date: toDate });
-
 export const apiExportAppointmentReport = (fromDate: string, toDate: string) =>
   GetBlob(url.adminAppointmentReportExport, { from_date: fromDate, to_date: toDate });
-
-/** Bỏ trống ngày = hôm nay. */
-export const apiGetClinicDashboard = (date?: string) => GetData<ClinicDashboard>(url.adminDashboard, { date });
 
 /* Giờ làm việc của bác sĩ — doctor_schedules.manage */
 

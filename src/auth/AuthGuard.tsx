@@ -46,7 +46,7 @@ export const AuthGuard = ({ children, allowWhenPasswordChangeRequired = false }:
 
 /**
  * Chặn một trang trong khu nhân viên theo **quyền** (không theo tên vai trò): admin mang cả
- * quyền thu ngân lẫn nhà thuốc nên tự vào được các trang đó. Có một trong `anyOf` là đủ.
+ * quyền lễ tân nên tự vào được các trang đó. Có một trong `anyOf` là đủ.
  * Backend vẫn là nơi quyết định cuối; guard này chỉ để không dẫn người dùng tới trang 403.
  */
 export const PermissionGuard = ({ anyOf, children }: { anyOf: string[]; children: ReactNode }) => {

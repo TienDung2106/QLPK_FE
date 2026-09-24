@@ -120,9 +120,6 @@ export const AppointmentDetail = ({ appointmentId, onChanged }: Props) => {
           </div>
           <p>
             {appointment.postponed_at ? `Thông báo lúc ${formatDateTime(appointment.postponed_at)}. ` : ''}
-            {appointment.compensation_percent > 0
-              ? `Bạn được giảm ${appointment.compensation_percent}% để bù cho sự bất tiện. `
-              : ''}
             Đồng ý giờ mới hoặc chọn một giờ trống khác với cùng bác sĩ.
           </p>
           {!choosing ? (

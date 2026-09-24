@@ -281,7 +281,7 @@ const StaffAccountsPage = () => {
     <>
       <PageHeader
         title="Tài khoản nhân viên"
-        description="Tạo tài khoản cho bác sĩ, dược sĩ, thu ngân và quản trị viên; khoá khi nhân viên nghỉ việc."
+        description="Tạo tài khoản cho bác sĩ, lễ tân và quản trị viên; khoá khi nhân viên nghỉ việc."
         actions={
           <Button
             variant="primary"

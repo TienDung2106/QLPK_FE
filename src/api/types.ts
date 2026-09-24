@@ -231,8 +231,6 @@ export interface Appointment extends AppointmentListItem {
   subtotal_amount: number;
   total_amount: number;
   services: AppointmentServiceLine[];
-  compensation_percent: number;
-  compensation_reason: string | null;
   rescheduled_from_appointment_id: number | null;
   postponed_at: string | null;
   /** Phòng khám đã dời lịch và đang chờ bệnh nhân đồng ý hoặc chọn giờ khác. */
@@ -254,7 +252,6 @@ export const APPOINTMENT_STATUS = {
   PendingApproval: 'pending_approval',
   Confirmed: 'confirmed',
   CheckedIn: 'checked_in',
-  InProgress: 'in_progress',
   Completed: 'completed',
   Cancelled: 'cancelled',
   NoShow: 'no_show',
@@ -266,7 +263,6 @@ export const APPOINTMENT_STATUS_LABEL: Record<string, string> = {
   pending_approval: 'Chờ duyệt giảm giá',
   confirmed: 'Đã xác nhận',
   checked_in: 'Đã nhận phòng',
-  in_progress: 'Đang khám',
   completed: 'Đã hoàn thành',
   cancelled: 'Đã huỷ',
   no_show: 'Không đến',
@@ -276,7 +272,6 @@ export const APPOINTMENT_STATUS_LABEL: Record<string, string> = {
 export const ROLE = {
   Admin: 'admin',
   Doctor: 'doctor',
-  Pharmacist: 'pharmacist',
   Receptionist: 'receptionist',
   Patient: 'patient',
 } as const;

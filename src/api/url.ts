@@ -10,8 +10,6 @@ const root = API_ROOT;
 
 export { API_ROOT };
 
-export type BatchAction = 'adjustments' | 'write-off' | 'return-to-supplier' | 'stock-out';
-
 const url = {
   // Auth (chương 10.4)
   login: `${root}/auth/login`,
@@ -46,10 +44,6 @@ const url = {
   patientAppointmentAttachments: (appointmentId: number) => `${root}/patient/appointments/${appointmentId}/attachments`,
   patientAppointmentAction: (appointmentId: number, action: 'accept-reschedule' | 'choose-slot') =>
     `${root}/patient/appointments/${appointmentId}/${action}`,
-  patientInvoices: `${root}/patient/invoices`,
-  patientInvoiceById: (invoiceId: number) => `${root}/patient/invoices/${invoiceId}`,
-  patientInvoicePdf: (invoiceId: number) => `${root}/patient/invoices/${invoiceId}/pdf`,
-  patientMedicalRecords: `${root}/patient/medical-records`,
 
   // Thông báo — mọi tài khoản đã đăng nhập, kể cả nhân viên, dù nằm dưới /patient.
   notifications: `${root}/patient/notifications`,
@@ -71,10 +65,7 @@ const url = {
   adminPromotionStatus: (promotionId: number) => `${root}/admin/promotions/${promotionId}/status`,
   adminSettingByKey: (settingKey: string) => `${root}/admin/settings/${encodeURIComponent(settingKey)}`,
   adminStaffAccountResetPassword: (accountId: number) => `${root}/admin/staff-accounts/${accountId}/reset-password`,
-  adminRevenueReport: `${root}/admin/reports/revenue`,
   adminAppointmentReport: `${root}/admin/reports/appointments`,
-  adminDashboard: `${root}/admin/reports/dashboard`,
-  adminRevenueReportExport: `${root}/admin/reports/revenue/export`,
   adminAppointmentReportExport: `${root}/admin/reports/appointments/export`,
   adminDoctorSchedules: (doctorId: number) => `${root}/admin/doctors/${doctorId}/schedules`,
   adminDoctorScheduleById: (doctorId: number, scheduleId: number) => `${root}/admin/doctors/${doctorId}/schedules/${scheduleId}`,
@@ -90,23 +81,16 @@ const url = {
   // Bác sĩ
   doctorAppointments: `${root}/doctor/appointments`,
   doctorDashboard: `${root}/doctor/dashboard`,
-  doctorAppointmentAction: (appointmentId: number, action: 'confirm' | 'decline' | 'follow-up') =>
+  doctorAppointmentAction: (appointmentId: number, action: 'confirm' | 'decline' | 'complete' | 'follow-up') =>
     `${root}/doctor/appointments/${appointmentId}/${action}`,
   doctorWorkingHours: `${root}/doctor/working-hours`,
   doctorTimeOffById: (timeOffId: number) => `${root}/doctor/time-off/${timeOffId}`,
-  doctorStartExamination: (appointmentId: number) => `${root}/doctor/appointments/${appointmentId}/start`,
-  doctorMedicalRecord: (appointmentId: number) => `${root}/doctor/appointments/${appointmentId}/medical-record`,
-  doctorPrescription: (appointmentId: number) => `${root}/doctor/appointments/${appointmentId}/prescription`,
-  doctorCompleteExamination: (appointmentId: number) => `${root}/doctor/appointments/${appointmentId}/complete`,
   doctorAppointmentAttachments: (appointmentId: number) => `${root}/doctor/appointments/${appointmentId}/attachments`,
   doctorAttachmentContent: (appointmentId: number, attachmentId: number) =>
     `${root}/doctor/appointments/${appointmentId}/attachments/${attachmentId}/content`,
-  doctorPatientHistory: (patientId: number) => `${root}/doctor/patients/${patientId}/medical-records`,
-  doctorMedicines: `${root}/doctor/medicines`,
-  doctorMedicineGroups: `${root}/doctor/medicines/groups`,
   doctorTimeOff: `${root}/doctor/time-off`,
 
-  // Quầy lễ tân / thu ngân
+  // Quầy lễ tân
   staffAppointments: `${root}/staff/appointments`,
   staffAppointmentsExport: `${root}/staff/appointments/export`,
   staffAppointmentById: (appointmentId: number) => `${root}/staff/appointments/${appointmentId}`,
@@ -123,38 +107,9 @@ const url = {
   staffPromotions: `${root}/staff/promotions`,
   staffPatientLinkAccount: (patientId: number) => `${root}/staff/patients/${patientId}/link-account`,
   staffPatientLinkAccountCode: (patientId: number) => `${root}/staff/patients/${patientId}/link-account/request-code`,
-  staffInvoicePdf: (invoiceId: number) => `${root}/staff/invoices/${invoiceId}/pdf`,
   staffPatients: `${root}/staff/patients`,
   staffPatientById: (patientId: number) => `${root}/staff/patients/${patientId}`,
-  staffDispenseRequests: `${root}/staff/dispense-requests`,
-  staffSettlementInvoice: (appointmentId: number) => `${root}/staff/appointments/${appointmentId}/settlement-invoice`,
-  staffInvoices: `${root}/staff/invoices`,
-  staffInvoicesExport: `${root}/staff/invoices/export`,
-  staffInvoiceById: (invoiceId: number) => `${root}/staff/invoices/${invoiceId}`,
-  staffInvoicePayments: (invoiceId: number) => `${root}/staff/invoices/${invoiceId}/payments`,
-  staffInvoiceRefunds: (invoiceId: number) => `${root}/staff/invoices/${invoiceId}/refunds`,
 
-  // Nhà thuốc
-  pharmacyMedicines: `${root}/pharmacist/inventory/medicines`,
-  pharmacyReorderSuggestions: `${root}/pharmacist/inventory/reorder-suggestions`,
-  pharmacyMedicineBatches: (medicineId: number) => `${root}/pharmacist/inventory/medicines/${medicineId}/batches`,
-  pharmacyMedicineClassification: (medicineId: number) =>
-    `${root}/pharmacist/inventory/medicines/${medicineId}/classification`,
-  pharmacyMedicineCatalog: `${root}/pharmacist/medicines`,
-  pharmacyMedicineCatalogById: (medicineId: number) => `${root}/pharmacist/medicines/${medicineId}`,
-  pharmacyMedicineCatalogStatus: (medicineId: number) => `${root}/pharmacist/medicines/${medicineId}/status`,
-  pharmacyExpiringBatches: `${root}/pharmacist/inventory/expiring-batches`,
-  pharmacyStockLogs: `${root}/pharmacist/inventory/logs`,
-  pharmacyInventoryReport: `${root}/pharmacist/inventory/report`,
-  pharmacyInventoryReportExport: `${root}/pharmacist/inventory/report/export`,
-  pharmacyStockLogsExport: `${root}/pharmacist/inventory/logs/export`,
-  pharmacyBatchAction: (batchId: number, action: BatchAction) => `${root}/pharmacist/inventory/batches/${batchId}/${action}`,
-  pharmacyPrescriptions: `${root}/pharmacist/prescriptions`,
-  pharmacyPrescriptionById: (prescriptionId: number) => `${root}/pharmacist/prescriptions/${prescriptionId}`,
-  pharmacyPrescriptionAction: (prescriptionId: number, action: 'prepare' | 'cancel-preparation' | 'deliver') =>
-    `${root}/pharmacist/prescriptions/${prescriptionId}/${action}`,
-  pharmacySuppliers: `${root}/pharmacist/suppliers`,
-  pharmacySupplierById: (supplierId: number) => `${root}/pharmacist/suppliers/${supplierId}`,
 };
 
 export default url;
