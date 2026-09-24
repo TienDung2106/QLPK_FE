@@ -118,6 +118,8 @@ export interface TimeOff {
   created_by: number;
   created_at: string;
   affected_appointments: AppointmentListItem[];
+  /** Lịch thay hệ thống tự dời lúc báo nghỉ (sang bác sĩ khác hoặc ca khác); chỉ có trong phản hồi tạo mới. */
+  rescheduled_appointments?: AppointmentListItem[];
 }
 
 export interface TimeOffQuery {

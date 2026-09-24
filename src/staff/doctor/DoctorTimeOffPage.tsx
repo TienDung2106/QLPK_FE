@@ -6,7 +6,7 @@ import { useAction, useApiQuery } from '../hooks';
 import { formatDate, todayIso } from '../format';
 import { useToast } from '../components/toastContext';
 import { Button, ConfirmDialog, PageHeader, Sheet, Alert } from '../components/ui';
-import { TimeOffForm, TimeOffList } from '../components/timeOff';
+import { TimeOffForm, TimeOffList, TimeOffOutcome } from '../components/timeOff';
 import { emptyTimeOff, timeOffPayload } from '../components/timeOffForm';
 import type { TimeOffFormValue } from '../components/timeOffForm';
 
@@ -36,7 +36,7 @@ const DoctorTimeOffPage = () => {
     setOpen(false);
     setForm(emptyTimeOff);
     setLastReported(result.data);
-    toast.success('Đã báo nghỉ. Quầy lễ tân sẽ dời các lịch hẹn bị ảnh hưởng.');
+    toast.success('Đã báo nghỉ.');
     query.reload();
   };
 
@@ -58,7 +58,7 @@ const DoctorTimeOffPage = () => {
     <>
       <PageHeader
         title="Báo nghỉ"
-        description="Báo nghỉ cả ngày hoặc một khoảng giờ. Khung giờ đó sẽ không nhận đặt lịch mới."
+        description="Báo nghỉ cả ngày, một buổi hoặc một ca. Lịch hẹn trong ca nghỉ được tự chuyển sang bác sĩ khác hoặc ca trống kế tiếp."
         actions={
           <Button
             variant="primary"
@@ -73,11 +73,7 @@ const DoctorTimeOffPage = () => {
         }
       />
 
-      {lastReported && lastReported.affected_appointments.length > 0 && (
-        <Alert tone="warning" className="st-alert-gap">
-          Có {lastReported.affected_appointments.length} lịch hẹn rơi vào thời gian nghỉ vừa báo. Quầy lễ tân sẽ liên hệ bệnh nhân để dời lịch.
-        </Alert>
-      )}
+      <TimeOffOutcome result={lastReported} pendingText="Quầy lễ tân sẽ liên hệ bệnh nhân để dời lịch." />
 
       <TimeOffList query={query} onWithdraw={setWithdrawing} emptyText="Bạn chưa báo nghỉ ngày nào trong khoảng 30 ngày trước đến 6 tháng tới." />
 

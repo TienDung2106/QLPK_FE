@@ -6,7 +6,7 @@ import { useAction, useApiQuery } from '../hooks';
 import { formatDate, todayIso } from '../format';
 import { useToast } from '../components/toastContext';
 import { DoctorSelect } from '../components/pickers';
-import { TimeOffForm, TimeOffList } from '../components/timeOff';
+import { TimeOffForm, TimeOffList, TimeOffOutcome } from '../components/timeOff';
 import { emptyTimeOff, timeOffPayload } from '../components/timeOffForm';
 import type { TimeOffFormValue } from '../components/timeOffForm';
 import { Alert, Button, ConfirmDialog, EmptyState, PageHeader, Panel, Sheet } from '../components/ui';
@@ -84,11 +84,7 @@ const DoctorTimeOffDeskPage = () => {
         <DoctorSelect value={doctorId} onChange={setDoctorId} />
       </div>
 
-      {recorded && recorded.affected_appointments.length > 0 && (
-        <Alert tone="warning" className="st-alert-gap">
-          {recorded.affected_appointments.length} lịch hẹn bị ảnh hưởng. Mở từng lịch hẹn trong bảng bên dưới để dời sang giờ khác.
-        </Alert>
-      )}
+      <TimeOffOutcome result={recorded} pendingText="Mở từng lịch hẹn trong bảng bên dưới để dời sang giờ khác." />
 
       {doctorId ? (
         <TimeOffList query={query} onWithdraw={setWithdrawing} appointmentLinkBase="/thu-ngan/lich-hen" emptyText="Bác sĩ chưa có ngày nghỉ nào từ 30 ngày trước đến 6 tháng tới." />

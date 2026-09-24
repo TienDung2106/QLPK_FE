@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import type { TimeOff } from '../../api/staffTypes';
 import type { TimeOffFormValue } from './timeOffForm';
+import { TIME_OFF_PERIODS, timeOffPeriodLabel } from './timeOffForm';
 import type { QueryState } from '../hooks';
 import { formatDate, formatDateTime, formatTime, todayIso } from '../format';
 import { APPOINTMENT_STATUS, labelOf } from '../labels';
@@ -11,11 +12,25 @@ export const TimeOffForm = ({ value, onChange }: { value: TimeOffFormValue; onCh
     <Field label="Ngày nghỉ" required className="st-span-2">
       {(id) => <input id={id} type="date" className="st-input" value={value.off_date} onChange={(e) => onChange({ ...value, off_date: e.target.value })} />}
     </Field>
-    <label className="st-check st-span-2">
-      <input type="checkbox" checked={value.whole_day} onChange={(e) => onChange({ ...value, whole_day: e.target.checked })} />
-      Nghỉ cả ngày
-    </label>
-    {!value.whole_day && (
+    <div className="st-span-2">
+      <span className="st-label">Nghỉ ca nào</span>
+      <div className="st-chip-row" role="radiogroup" aria-label="Nghỉ ca nào">
+        {TIME_OFF_PERIODS.map((period) => (
+          <button
+            key={period.key}
+            type="button"
+            role="radio"
+            aria-checked={value.period === period.key}
+            className={`st-slot ${value.period === period.key ? 'active' : ''}`}
+            onClick={() => onChange({ ...value, period: period.key })}
+          >
+            {period.label}
+            {period.start && <span className="st-muted"> · {period.start}–{period.end}</span>}
+          </button>
+        ))}
+      </div>
+    </div>
+    {value.period === 'custom' && (
       <>
         <Field label="Từ giờ" required>
           {(id) => <input id={id} type="time" className="st-input" value={value.start_time} onChange={(e) => onChange({ ...value, start_time: e.target.value })} />}
@@ -80,7 +95,11 @@ export const TimeOffList = ({
                 <tr key={item.doctor_time_off_id}>
                   <td className="st-strong st-nowrap">{formatDate(item.off_date)}</td>
                   <td className="st-nowrap">
-                    {item.start_time ? `${formatTime(item.start_time)} – ${formatTime(item.end_time)}` : 'Cả ngày'}
+                    {item.start_time && item.end_time
+                      ? [timeOffPeriodLabel(item.start_time, item.end_time), `${formatTime(item.start_time)} – ${formatTime(item.end_time)}`]
+                          .filter(Boolean)
+                          .join(' · ')
+                      : 'Cả ngày'}
                   </td>
                   <td>{item.reason ?? '—'}</td>
                   <td>
@@ -120,5 +139,25 @@ export const TimeOffList = ({
         </div>
       )}
     </Panel>
+  );
+};
+
+/** Kết quả vừa báo nghỉ: bao nhiêu lịch hệ thống đã tự dời, bao nhiêu còn chờ quầy. */
+export const TimeOffOutcome = ({ result, pendingText }: { result: TimeOff | null; pendingText: string }) => {
+  if (!result) {
+    return null;
+  }
+  const moved = result.rescheduled_appointments ?? [];
+  const toOtherDoctor = moved.filter((appointment) => appointment.doctor_id !== result.doctor_id).length;
+  const left = result.affected_appointments.length;
+  if (moved.length === 0 && left === 0) {
+    return null;
+  }
+  return (
+    <Alert tone={left > 0 ? 'warning' : 'success'} className="st-alert-gap">
+      {moved.length > 0 &&
+        `Đã tự dời ${toOtherDoctor} lịch sang bác sĩ khác và ${moved.length - toOtherDoctor} lịch sang ca khác. Bệnh nhân đã được báo kèm lời xin lỗi và giảm giá đền bù. `}
+      {left > 0 && `Còn ${left} lịch chưa tìm được chỗ trống. ${pendingText}`}
+    </Alert>
   );
 };

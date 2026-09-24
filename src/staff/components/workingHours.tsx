@@ -6,7 +6,7 @@ import type { AppointmentListItem } from '../../api/types';
 import type { DoctorSchedule, DoctorSchedulePayload } from '../../api/staffTypes';
 import { useAction, useApiQuery } from '../hooks';
 import { formatDate, formatTime, toApiTime } from '../format';
-import { CONSULTATION_MODE_LABEL, DAY_OF_WEEK_LABEL, textOf } from '../labels';
+import { CONSULTATION_MODE_LABEL, DAY_OF_WEEK_LABEL, STANDARD_SHIFTS, textOf } from '../labels';
 import { useToast } from './toastContext';
 import { Alert, Button, ConfirmDialog, EmptyState, Field, Panel, Sheet, TableSkeleton } from './ui';
 
@@ -44,14 +44,6 @@ const toForm = (row: DoctorSchedule): FormValue => ({
   max_patients: String(row.max_patients),
   is_active: row.is_active,
 });
-
-/** 4 ca chuẩn của phòng khám: 2 ca sáng, 2 ca chiều, mỗi ca 2 tiếng. */
-const STANDARD_SHIFTS = [
-  { label: 'Ca sáng 1', start_time: '07:30', end_time: '09:30' },
-  { label: 'Ca sáng 2', start_time: '09:30', end_time: '11:30' },
-  { label: 'Ca chiều 1', start_time: '13:30', end_time: '15:30' },
-  { label: 'Ca chiều 2', start_time: '15:30', end_time: '17:30' },
-];
 
 const MIN_SHIFT_MINUTES = 30;
 const MAX_SHIFT_MINUTES = 480;

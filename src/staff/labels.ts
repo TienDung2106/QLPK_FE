@@ -170,6 +170,14 @@ export const PATIENT_CREATED_VIA_LABEL: Record<string, string> = {
   admin_created: 'Tạo tại quầy',
 };
 
+/** 4 ca chuẩn của phòng khám: 2 ca sáng, 2 ca chiều, mỗi ca 2 tiếng. */
+export const STANDARD_SHIFTS = [
+  { label: 'Ca sáng 1', start_time: '07:30', end_time: '09:30' },
+  { label: 'Ca sáng 2', start_time: '09:30', end_time: '11:30' },
+  { label: 'Ca chiều 1', start_time: '13:30', end_time: '15:30' },
+  { label: 'Ca chiều 2', start_time: '15:30', end_time: '17:30' },
+];
+
 /** doctor_schedules.day_of_week: 1 = Thứ Hai … 7 = Chủ nhật (ISO-8601). */
 export const DAY_OF_WEEK_LABEL: Record<number, string> = {
   1: 'Thứ Hai',
