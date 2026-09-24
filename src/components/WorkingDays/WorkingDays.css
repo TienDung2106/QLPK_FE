@@ -1,12 +1,39 @@
 .working-days {
   display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.working-days-row {
+  display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.35rem 0.6rem;
+  gap: 0.3rem 0.5rem;
+}
+
+.working-days-session {
+  min-width: 3.4rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.working-days-session.sang {
+  color: #b45309;
+}
+
+.working-days-session.chieu {
+  color: #4338ca;
+}
+
+.working-days-session.ca-ngay {
+  color: #0f766e;
 }
 
 .working-days-pills {
   display: flex;
+  flex-wrap: wrap;
   gap: 3px;
 }
 
@@ -17,7 +44,6 @@
   min-width: 24px;
   height: 20px;
   padding: 0 3px;
-  border: 1px solid transparent;
   border-radius: 5px;
   font-size: 0.66rem;
   font-weight: 700;
@@ -25,18 +51,23 @@
   cursor: default;
 }
 
-.working-day.main {
-  background: var(--primary, #1877f2);
-  color: #fff;
+.working-day.sang {
+  background: #fef3c7;
+  color: #92400e;
 }
 
-.working-day.other {
-  border-color: var(--primary, #1877f2);
-  background: var(--primary-light, #eff6ff);
-  color: var(--primary, #1877f2);
+.working-day.chieu {
+  background: #e0e7ff;
+  color: #3730a3;
+}
+
+.working-day.ca-ngay {
+  background: #ccfbf1;
+  color: #115e59;
 }
 
 .working-days-hours {
+  min-width: 5.6rem;
   font-size: 0.78rem;
   font-weight: 600;
   color: #475569;

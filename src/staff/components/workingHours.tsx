@@ -115,12 +115,15 @@ export const WorkingHoursEditor = ({
   scopeKey,
   affectedLinkBase,
   intro,
+  onChanged,
 }: {
   api: WorkingHoursApi;
   /** Đổi khi đổi bác sĩ để tải lại. */
   scopeKey: string | number;
   affectedLinkBase?: string;
   intro?: string;
+  /** Gọi sau mỗi lần thêm/sửa/tắt ca thành công, để màn cha tải lại dữ liệu phụ thuộc. */
+  onChanged?: () => void;
 }) => {
   const toast = useToast();
   const { run, isPending } = useAction();
@@ -156,6 +159,7 @@ export const WorkingHoursEditor = ({
     setLastSaved(result);
     toast.success(message);
     query.reload();
+    onChanged?.();
   };
 
   const save = async () => {
@@ -213,6 +217,7 @@ export const WorkingHoursEditor = ({
     if (created.length > 0) {
       toast.success(`Đã tạo ${created.length} ca cho ${DAY_OF_WEEK_LABEL[Number(form.day_of_week)]?.toLowerCase() ?? 'ngày này'}.`);
       query.reload();
+      onChanged?.();
     }
   };
 

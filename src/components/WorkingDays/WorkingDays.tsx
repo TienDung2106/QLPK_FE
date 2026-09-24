@@ -1,39 +1,34 @@
 import type { DoctorWorkingHours } from '../../api/types';
-import { summarizeWorkingHours } from '../../utils/workingHours';
+import { DAY_SHORT, SESSION_LABEL, groupWorkingHours } from '../../utils/workingHours';
 import './WorkingDays.css';
 
-/**
- * Tuần làm việc gọn: 7 ô thứ và khung giờ chính. Ô đậm là ngày làm đúng khung chính, ô viền là ngày
- * làm giờ khác (rê chuột xem giờ). Ngày nghỉ không hiện.
- */
+/** Tuần làm việc theo buổi, mỗi buổi một dòng: "Sáng 07:30–11:30 · T2 T4 T6". Ngày nghỉ không hiện. */
 export const WorkingDays = ({ rows }: { rows: DoctorWorkingHours[] }) => {
-  const { days, mainHours } = summarizeWorkingHours(rows);
+  const groups = groupWorkingHours(rows);
 
-  if (!mainHours) {
+  if (groups.length === 0) {
     return <span className="working-days-empty">Chưa có lịch làm việc</span>;
   }
 
-  const summary = days
-    .filter((day) => day.hours !== null)
-    .map((day) => `${day.label}: ${day.hours}`)
+  const summary = groups
+    .map((group) => `${SESSION_LABEL[group.session]} ${group.hours}: ${group.days.map((day) => DAY_SHORT[day]).join(', ')}`)
     .join('; ');
 
   return (
     <div className="working-days" role="img" aria-label={`Lịch làm việc — ${summary}`}>
-      <div className="working-days-pills" aria-hidden="true">
-        {days
-          .filter((day) => day.hours !== null)
-          .map((day) => (
-            <span
-              key={day.day}
-              className={`working-day ${day.isMain ? 'main' : 'other'}`}
-              title={`${day.label}: ${day.hours}`}
-            >
-              {day.label}
-            </span>
-          ))}
-      </div>
-      <span className="working-days-hours">{mainHours}</span>
+      {groups.map((group) => (
+        <div key={`${group.session}|${group.hours}`} className="working-days-row" aria-hidden="true">
+          <span className={`working-days-session ${group.session}`}>{SESSION_LABEL[group.session]}</span>
+          <span className="working-days-hours">{group.hours}</span>
+          <span className="working-days-pills">
+            {group.days.map((day) => (
+              <span key={day} className={`working-day ${group.session}`}>
+                {DAY_SHORT[day]}
+              </span>
+            ))}
+          </span>
+        </div>
+      ))}
     </div>
   );
 };
