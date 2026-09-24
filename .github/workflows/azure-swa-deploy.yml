@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # Deploy token là thứ duy nhất workflow này cần. Thiếu nó thì action bên dưới đổ một
       # lỗi khó đọc về "deployment_token was not provided"; nói thẳng ra ở đây thay vì để
