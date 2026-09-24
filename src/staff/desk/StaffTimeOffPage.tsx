@@ -1,41 +1,39 @@
 import { useState } from 'react';
 import { CalendarOff } from 'lucide-react';
-import { apiGetOwnTimeOff, apiReportOwnTimeOff, apiWithdrawOwnTimeOff } from '../../api/functions/doctorWork';
-import type { TimeOff, TimeOffPayload } from '../../api/staffTypes';
+import { apiGetOwnStaffTimeOff, apiReportOwnStaffTimeOff, apiWithdrawOwnStaffTimeOff } from '../../api/functions/desk';
+import type { StaffTimeOff } from '../../api/staffTypes';
 import { useAction, useApiQuery } from '../hooks';
 import { formatDate, todayIso } from '../format';
 import { useToast } from '../components/toastContext';
-import { Button, ConfirmDialog, PageHeader, Sheet, Alert } from '../components/ui';
-import { TimeOffForm, TimeOffList, TimeOffOutcome } from '../components/timeOff';
+import { Alert, Button, ConfirmDialog, PageHeader, Sheet } from '../components/ui';
+import { TimeOffForm, TimeOffList } from '../components/timeOff';
 import { emptyTimeOff, timeOffPayload } from '../components/timeOffForm';
 import type { TimeOffFormValue } from '../components/timeOffForm';
 
-/** Bác sĩ tự báo nghỉ; hệ thống trả về các lịch hẹn bị ảnh hưởng để quầy dời lịch. */
-const DoctorTimeOffPage = () => {
+/** Lễ tân tự báo nghỉ; chỉ ghi nhận, không động tới lịch hẹn. */
+const StaffTimeOffPage = () => {
   const toast = useToast();
   const { run, isPending } = useAction();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<TimeOffFormValue>(emptyTimeOff);
   const [error, setError] = useState<string | null>(null);
-  const [lastReported, setLastReported] = useState<TimeOff | null>(null);
-  const [withdrawing, setWithdrawing] = useState<TimeOff | null>(null);
+  const [withdrawing, setWithdrawing] = useState<StaffTimeOff | null>(null);
 
-  const query = useApiQuery(() => apiGetOwnTimeOff({ from_date: todayIso(-30), to_date: todayIso(180) }), []);
+  const query = useApiQuery(() => apiGetOwnStaffTimeOff({ from_date: todayIso(-30), to_date: todayIso(180) }), []);
 
   const submit = async () => {
-    const payload: TimeOffPayload | string = timeOffPayload(form);
+    const payload = timeOffPayload(form);
     if (typeof payload === 'string') {
       setError(payload);
       return;
     }
-    const result = await run('save', () => apiReportOwnTimeOff(payload));
-    if (!result.ok || !result.data) {
+    const result = await run('save', () => apiReportOwnStaffTimeOff(payload));
+    if (!result.ok) {
       setError(result.error);
       return;
     }
     setOpen(false);
     setForm(emptyTimeOff);
-    setLastReported(result.data);
     toast.success('Đã báo nghỉ.');
     query.reload();
   };
@@ -44,13 +42,13 @@ const DoctorTimeOffPage = () => {
     if (!withdrawing) {
       return;
     }
-    const result = await run('withdraw', () => apiWithdrawOwnTimeOff(withdrawing.doctor_time_off_id));
+    const result = await run('withdraw', () => apiWithdrawOwnStaffTimeOff(withdrawing.staff_time_off_id));
     setWithdrawing(null);
     if (!result.ok) {
       toast.error(result.error);
       return;
     }
-    toast.success('Đã rút lại ngày nghỉ. Khung giờ mở nhận lịch trở lại.');
+    toast.success('Đã rút lại ngày nghỉ.');
     query.reload();
   };
 
@@ -58,7 +56,7 @@ const DoctorTimeOffPage = () => {
     <>
       <PageHeader
         title="Báo nghỉ"
-        description="Báo nghỉ cả ngày, một buổi hoặc một ca. Lịch hẹn trong ca nghỉ được tự chuyển sang bác sĩ khác hoặc ca trống kế tiếp."
+        description="Báo nghỉ cả ngày, một buổi hoặc một ca."
         actions={
           <Button
             variant="primary"
@@ -73,9 +71,12 @@ const DoctorTimeOffPage = () => {
         }
       />
 
-      <TimeOffOutcome result={lastReported} pendingText="Quầy lễ tân sẽ liên hệ bệnh nhân để dời lịch." />
-
-      <TimeOffList query={query} rowKey={(item) => item.doctor_time_off_id} onWithdraw={setWithdrawing} emptyText="Bạn chưa báo nghỉ ngày nào trong khoảng 30 ngày trước đến 6 tháng tới." />
+      <TimeOffList
+        query={query}
+        rowKey={(item) => item.staff_time_off_id}
+        onWithdraw={setWithdrawing}
+        emptyText="Bạn chưa báo nghỉ ngày nào trong khoảng 30 ngày trước đến 6 tháng tới."
+      />
 
       <Sheet
         open={open}
@@ -98,7 +99,7 @@ const DoctorTimeOffPage = () => {
       <ConfirmDialog
         open={withdrawing !== null}
         title="Rút lại ngày nghỉ?"
-        text={withdrawing ? `Ngày ${formatDate(withdrawing.off_date)} sẽ mở nhận đặt lịch trở lại.` : undefined}
+        text={withdrawing ? `Bỏ ngày nghỉ ${formatDate(withdrawing.off_date)}.` : undefined}
         confirmLabel="Rút lại"
         loading={isPending('withdraw')}
         onConfirm={withdraw}
@@ -108,4 +109,4 @@ const DoctorTimeOffPage = () => {
   );
 };
 
-export default DoctorTimeOffPage;
+export default StaffTimeOffPage;

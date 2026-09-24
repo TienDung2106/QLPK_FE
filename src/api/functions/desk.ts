@@ -18,6 +18,7 @@ import type {
   PostponePayload,
   RegisterDeskPatientPayload,
   StaffAppointment,
+  StaffTimeOff,
   TimeOff,
   TimeOffPayload,
   TimeOffQuery,
@@ -100,8 +101,17 @@ export const apiGetDoctorTimeOff = (doctorId: number, query: TimeOffQuery = {}) 
 export const apiRecordDoctorTimeOff = (doctorId: number, payload: TimeOffPayload) =>
   PostData<TimeOff>(url.staffDoctorTimeOff(doctorId), payload);
 
+/** Chỉ admin (doctor_schedules.manage); lễ tân ghi hộ được nhưng không rút được. */
 export const apiWithdrawDoctorTimeOff = (doctorId: number, timeOffId: number) =>
   DeleteData<void>(url.staffDoctorTimeOffById(doctorId, timeOffId));
+
+/* Lễ tân tự báo nghỉ — staff_time_off.report_own */
+
+export const apiGetOwnStaffTimeOff = (query: TimeOffQuery = {}) => GetData<StaffTimeOff[]>(url.staffTimeOff, query);
+
+export const apiReportOwnStaffTimeOff = (payload: TimeOffPayload) => PostData<StaffTimeOff>(url.staffTimeOff, payload);
+
+export const apiWithdrawOwnStaffTimeOff = (timeOffId: number) => DeleteData<void>(url.staffTimeOffById(timeOffId));
 
 /** Mã khuyến mãi đang áp dụng được hôm nay — discount.apply_within_threshold. */
 export const apiSearchStaffPromotions = (query: { search?: string } & PageQuery = {}) =>

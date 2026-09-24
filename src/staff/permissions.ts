@@ -13,6 +13,7 @@ export const PERMISSION = {
   ReportsView: 'reports.view',
   PatientsManage: 'patients.manage',
   DoctorTimeOffReportOwn: 'doctor_time_off.report_own',
+  StaffTimeOffReportOwn: 'staff_time_off.report_own',
   DoctorSchedulesManage: 'doctor_schedules.manage',
   DoctorSchedulesManageOwn: 'doctor_schedules.manage_own',
   AppointmentsConfirmOwn: 'appointments.confirm_own',

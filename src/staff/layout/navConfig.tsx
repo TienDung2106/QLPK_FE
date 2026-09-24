@@ -69,6 +69,7 @@ export const NAV_SECTIONS: NavSection[] = [
       { to: '/thu-ngan/dat-lich', label: 'Đặt lịch / Vãng lai', icon: <CalendarPlus size={ICON} />, permission: PERMISSION.AppointmentsManage },
       { to: '/thu-ngan/benh-nhan', label: 'Bệnh nhân', icon: <Users size={ICON} />, permission: PERMISSION.PatientsManage },
       { to: '/thu-ngan/lich-nghi', label: 'Lịch nghỉ bác sĩ', icon: <CalendarClock size={ICON} />, permission: PERMISSION.AppointmentsManage },
+      { to: '/thu-ngan/bao-nghi', label: 'Báo nghỉ', icon: <CalendarOff size={ICON} />, permission: PERMISSION.StaffTimeOffReportOwn },
     ],
   },
 ];

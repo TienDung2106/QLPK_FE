@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { CalendarOff } from 'lucide-react';
 import { apiGetDoctorTimeOff, apiRecordDoctorTimeOff, apiWithdrawDoctorTimeOff } from '../../api/functions/desk';
 import type { TimeOff } from '../../api/staffTypes';
+import useAuth from '../../hooks/useAuth';
+import { PERMISSION } from '../permissions';
 import { useAction, useApiQuery } from '../hooks';
 import { formatDate, todayIso } from '../format';
 import { useToast } from '../components/toastContext';
@@ -14,6 +16,7 @@ import { Alert, Button, ConfirmDialog, EmptyState, PageHeader, Panel, Sheet } fr
 /** Quầy ghi nhận bác sĩ nghỉ thay bác sĩ, rồi dời các lịch hẹn bị ảnh hưởng. */
 const DoctorTimeOffDeskPage = () => {
   const toast = useToast();
+  const { hasPermission } = useAuth();
   const { run, isPending } = useAction();
   const [doctorId, setDoctorId] = useState<number | null>(null);
   const [open, setOpen] = useState(false);
@@ -87,7 +90,12 @@ const DoctorTimeOffDeskPage = () => {
       <TimeOffOutcome result={recorded} pendingText="Mở từng lịch hẹn trong bảng bên dưới để dời sang giờ khác." />
 
       {doctorId ? (
-        <TimeOffList query={query} onWithdraw={setWithdrawing} appointmentLinkBase="/thu-ngan/lich-hen" emptyText="Bác sĩ chưa có ngày nghỉ nào từ 30 ngày trước đến 6 tháng tới." />
+        <TimeOffList
+          query={query}
+          rowKey={(item) => item.doctor_time_off_id}
+          // lễ tân chỉ ghi hộ; rút lại là việc của bác sĩ hoặc admin
+          onWithdraw={hasPermission(PERMISSION.DoctorSchedulesManage) ? setWithdrawing : undefined}
+          appointmentLinkBase="/thu-ngan/lich-hen" emptyText="Bác sĩ chưa có ngày nghỉ nào từ 30 ngày trước đến 6 tháng tới." />
       ) : (
         <Panel>
           <EmptyState title="Chọn một bác sĩ" text="Chọn bác sĩ ở trên để xem và ghi nhận lịch nghỉ." />

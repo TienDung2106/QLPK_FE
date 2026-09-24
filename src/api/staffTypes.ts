@@ -102,6 +102,16 @@ export interface TimeOff {
   rescheduled_appointments?: AppointmentListItem[];
 }
 
+/** Ngày nghỉ lễ tân tự báo; không gắn ca khám nên không có lịch hẹn bị ảnh hưởng. */
+export interface StaffTimeOff {
+  staff_time_off_id: number;
+  off_date: string;
+  start_time: string | null;
+  end_time: string | null;
+  reason: string | null;
+  created_at: string;
+}
+
 export interface TimeOffQuery {
   from_date?: string;
   to_date?: string;

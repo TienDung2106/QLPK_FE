@@ -100,6 +100,8 @@ const url = {
   staffCheckIn: `${root}/staff/appointments/check-in`,
   staffDoctorTimeOff: (doctorId: number) => `${root}/staff/doctors/${doctorId}/time-off`,
   staffDoctorTimeOffById: (doctorId: number, timeOffId: number) => `${root}/staff/doctors/${doctorId}/time-off/${timeOffId}`,
+  staffTimeOff: `${root}/staff/time-off`,
+  staffTimeOffById: (timeOffId: number) => `${root}/staff/time-off/${timeOffId}`,
   staffDoctors: `${root}/staff/doctors`,
   staffDoctorAlternatives: `${root}/staff/doctors/alternatives`,
   staffDoctorSlots: (doctorId: number) => `${root}/staff/doctors/${doctorId}/available-slots`,

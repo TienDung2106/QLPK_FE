@@ -46,21 +46,27 @@ export const TimeOffForm = ({ value, onChange }: { value: TimeOffFormValue; onCh
   </div>
 );
 
-export const TimeOffList = ({
+/** Dòng nghỉ tối thiểu: của bác sĩ (có lịch hẹn bị ảnh hưởng) hoặc của lễ tân (không có). */
+type TimeOffRow = Pick<TimeOff, 'off_date' | 'start_time' | 'end_time' | 'reason' | 'created_at'> & Partial<Pick<TimeOff, 'affected_appointments'>>;
+
+export const TimeOffList = <T extends TimeOffRow>({
   query,
+  rowKey,
   emptyText,
   appointmentLinkBase,
   onWithdraw,
 }: {
-  query: QueryState<TimeOff[]>;
+  query: QueryState<T[]>;
+  rowKey: (item: T) => number;
   emptyText: string;
   /** Có thì lịch hẹn bị ảnh hưởng thành liên kết (khu quầy). */
   appointmentLinkBase?: string;
   /** Có thì hiện nút "Rút lại" cho ngày nghỉ chưa tới. */
-  onWithdraw?: (item: TimeOff) => void;
+  onWithdraw?: (item: T) => void;
 }) => {
   const today = todayIso();
   const items = [...(query.data ?? [])].sort((a, b) => b.off_date.localeCompare(a.off_date));
+  const showAffected = items.some((item) => item.affected_appointments);
 
   return (
     <Panel title="Các lần nghỉ" subtitle="Mới nhất trước" bodyless>
@@ -85,14 +91,14 @@ export const TimeOffList = ({
                 <th>Ngày nghỉ</th>
                 <th>Khung giờ</th>
                 <th>Lý do</th>
-                <th>Lịch hẹn bị ảnh hưởng</th>
+                {showAffected && <th>Lịch hẹn bị ảnh hưởng</th>}
                 <th>Ghi nhận lúc</th>
                 {onWithdraw && <th />}
               </tr>
             </thead>
             <tbody>
               {items.map((item) => (
-                <tr key={item.doctor_time_off_id}>
+                <tr key={rowKey(item)}>
                   <td className="st-strong st-nowrap">{formatDate(item.off_date)}</td>
                   <td className="st-nowrap">
                     {item.start_time && item.end_time
@@ -102,8 +108,8 @@ export const TimeOffList = ({
                       : 'Cả ngày'}
                   </td>
                   <td>{item.reason ?? '—'}</td>
-                  <td>
-                    {item.affected_appointments.length === 0 ? (
+                  {showAffected && <td>
+                    {!item.affected_appointments?.length ? (
                       <span className="st-muted">Không có</span>
                     ) : (
                       item.affected_appointments.map((appointment) => (
@@ -121,7 +127,7 @@ export const TimeOffList = ({
                         </div>
                       ))
                     )}
-                  </td>
+                  </td>}
                   <td className="st-nowrap st-muted">{formatDateTime(item.created_at)}</td>
                   {onWithdraw && (
                     <td className="st-num">

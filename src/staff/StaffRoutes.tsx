@@ -36,6 +36,7 @@ const DeskBookingPage = lazy(() => import('./desk/DeskBookingPage'));
 const PatientsPage = lazy(() => import('./desk/PatientsPage'));
 const PatientDetailPage = lazy(() => import('./desk/PatientDetailPage'));
 const DoctorTimeOffDeskPage = lazy(() => import('./desk/DoctorTimeOffDeskPage'));
+const StaffTimeOffPage = lazy(() => import('./desk/StaffTimeOffPage'));
 
 /** Chờ tải một trang con: chỉ vùng nội dung, sidebar vẫn đứng yên. */
 const PageLoading = () => (
@@ -96,6 +97,7 @@ export function staffRoutes() {
       <Route path="/thu-ngan/benh-nhan" element={guard([P.PatientsManage], <PatientsPage />)} />
       <Route path="/thu-ngan/benh-nhan/:patientId" element={guard([P.PatientsManage], <PatientDetailPage />)} />
       <Route path="/thu-ngan/lich-nghi" element={guard([P.AppointmentsManage], <DoctorTimeOffDeskPage />)} />
+      <Route path="/thu-ngan/bao-nghi" element={guard([P.StaffTimeOffReportOwn], <StaffTimeOffPage />)} />
 
     </Route>
   );
