@@ -56,5 +56,7 @@ export interface BookingState {
   /** Theo thứ tự tick; dịch vụ đầu tiên là dịch vụ chính của lượt khám. */
   selectedServices: SelectedService[];
   reasonForVisit: string;
+  /** Ảnh vùng da, gửi lên ngay sau khi đặt lịch thành công. */
+  attachments: File[];
   patientInfo: PatientInfo;
 }

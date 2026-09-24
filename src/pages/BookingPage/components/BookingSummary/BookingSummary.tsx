@@ -54,7 +54,7 @@ export const BookingSummary: React.FC<BookingSummaryProps> = ({
             {selectedServices.map((service) => (
               <div className="payment-row" key={service.serviceId}>
                 <span>{service.name}</span>
-                <span className="payment-amount">{formatVND(service.price)}</span>
+                <span className="payment-amount">{service.price === 0 ? 'Miễn phí' : formatVND(service.price)}</span>
               </div>
             ))}
             <div className="payment-row">

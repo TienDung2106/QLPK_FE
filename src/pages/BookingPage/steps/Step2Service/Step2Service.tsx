@@ -423,7 +423,7 @@ export const Step2Service: React.FC<Step2ServiceProps> = ({
                       <Clock size={13} />
                       <span>{service.duration_minutes} phút</span>
                     </div>
-                    <span className="service-price">{formatCurrency(service.price)}</span>
+                    <span className="service-price">{service.price === 0 ? 'Miễn phí' : formatCurrency(service.price)}</span>
                   </div>
                 </div>
               );

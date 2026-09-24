@@ -1,6 +1,6 @@
-import { DeleteData, GetData, PostData, PutData } from '../helpers';
+import { DeleteData, GetBlob, GetData, PostData, PutData } from '../helpers';
 import url from '../url';
-import type { Appointment, AppointmentListItem, PagedResponse } from '../types';
+import type { Appointment, AppointmentAttachment, AppointmentListItem, PagedResponse } from '../types';
 import type {
   AppointmentQuery,
   DoctorDashboard,
@@ -74,3 +74,10 @@ export const apiReportOwnTimeOff = (payload: TimeOffPayload) => PostData<TimeOff
 
 /** Chỉ rút được ngày nghỉ chưa tới; slot mở lại ngay. */
 export const apiWithdrawOwnTimeOff = (timeOffId: number) => DeleteData<void>(url.doctorTimeOffById(timeOffId));
+
+/** Ảnh bệnh nhân gửi kèm lịch hẹn của chính bác sĩ. */
+export const apiGetDoctorAttachments = (appointmentId: number) =>
+  GetData<AppointmentAttachment[]>(url.doctorAppointmentAttachments(appointmentId));
+
+export const apiGetDoctorAttachmentContent = (appointmentId: number, attachmentId: number) =>
+  GetBlob(url.doctorAttachmentContent(appointmentId, attachmentId));

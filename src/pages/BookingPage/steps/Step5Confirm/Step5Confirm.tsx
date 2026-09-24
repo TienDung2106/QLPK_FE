@@ -19,6 +19,7 @@ interface Step5ConfirmProps {
   quote: BookingQuote | null;
   patientInfo: PatientInfo;
   reasonForVisit: string;
+  photoCount: number;
   submitting: boolean;
   error: string | null;
   onPrevStep: () => void;
@@ -44,6 +45,7 @@ export const Step5Confirm: React.FC<Step5ConfirmProps> = ({
   quote,
   patientInfo,
   reasonForVisit,
+  photoCount,
   submitting,
   error,
   onPrevStep,
@@ -196,6 +198,12 @@ export const Step5Confirm: React.FC<Step5ConfirmProps> = ({
               <span className="info-row-label">Lý do khám</span>
               <span className="info-row-val">{reasonForVisit || 'Không có'}</span>
             </div>
+            {photoCount > 0 && (
+              <div className="step5-info-row">
+                <span className="info-row-label">Ảnh gửi kèm</span>
+                <span className="info-row-val">{photoCount} ảnh</span>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -211,7 +219,7 @@ export const Step5Confirm: React.FC<Step5ConfirmProps> = ({
               {selectedServices.map((service) => (
                 <div className="step5-pay-row" key={service.serviceId}>
                   <span>{service.name}</span>
-                  <span className="pay-val">{formatCurrency(service.price)}</span>
+                  <span className="pay-val">{service.price === 0 ? 'Miễn phí' : formatCurrency(service.price)}</span>
                 </div>
               ))}
               <div className="step5-pay-row">

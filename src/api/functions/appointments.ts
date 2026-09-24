@@ -1,6 +1,6 @@
 import { GetData, PostData, PostWithCaptcha } from '../helpers';
 import url from '../url';
-import type { Appointment, AppointmentListItem, PagedResponse } from '../types';
+import type { Appointment, AppointmentAttachment, AppointmentListItem, PagedResponse } from '../types';
 
 export interface AppointmentQuery {
   doctor_id?: number;
@@ -51,3 +51,12 @@ export const apiAcceptReschedule = (appointmentId: number) =>
 export const apiChooseRescheduleSlot = (appointmentId: number, newDate: string, newTime: string) =>
   PostData<Appointment>(url.patientAppointmentAction(appointmentId, 'choose-slot'), { new_date: newDate, new_time: newTime });
 
+
+/** Gửi ảnh vùng da kèm lịch hẹn vừa đặt (JPEG/PNG/WebP, tối đa 5 ảnh, mỗi ảnh 5 MB). */
+export const apiUploadAppointmentAttachments = (appointmentId: number, files: File[]) => {
+  const form = new FormData();
+  files.forEach((file) => form.append('files', file));
+  return PostData<AppointmentAttachment[]>(url.patientAppointmentAttachments(appointmentId), form, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+};

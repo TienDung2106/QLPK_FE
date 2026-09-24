@@ -8,6 +8,7 @@ import {
   CheckCircle2,
   ClipboardCheck,
   History,
+  Image as ImageIcon,
   Pill,
   Play,
   Plus,
@@ -17,6 +18,8 @@ import {
 import {
   apiCompleteExamination,
   apiDeletePrescription,
+  apiGetDoctorAttachmentContent,
+  apiGetDoctorAttachments,
   apiGetDoctorSchedule,
   apiGetMedicalRecord,
   apiGetPatientHistory,
@@ -26,7 +29,8 @@ import {
   apiStartExamination,
   apiWritePrescription,
 } from '../../api/functions/doctorWork';
-import type { AppointmentListItem } from '../../api/types';
+import { openFile } from '../../api/helpers';
+import type { AppointmentAttachment, AppointmentListItem } from '../../api/types';
 import type { MedicalRecord, MedicalRecordPayload, PrescribableMedicine, Prescription } from '../../api/staffTypes';
 import { useAction, useApiQuery, useDebounced } from '../hooks';
 import { formatDate, formatMoney, formatTime, nullIfBlank, todayIso } from '../format';
@@ -48,6 +52,73 @@ import {
   Steps,
   TableSkeleton,
 } from '../components/ui';
+
+/* ---------------------------------------------------------------- Visit reason */
+
+// Ảnh không public: tải kèm token thành blob rồi mới gắn vào <img>.
+function AttachmentThumb({ appointmentId, attachment }: { appointmentId: number; attachment: AppointmentAttachment }) {
+  const [src, setSrc] = useState<string | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    let objectUrl: string | null = null;
+    apiGetDoctorAttachmentContent(appointmentId, attachment.attachment_id).then((result) => {
+      if (alive && result.data) {
+        objectUrl = URL.createObjectURL(result.data.blob);
+        setSrc(objectUrl);
+      }
+    });
+    return () => {
+      alive = false;
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+      }
+    };
+  }, [appointmentId, attachment.attachment_id]);
+
+  const openFull = async () => {
+    const result = await apiGetDoctorAttachmentContent(appointmentId, attachment.attachment_id);
+    if (result.data) {
+      openFile(result.data, `anh-${attachment.attachment_id}`);
+    }
+  };
+
+  return (
+    <button type="button" className="st-photo-thumb" onClick={openFull} title="Xem ảnh gốc">
+      {src ? <img src={src} alt={attachment.body_area ?? 'Ảnh bệnh nhân gửi'} /> : <span className="st-skel" />}
+    </button>
+  );
+}
+
+function VisitReasonPanel({ appointmentId, reason }: { appointmentId: number; reason: string | null | undefined }) {
+  const attachments = useApiQuery(() => apiGetDoctorAttachments(appointmentId), [appointmentId]);
+  const photos = attachments.data ?? [];
+
+  return (
+    <Panel
+      title={
+        <span style={{ display: 'inline-flex', gap: '0.5rem', alignItems: 'center' }}>
+          <ImageIcon size={16} /> Lý do khám
+        </span>
+      }
+      subtitle="Bệnh nhân tự ghi lúc đặt lịch"
+    >
+      <div className="st-stack">
+        <p style={{ margin: 0, whiteSpace: 'pre-wrap' }} className={reason ? undefined : 'st-muted'}>
+          {reason || 'Bệnh nhân không ghi lý do.'}
+        </p>
+        {attachments.error && <Alert tone="danger">{attachments.error}</Alert>}
+        {photos.length > 0 && (
+          <div className="st-photo-grid">
+            {photos.map((attachment) => (
+              <AttachmentThumb key={attachment.attachment_id} appointmentId={appointmentId} attachment={attachment} />
+            ))}
+          </div>
+        )}
+      </div>
+    </Panel>
+  );
+}
 
 /* ---------------------------------------------------------------- Record form */
 
@@ -968,60 +1039,64 @@ const ExaminationPage = () => {
           )}
         </div>
 
-        <Panel
-          title={
-            <span
-              style={{
-                display: 'inline-flex',
-                gap: '0.5rem',
-                alignItems: 'center',
-              }}
-            >
-              <History size={16} /> Lịch sử khám
-            </span>
-          }
-          subtitle="Các lần khám trước của bệnh nhân với bạn"
-        >
-          {history.loading && !history.data ? (
-            <div className="st-stack">
-              <span className="st-skel" />
-              <span className="st-skel" style={{ width: '70%' }} />
-            </div>
-          ) : history.error ? (
-            <Alert tone="danger">{history.error}</Alert>
-          ) : (history.data?.items ?? []).filter((item) => item.appointment_id !== appointmentId).length === 0 ? (
-            <EmptyState title="Chưa có lần khám trước" text="Đây là lần đầu bệnh nhân khám với bạn." />
-          ) : (
-            <div className="st-stack" style={{ gap: '0.75rem' }}>
-              {(history.data?.items ?? [])
-                .filter((item) => item.appointment_id !== appointmentId)
-                .map((item) => (
-                  <details key={item.medical_record_id} className="st-panel" style={{ padding: '0.7rem 0.85rem' }}>
-                    <summary style={{ cursor: 'pointer' }}>
-                      <span className="st-cell-main">{item.diagnosis}</span>
-                      <span className="st-cell-sub"> · {formatDate(item.appointment_date)}</span>
-                    </summary>
-                    <dl className="st-dl" style={{ marginTop: '0.6rem' }}>
-                      <dt>Triệu chứng</dt>
-                      <dd>{item.symptoms ?? '—'}</dd>
-                      <dt>Thăm khám</dt>
-                      <dd>{item.examination_findings ?? '—'}</dd>
-                      <dt>ICD-10</dt>
-                      <dd>{item.icd10_code ?? '—'}</dd>
-                      <dt>Điều trị</dt>
-                      <dd>{item.treatment_plan ?? '—'}</dd>
-                      <dt>Thuốc</dt>
-                      <dd>
-                        {item.prescription?.items.length
-                          ? item.prescription.items.map((rx) => `${rx.medicine_name} ×${rx.quantity_prescribed}`).join(', ')
-                          : '—'}
-                      </dd>
-                    </dl>
-                  </details>
-                ))}
-            </div>
-          )}
-        </Panel>
+        <div className="st-stack">
+          <VisitReasonPanel appointmentId={appointmentId} reason={appointment?.reason_for_visit} />
+
+          <Panel
+            title={
+              <span
+                style={{
+                  display: 'inline-flex',
+                  gap: '0.5rem',
+                  alignItems: 'center',
+                }}
+              >
+                <History size={16} /> Lịch sử khám
+              </span>
+            }
+            subtitle="Các lần khám trước của bệnh nhân với bạn"
+          >
+            {history.loading && !history.data ? (
+              <div className="st-stack">
+                <span className="st-skel" />
+                <span className="st-skel" style={{ width: '70%' }} />
+              </div>
+            ) : history.error ? (
+              <Alert tone="danger">{history.error}</Alert>
+            ) : (history.data?.items ?? []).filter((item) => item.appointment_id !== appointmentId).length === 0 ? (
+              <EmptyState title="Chưa có lần khám trước" text="Đây là lần đầu bệnh nhân khám với bạn." />
+            ) : (
+              <div className="st-stack" style={{ gap: '0.75rem' }}>
+                {(history.data?.items ?? [])
+                  .filter((item) => item.appointment_id !== appointmentId)
+                  .map((item) => (
+                    <details key={item.medical_record_id} className="st-panel" style={{ padding: '0.7rem 0.85rem' }}>
+                      <summary style={{ cursor: 'pointer' }}>
+                        <span className="st-cell-main">{item.diagnosis}</span>
+                        <span className="st-cell-sub"> · {formatDate(item.appointment_date)}</span>
+                      </summary>
+                      <dl className="st-dl" style={{ marginTop: '0.6rem' }}>
+                        <dt>Triệu chứng</dt>
+                        <dd>{item.symptoms ?? '—'}</dd>
+                        <dt>Thăm khám</dt>
+                        <dd>{item.examination_findings ?? '—'}</dd>
+                        <dt>ICD-10</dt>
+                        <dd>{item.icd10_code ?? '—'}</dd>
+                        <dt>Điều trị</dt>
+                        <dd>{item.treatment_plan ?? '—'}</dd>
+                        <dt>Thuốc</dt>
+                        <dd>
+                          {item.prescription?.items.length
+                            ? item.prescription.items.map((rx) => `${rx.medicine_name} ×${rx.quantity_prescribed}`).join(', ')
+                            : '—'}
+                        </dd>
+                      </dl>
+                    </details>
+                  ))}
+              </div>
+            )}
+          </Panel>
+        </div>
       </div>
 
       <FollowUpSheet

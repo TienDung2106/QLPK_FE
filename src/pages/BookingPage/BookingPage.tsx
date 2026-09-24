@@ -11,7 +11,7 @@ import { Step2Service } from './steps/Step2Service';
 import { Step3DateTime } from './steps/Step3DateTime';
 import { Step4PatientInfo } from './steps/Step4PatientInfo';
 import { Step5Confirm } from './steps/Step5Confirm';
-import { apiBookAppointment } from '../../api/functions/appointments';
+import { apiBookAppointment, apiUploadAppointmentAttachments } from '../../api/functions/appointments';
 import { apiGetDoctorAlternatives } from '../../api/functions/doctors';
 import { apiGetBookingQuote } from '../../api/functions/services';
 import type { Appointment, BookingQuote, ClinicService, DoctorAvailability } from '../../api/types';
@@ -40,6 +40,7 @@ export const BookingPage: React.FC<BookingPageProps> = ({ onBackToHome }) => {
   const [booked, setBooked] = useState<Appointment | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [photoUploadError, setPhotoUploadError] = useState<string | null>(null);
   const [alternatives, setAlternatives] = useState<DoctorAvailability[]>([]);
   // Chỗ ở cột tóm tắt, dưới ô hỗ trợ, nơi bước 2–4 đặt nút Quay lại / Tiếp tục.
   const [actionsSlot, setActionsSlot] = useState<HTMLDivElement | null>(null);
@@ -52,6 +53,7 @@ export const BookingPage: React.FC<BookingPageProps> = ({ onBackToHome }) => {
     selectedShift: null,
     selectedServices: [],
     reasonForVisit: '',
+    attachments: [],
     patientInfo: EMPTY_PATIENT,
   });
 
@@ -189,6 +191,12 @@ export const BookingPage: React.FC<BookingPageProps> = ({ onBackToHome }) => {
       },
       captchaToken,
     );
+
+    // Ảnh chỉ gửi được khi đã có lịch hẹn; gửi lỗi thì lịch vẫn giữ nguyên, chỉ báo lại.
+    if (result.ok && result.data && state.attachments.length > 0) {
+      const upload = await apiUploadAppointmentAttachments(result.data.appointment_id, state.attachments);
+      setPhotoUploadError(upload.ok ? null : upload.error);
+    }
 
     setSubmitting(false);
 
@@ -339,6 +347,8 @@ export const BookingPage: React.FC<BookingPageProps> = ({ onBackToHome }) => {
                 onSelectPatient={handleSelectPatient}
                 onUpdatePatientInfo={handleUpdatePatientInfo}
                 onChangeReason={(reason) => setState((prev) => ({ ...prev, reasonForVisit: reason }))}
+                attachments={state.attachments}
+                onChangeAttachments={(files) => setState((prev) => ({ ...prev, attachments: files }))}
                 onPrevStep={() => goToStep(3)}
                 actionsSlot={actionsSlot}
                 onNextStep={() => goToStep(5)}
@@ -354,6 +364,7 @@ export const BookingPage: React.FC<BookingPageProps> = ({ onBackToHome }) => {
                 quote={quote}
                 patientInfo={state.patientInfo}
                 reasonForVisit={state.reasonForVisit}
+                photoCount={state.attachments.length}
                 submitting={submitting}
                 error={submitError}
                 onPrevStep={() => goToStep(4)}
@@ -438,6 +449,14 @@ export const BookingPage: React.FC<BookingPageProps> = ({ onBackToHome }) => {
                 <strong>Tổng tiền:</strong> {formatCurrency(booked.total_amount)}
                 {booked.discount_percent > 0 && ` (đã giảm ${booked.discount_percent.toLocaleString('vi-VN')}%)`}
               </div>
+              {state.attachments.length > 0 && (
+                <div>
+                  <strong>Ảnh gửi kèm:</strong>{' '}
+                  {photoUploadError
+                    ? `Chưa gửi được ảnh (${photoUploadError}). Lịch hẹn vẫn được giữ; bạn có thể đưa ảnh cho bác sĩ khi tới khám.`
+                    : `${state.attachments.length} ảnh`}
+                </div>
+              )}
             </div>
 
             <div className="modal-actions">

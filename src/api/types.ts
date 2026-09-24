@@ -204,8 +204,21 @@ export interface AppointmentListItem {
   check_in_deadline?: string | null;
   status: string;
   consultation_mode: string;
+  /** Bệnh nhân tự ghi lúc đặt lịch. */
+  reason_for_visit?: string | null;
   queue_number: number | null;
   discount_percent: number;
+  created_at: string;
+}
+
+/** Ảnh bệnh nhân gửi kèm lịch hẹn; nội dung đọc qua route .../content có token. */
+export interface AppointmentAttachment {
+  attachment_id: number;
+  appointment_id: number | null;
+  patient_id: number;
+  attachment_type: string;
+  body_area: string | null;
+  notes: string | null;
   created_at: string;
 }
 

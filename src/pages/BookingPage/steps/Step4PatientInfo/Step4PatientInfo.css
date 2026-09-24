@@ -288,3 +288,82 @@
   transform: none;
   box-shadow: none;
 }
+
+/* Ảnh vùng da gửi kèm lý do khám */
+.step4-photo-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.step4-photo-thumb,
+.step4-photo-add {
+  width: 76px;
+  height: 76px;
+  border-radius: 8px;
+}
+
+.step4-photo-thumb {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  background: var(--bg-subtle);
+}
+
+.step4-photo-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.step4-photo-remove {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 20px;
+  height: 20px;
+  border: none;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: rgba(15, 23, 42, 0.65);
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.step4-photo-add {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem;
+  border: 1px dashed #cbd5e1;
+  color: var(--primary, #1877f2);
+  font-size: 0.72rem;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.step4-photo-add:hover,
+.step4-photo-add:focus-within {
+  border-color: var(--primary, #1877f2);
+  background: #f0f7ff;
+}
+
+/* ẩn nhưng vẫn nhận Tab để chọn ảnh bằng bàn phím */
+.step4-photo-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.step4-photo-add {
+  position: relative;
+}
+
+.step4-photo-error {
+  color: #dc2626;
+}

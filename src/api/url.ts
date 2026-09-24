@@ -43,6 +43,7 @@ const url = {
   patientAppointments: `${root}/patient/appointments`,
   patientAppointmentById: (appointmentId: number) => `${root}/patient/appointments/${appointmentId}`,
   cancelAppointment: (appointmentId: number) => `${root}/patient/appointments/${appointmentId}/cancel`,
+  patientAppointmentAttachments: (appointmentId: number) => `${root}/patient/appointments/${appointmentId}/attachments`,
   patientAppointmentAction: (appointmentId: number, action: 'accept-reschedule' | 'choose-slot') =>
     `${root}/patient/appointments/${appointmentId}/${action}`,
   patientInvoices: `${root}/patient/invoices`,
@@ -97,6 +98,9 @@ const url = {
   doctorMedicalRecord: (appointmentId: number) => `${root}/doctor/appointments/${appointmentId}/medical-record`,
   doctorPrescription: (appointmentId: number) => `${root}/doctor/appointments/${appointmentId}/prescription`,
   doctorCompleteExamination: (appointmentId: number) => `${root}/doctor/appointments/${appointmentId}/complete`,
+  doctorAppointmentAttachments: (appointmentId: number) => `${root}/doctor/appointments/${appointmentId}/attachments`,
+  doctorAttachmentContent: (appointmentId: number, attachmentId: number) =>
+    `${root}/doctor/appointments/${appointmentId}/attachments/${attachmentId}/content`,
   doctorPatientHistory: (patientId: number) => `${root}/doctor/patients/${patientId}/medical-records`,
   doctorMedicines: `${root}/doctor/medicines`,
   doctorMedicineGroups: `${root}/doctor/medicines/groups`,

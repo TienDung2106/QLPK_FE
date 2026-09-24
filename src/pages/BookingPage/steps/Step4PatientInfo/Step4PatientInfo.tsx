@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { AlertCircle, ArrowLeft, ArrowRight, BarChart2, Loader2 } from 'lucide-react';
+import { AlertCircle, ArrowLeft, ArrowRight, BarChart2, ImagePlus, Loader2, X } from 'lucide-react';
 import type { PatientInfo } from '../../../../types/booking';
 import { apiGetMyProfiles } from '../../../../api/functions/patients';
 import type { PatientProfile } from '../../../../api/types';
@@ -14,6 +14,8 @@ interface Step4PatientInfoProps {
   onSelectPatient: (patientId: number, info: PatientInfo) => void;
   onUpdatePatientInfo: (info: Partial<PatientInfo>) => void;
   onChangeReason: (reason: string) => void;
+  attachments: File[];
+  onChangeAttachments: (files: File[]) => void;
   onPrevStep: () => void;
   /** Có thì nút Quay lại / Tiếp tục được đưa sang cột tóm tắt bên phải. */
   actionsSlot?: HTMLElement | null;
@@ -27,6 +29,32 @@ const RELATIONSHIP_LABEL: Record<string, string> = {
   spouse: 'Vợ / chồng',
   other: 'Người thân khác',
 };
+
+// Khớp giới hạn Attachments trong appsettings của API.
+const MAX_PHOTOS = 5;
+const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
+const PHOTO_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+
+/** Ảnh xem trước đọc thành data URL, không phải giữ rồi thu hồi object URL. */
+function PhotoThumb({ file, onRemove }: { file: File; onRemove: () => void }) {
+  const [src, setSrc] = useState<string | null>(null);
+
+  useEffect(() => {
+    const reader = new FileReader();
+    reader.onload = () => setSrc(String(reader.result));
+    reader.readAsDataURL(file);
+    return () => reader.abort();
+  }, [file]);
+
+  return (
+    <div className="step4-photo-thumb">
+      {src && <img src={src} alt={file.name} />}
+      <button type="button" className="step4-photo-remove" onClick={onRemove} aria-label={`Bỏ ảnh ${file.name}`}>
+        <X size={12} />
+      </button>
+    </div>
+  );
+}
 
 /** PatientProfile của API → phần thông tin biểu mẫu đặt lịch hiển thị. */
 function toPatientInfo(profile: PatientProfile): PatientInfo {
@@ -48,6 +76,8 @@ export const Step4PatientInfo: React.FC<Step4PatientInfoProps> = ({
   onSelectPatient,
   onUpdatePatientInfo,
   onChangeReason,
+  attachments,
+  onChangeAttachments,
   onPrevStep,
   actionsSlot,
   onNextStep,
@@ -55,6 +85,23 @@ export const Step4PatientInfo: React.FC<Step4PatientInfoProps> = ({
   const [profiles, setProfiles] = useState<PatientProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [photoError, setPhotoError] = useState<string | null>(null);
+
+  const handlePickPhotos = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const picked = Array.from(event.target.files ?? []);
+    event.target.value = '';
+    const valid = picked.filter((file) => PHOTO_TYPES.includes(file.type) && file.size <= MAX_PHOTO_BYTES);
+    const next = [...attachments, ...valid];
+
+    if (valid.length < picked.length) {
+      setPhotoError('Chỉ nhận ảnh JPEG, PNG hoặc WebP, mỗi ảnh tối đa 5 MB.');
+    } else if (next.length > MAX_PHOTOS) {
+      setPhotoError(`Chỉ gửi được tối đa ${MAX_PHOTOS} ảnh.`);
+    } else {
+      setPhotoError(null);
+    }
+    onChangeAttachments(next.slice(0, MAX_PHOTOS));
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -284,6 +331,29 @@ export const Step4PatientInfo: React.FC<Step4PatientInfoProps> = ({
             onChange={(event) => onChangeReason(event.target.value)}
             placeholder="Ví dụ: Mụn viêm vùng má hai bên khoảng 3 tháng nay, đã dùng thuốc bôi nhưng không đỡ."
           />
+        </div>
+
+        <div className="step4-form-group full-width">
+          <span className="step4-input-label font-normal">Ảnh vùng da cần khám (không bắt buộc)</span>
+          <div className="step4-photo-list">
+            {attachments.map((file, index) => (
+              <PhotoThumb
+                key={`${file.name}-${file.lastModified}-${index}`}
+                file={file}
+                onRemove={() => onChangeAttachments(attachments.filter((_, i) => i !== index))}
+              />
+            ))}
+            {attachments.length < MAX_PHOTOS && (
+              <label className="step4-photo-add">
+                <ImagePlus size={18} />
+                <span>Thêm ảnh</span>
+                <input type="file" accept={PHOTO_TYPES.join(',')} multiple onChange={handlePickPhotos} className="step4-photo-input" />
+              </label>
+            )}
+          </div>
+          <p className={photoError ? 'step4-field-hint step4-photo-error' : 'step4-field-hint'}>
+            {photoError ?? `Tối đa ${MAX_PHOTOS} ảnh JPEG/PNG/WebP, mỗi ảnh ≤ 5 MB. Chụp rõ, đủ sáng; chỉ bác sĩ khám cho bạn xem được.`}
+          </p>
         </div>
       </div>
 
