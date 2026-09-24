@@ -824,7 +824,12 @@ export interface DoctorSchedule {
   managed_by: number;
   created_at: string;
   updated_at: string;
+  /** Lịch rơi ra ngoài ca sau khi sửa/tắt mà hệ thống không tự dời được; quầy dời tay. */
   affected_appointments: AppointmentListItem[];
+  /** Lịch thay hệ thống đã tự dời khi sửa/tắt ca; chỉ có trong phản hồi ghi. */
+  rescheduled_appointments?: AppointmentListItem[];
+  /** Các ngày sắp tới ca đang có nhiều lịch hơn max_patients (vừa giảm trần); lịch cũ vẫn giữ. */
+  overbooked_dates?: string[];
 }
 
 export interface DoctorSchedulePayload {

@@ -143,7 +143,14 @@ export const TimeOffList = ({
 };
 
 /** Kết quả vừa báo nghỉ: bao nhiêu lịch hệ thống đã tự dời, bao nhiêu còn chờ quầy. */
-export const TimeOffOutcome = ({ result, pendingText }: { result: TimeOff | null; pendingText: string }) => {
+export const TimeOffOutcome = ({
+  result,
+  pendingText,
+}: {
+  /** Dùng chung cho báo nghỉ và sửa/tắt ca làm việc. */
+  result: Pick<TimeOff, 'doctor_id' | 'affected_appointments' | 'rescheduled_appointments'> | null;
+  pendingText: string;
+}) => {
   if (!result) {
     return null;
   }

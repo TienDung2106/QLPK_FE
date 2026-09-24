@@ -7,6 +7,7 @@ import type { DoctorSchedule, DoctorSchedulePayload } from '../../api/staffTypes
 import { useAction, useApiQuery } from '../hooks';
 import { formatDate, formatTime, toApiTime } from '../format';
 import { CONSULTATION_MODE_LABEL, DAY_OF_WEEK_LABEL, STANDARD_SHIFTS, textOf } from '../labels';
+import { TimeOffOutcome } from './timeOff';
 import { useToast } from './toastContext';
 import { Alert, Button, ConfirmDialog, EmptyState, Field, Panel, Sheet, TableSkeleton } from './ui';
 
@@ -78,7 +79,7 @@ function toPayload(form: FormValue): DoctorSchedulePayload | string {
   };
 }
 
-/** Các lịch hẹn nằm ngoài khung giờ mới — backend không tự huỷ, quầy phải dời. */
+/** Các lịch hẹn nằm ngoài khung giờ mới mà hệ thống không tự dời được — quầy phải dời. */
 export const AffectedAppointments = ({
   items,
   linkBase,
@@ -87,8 +88,8 @@ export const AffectedAppointments = ({
   linkBase?: string;
 }) => (
   <Alert tone="warning" className="st-alert-gap">
-    <strong>{items.length} lịch hẹn đã đặt nằm ngoài khung giờ mới.</strong> Không lịch nào bị huỷ tự động; quầy lễ tân cần dời
-    các lịch này.
+    <strong>{items.length} lịch hẹn nằm ngoài khung giờ mới và chưa tự dời được.</strong> Không lịch nào bị huỷ; quầy lễ tân cần
+    dời các lịch này.
     <ul style={{ margin: '0.4rem 0 0', paddingLeft: '1.1rem' }}>
       {items.map((item) => (
         <li key={item.appointment_id}>
@@ -128,7 +129,9 @@ export const WorkingHoursEditor = ({
   const [form, setForm] = useState<FormValue>(emptyForm);
   const [error, setError] = useState<string | null>(null);
   const [toggling, setToggling] = useState<DoctorSchedule | null>(null);
-  const [affected, setAffected] = useState<AppointmentListItem[]>([]);
+  const [lastSaved, setLastSaved] = useState<DoctorSchedule | null>(null);
+  const affected = lastSaved?.affected_appointments ?? [];
+  const overbooked = lastSaved?.overbooked_dates ?? [];
 
   const query = useApiQuery(() => api.list(showInactive), [scopeKey, showInactive]);
   const rows = [...(query.data ?? [])].sort(
@@ -150,7 +153,7 @@ export const WorkingHoursEditor = ({
   };
 
   const done = (result: DoctorSchedule, message: string) => {
-    setAffected(result.affected_appointments ?? []);
+    setLastSaved(result);
     toast.success(message);
     query.reload();
   };
@@ -237,7 +240,14 @@ export const WorkingHoursEditor = ({
 
   return (
     <>
+      <TimeOffOutcome result={lastSaved} pendingText="Xem danh sách bên dưới để dời sang giờ khác." />
       {affected.length > 0 && <AffectedAppointments items={affected} linkBase={affectedLinkBase} />}
+      {lastSaved && overbooked.length > 0 && (
+        <Alert tone="warning" className="st-alert-gap">
+          Ca này đang có nhiều hơn {lastSaved.max_patients} lịch vào các ngày: {overbooked.map((date) => formatDate(date)).join(', ')}. Các lịch đã
+          đặt vẫn giữ nguyên, ca sẽ không nhận thêm cho đến khi số lịch giảm xuống.
+        </Alert>
+      )}
 
       <Panel
         title="Ca làm việc trong tuần"
