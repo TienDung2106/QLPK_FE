@@ -23,6 +23,9 @@ const STATUS_TABS = [
   { value: 'no_show', label: 'Không đến' },
 ];
 
+// STT chỉ cấp lúc nhận phòng; lịch còn chờ đến thì báo rõ thay vì để trống
+const WAITING = ['pending', 'pending_approval', 'confirmed'];
+
 /** Bàn làm việc của quầy: nhận phòng bằng mã ngay đầu trang, lịch hẹn trong ngày bên dưới. */
 const DeskAppointmentsPage = () => {
   const navigate = useNavigate();
@@ -140,7 +143,7 @@ const DeskAppointmentsPage = () => {
           <table className="st-table">
             <thead>
               <tr>
-                <th>STT</th>
+                <th title="Cấp khi nhận phòng, theo thứ tự đến">STT</th>
                 <th>Ngày giờ</th>
                 <th>Bệnh nhân</th>
                 <th>Bác sĩ</th>
@@ -161,7 +164,7 @@ const DeskAppointmentsPage = () => {
               {items.map((item) => (
                 <tr key={item.appointment_id} className="st-row-link" onClick={() => navigate(`/thu-ngan/lich-hen/${item.appointment_id}`)}>
                   <td>
-                    <span className={`st-queue ${item.queue_number ? '' : 'empty'}`}>{item.queue_number ?? '—'}</span>
+                    <span className={`st-queue ${item.queue_number ? '' : 'empty'}`}>{item.queue_number ?? (WAITING.includes(item.status) ? 'Chưa nhận phòng' : '—')}</span>
                   </td>
                   <td className="st-nowrap">
                     <div className="st-cell-main">{formatTime(item.appointment_time)}</div>
