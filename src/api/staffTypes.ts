@@ -201,7 +201,6 @@ export interface StaffDoctor {
 
 export interface StaffDoctorPayload {
   specialty_id: number;
-  additional_specialty_ids: number[];
   license_number?: string | null;
   license_expiry_date?: string | null;
   employment_type: string;

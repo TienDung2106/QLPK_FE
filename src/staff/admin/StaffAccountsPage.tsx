@@ -39,7 +39,6 @@ interface Form {
   profile: Record<keyof StaffProfilePayload, string>;
   doctor: {
     specialty_id: string;
-    additional_specialty_ids: number[];
     license_number: string;
     license_expiry_date: string;
     employment_type: string;
@@ -72,7 +71,6 @@ const emptyForm = (): Form => ({
   },
   doctor: {
     specialty_id: '1',
-    additional_specialty_ids: [],
     license_number: '',
     license_expiry_date: '',
     employment_type: 'full_time',
@@ -112,7 +110,6 @@ const toForm = (account: StaffAccount): Form => {
     doctor: doctor
       ? {
           specialty_id: String(doctor.specialty_id),
-          additional_specialty_ids: doctor.specialties.map((s) => s.specialty_id).filter((id) => id !== doctor.specialty_id),
           license_number: doctor.license_number ?? '',
           license_expiry_date: doctor.license_expiry_date ?? '',
           employment_type: doctor.employment_type,
@@ -142,7 +139,6 @@ const profilePayload = (form: Form): StaffProfilePayload => ({
 
 const doctorPayload = (form: Form): StaffDoctorPayload => ({
   specialty_id: Number(form.doctor.specialty_id),
-  additional_specialty_ids: form.doctor.additional_specialty_ids,
   license_number: nullIfBlank(form.doctor.license_number),
   license_expiry_date: nullIfBlank(form.doctor.license_expiry_date),
   employment_type: form.doctor.employment_type,
@@ -495,22 +491,13 @@ const StaffAccountsPage = () => {
           <div className="st-form-section">
             <div className="st-form-section-title">Hồ sơ bác sĩ</div>
             <div className="st-form-grid st-form-grid-3">
-              <Field label="Chuyên khoa chính" required>
+              <Field label="Chuyên khoa" required>
                 {(id) => (
                   <select
                     id={id}
                     className="st-select"
                     value={form.doctor.specialty_id}
-                    onChange={(e) =>
-                      setForm({
-                        ...form,
-                        doctor: {
-                          ...form.doctor,
-                          specialty_id: e.target.value,
-                          additional_specialty_ids: form.doctor.additional_specialty_ids.filter((sid) => sid !== Number(e.target.value)),
-                        },
-                      })
-                    }
+                    onChange={(e) => setDoctor('specialty_id', e.target.value)}
                   >
                     {specialties.map((specialty) => (
                       <option key={specialty.id} value={specialty.id}>
@@ -520,28 +507,6 @@ const StaffAccountsPage = () => {
                   </select>
                 )}
               </Field>
-              <div className="st-field st-span-2">
-                <span className="st-label">Chuyên khoa phụ</span>
-                <div className="st-chip-row" style={{ minHeight: 36, alignItems: 'center' }}>
-                  {specialties.filter((s) => String(s.id) !== form.doctor.specialty_id).map((specialty) => (
-                    <label key={specialty.id} className="st-check">
-                      <input
-                        type="checkbox"
-                        checked={form.doctor.additional_specialty_ids.includes(specialty.id)}
-                        onChange={(e) =>
-                          setDoctor(
-                            'additional_specialty_ids',
-                            e.target.checked
-                              ? [...form.doctor.additional_specialty_ids, specialty.id]
-                              : form.doctor.additional_specialty_ids.filter((sid) => sid !== specialty.id),
-                          )
-                        }
-                      />
-                      {specialty.name}
-                    </label>
-                  ))}
-                </div>
-              </div>
               <Field label="Học vị">
                 {(id) => <input id={id} className="st-input" placeholder="ThS.BS" value={form.doctor.degree} onChange={(e) => setDoctor('degree', e.target.value)} />}
               </Field>
