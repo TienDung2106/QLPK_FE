@@ -231,8 +231,119 @@
   color: var(--primary);
 }
 
-.appointment-card.is-highlight {
-  background: var(--primary-light);
+/* Số lịch theo trạng thái ngay trên tiêu đề tháng. */
+.month-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-left: 0.4rem;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.month-count i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+
+.month-count strong {
+  color: #1e293b;
+}
+
+/* ---------- Sắp tới / Đã qua và tìm theo ngày ---------- */
+
+.appointment-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.6rem 1rem;
+  margin-bottom: 0.9rem;
+}
+
+.view-switch {
+  display: inline-flex;
+  padding: 3px;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+}
+
+.view-switch button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.9rem;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  font-family: inherit;
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.view-switch button span {
+  min-width: 1.3rem;
+  padding: 0 0.35rem;
+  border-radius: var(--radius-pill);
+  background: var(--bg-subtle);
+  font-size: 0.72rem;
+  line-height: 1.3rem;
+}
+
+.view-switch button[aria-selected='true'] {
+  background: var(--primary);
+  color: var(--text-white);
+}
+
+.view-switch button[aria-selected='true'] span {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.date-search {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.date-search .form-input {
+  width: auto;
+  height: 34px;
+  padding: 0 0.6rem;
+  font-size: 0.84rem;
+}
+
+.date-search button {
+  display: inline-flex;
+  padding: 0.3rem;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.date-search button:hover {
+  color: var(--danger);
+}
+
+.appointment-empty.compact {
+  padding: 2.5rem 1.5rem;
+}
+
+.overview-day.is-selected,
+.overview-day.is-selected:hover {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: var(--text-white);
 }
 
 /* ---------- Bố cục: lịch tổng quan bên trái, danh sách bên phải ---------- */
