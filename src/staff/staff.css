@@ -1419,11 +1419,178 @@ button.st-stat:hover {
 .st-cal-day:disabled { cursor: not-allowed; }
 .st-cal-day.active { outline: 2px solid var(--primary); outline-offset: 1px; }
 
+/* Lịch hẹn nhỏ ở cột phải quầy: ô càng đậm càng nhiều lịch, bấm ngày để lọc bảng. */
+.st-desk-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 1rem;
+  align-items: start;
+}
+
+.st-desk-layout > div > .st-panel + .st-panel {
+  margin-top: 1rem;
+}
+
+.st-desk-aside {
+  position: sticky;
+  top: 76px;
+}
+
+/* Trang quầy có cột lịch: cho lấn sang khoảng trống thay vì bóp bảng. */
+.st-content:has(.st-desk-layout) {
+  max-width: 1760px;
+}
+
+.st-appointment-calendar {
+  display: grid;
+  gap: 0.4rem;
+  padding: 0.75rem;
+}
+
+.st-calendar-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-bottom: 0.2rem;
+}
+
+.st-calendar-title {
+  flex: 1;
+  text-align: center;
+  font-size: 0.88rem;
+  color: var(--st-text);
+}
+
+.st-calendar-weekdays,
+.st-calendar-days {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 3px;
+}
+
+.st-calendar-weekdays {
+  text-align: center;
+  font-size: 0.66rem;
+  font-weight: 600;
+  color: var(--st-text-3);
+}
+
+.st-calendar-days[aria-busy='true'] {
+  opacity: 0.6;
+}
+
+.st-calendar-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  aspect-ratio: 1;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  font: inherit;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.st-calendar-day:hover {
+  filter: brightness(0.94);
+}
+
+.st-calendar-day:focus-visible {
+  outline: none;
+  box-shadow: var(--st-focus);
+}
+
+.st-calendar-day.is-today {
+  border-color: var(--st-danger);
+}
+
+.st-calendar-day.is-selected {
+  outline: 2px solid var(--st-text);
+  outline-offset: 1px;
+}
+
+.st-calendar-day-number {
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.st-calendar-day-count {
+  font-size: 0.6rem;
+  font-weight: 700;
+  opacity: 0.85;
+}
+
+/* Cùng tông xanh thương hiệu; mức 3–4 chữ trắng cho đủ tương phản. */
+.st-calendar-level-0 { background: var(--st-surface-sunken); color: var(--st-text-3); }
+.st-calendar-level-1 { background: #dbe8fd; color: var(--st-text); }
+.st-calendar-level-2 { background: #a9c8f7; color: var(--st-text); }
+.st-calendar-level-3 { background: #5b93e6; color: #fff; }
+.st-calendar-level-4 { background: var(--st-info); color: #fff; }
+
+.st-calendar-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.3rem;
+  margin-top: 0.2rem;
+  font-size: 0.72rem;
+  color: var(--st-text-3);
+}
+
+.st-calendar-footer strong {
+  color: var(--st-text);
+}
+
+.st-calendar-retry {
+  border: 0;
+  padding: 0;
+  background: none;
+  color: var(--primary);
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.st-calendar-legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.st-calendar-legend i {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+}
+
+.st-calendar-legend i:first-child {
+  margin-left: 2px;
+}
+
+.st-calendar-legend i:last-of-type {
+  margin-right: 2px;
+}
+
 /* ---------------------------------------------------------------- Responsive */
 
 @media (max-width: 1100px) {
   .st-grid-main {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .st-desk-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .st-desk-aside {
+    position: static;
+    order: -1;
+    width: 100%;
+    max-width: 360px;
   }
 }
 

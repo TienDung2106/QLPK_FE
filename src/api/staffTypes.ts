@@ -32,6 +32,17 @@ export interface AppointmentQuery extends PageQuery {
   search?: string;
 }
 
+export interface AppointmentDayCount {
+  date: string;
+  count: number;
+}
+
+export interface AppointmentCalendarQuery {
+  year: number;
+  doctor_id?: number;
+  status?: string;
+}
+
 export interface AppointmentServicePayload {
   service_id: number;
   quantity: number;

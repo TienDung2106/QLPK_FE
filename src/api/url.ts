@@ -92,6 +92,7 @@ const url = {
 
   // Quầy lễ tân
   staffAppointments: `${root}/staff/appointments`,
+  staffAppointmentCalendar: `${root}/staff/appointments/calendar`,
   staffAppointmentsExport: `${root}/staff/appointments/export`,
   staffAppointmentById: (appointmentId: number) => `${root}/staff/appointments/${appointmentId}`,
   staffAppointmentAction: (appointmentId: number, action: string) =>

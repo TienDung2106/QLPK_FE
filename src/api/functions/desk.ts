@@ -6,6 +6,8 @@ import type {
   ApplyDiscountPayload,
   ApplyDiscountResult,
   AppointmentQuery,
+  AppointmentCalendarQuery,
+  AppointmentDayCount,
   BookOnBehalfPayload,
   DeskPatient,
   DoctorCalendar,
@@ -29,6 +31,9 @@ import type {
 
 export const apiSearchStaffAppointments = (query: AppointmentQuery = {}) =>
   GetData<PagedResponse<AppointmentListItem>>(url.staffAppointments, query);
+
+export const apiGetStaffAppointmentCalendar = (query: AppointmentCalendarQuery) =>
+  GetData<AppointmentDayCount[]>(url.staffAppointmentCalendar, query);
 
 /** Xuất Excel mọi lịch khớp bộ lọc, không chỉ trang đang xem. */
 export const apiExportStaffAppointments = (query: AppointmentQuery = {}) =>
