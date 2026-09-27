@@ -7,7 +7,6 @@ import {
   CheckCircle2,
   ChevronDown,
   ChevronUp,
-  Clock,
   Loader2,
   X,
 } from 'lucide-react';
@@ -43,8 +42,6 @@ const DONE = new Set<string>([
   APPOINTMENT_STATUS.Cancelled,
   APPOINTMENT_STATUS.NoShow,
 ]);
-
-const THIS_YEAR = String(new Date().getFullYear());
 
 /** Backend trả TimeOnly dạng 'HH:mm:ss'; chỉ cần giờ và phút. */
 function formatTime(time: string): string {
@@ -145,6 +142,17 @@ export const MyAppointmentsPage = () => {
     reload();
   };
 
+  // gom theo tháng như activity của GitHub; backend trả mới nhất trước nên các tháng nối tiếp nhau
+  const months = appointments.reduce<{ month: string; items: AppointmentListItem[] }[]>((groups, appointment) => {
+    const month = appointment.appointment_date.slice(0, 7);
+    const last = groups[groups.length - 1];
+    if (last?.month === month) last.items.push(appointment);
+    else groups.push({ month, items: [appointment] });
+    return groups;
+  }, []);
+  // chỉ nêu tên bệnh nhân khi có lịch đặt hộ người khác
+  const multiPatient = new Set(appointments.map((appointment) => appointment.patient_id)).size > 1;
+
   return (
     <div className="account-page">
       <Header />
@@ -213,112 +221,117 @@ export const MyAppointmentsPage = () => {
             </button>
           </div>
         ) : (
-          <ul className="appointment-list">
-            {appointments.map((appointment) => {
-              const [year, month, day] = appointment.appointment_date.split('-');
-              const isOpen = openId === appointment.appointment_id;
-              const canCancel = CANCELLABLE.has(appointment.status) && !hasStarted(appointment);
-              return (
-                <li key={appointment.appointment_id} className={`appointment-card ${DONE.has(appointment.status) ? 'is-done' : ''}`}>
-                  <div className="appointment-date" aria-label={`Ngày ${day}/${month}/${year}`}>
-                    <strong>{Number(day)}</strong>
-                    <span>TH {Number(month)}</span>
-                    {year !== THIS_YEAR && <span>{year}</span>}
-                  </div>
+          <>
+            {months.map(({ month, items }) => (
+              <section key={month} className="appointment-month">
+                <h2 className="appointment-month-title">
+                  Tháng {Number(month.slice(5))} {month.slice(0, 4)} <span>· {items.length} lịch</span>
+                </h2>
+                <ul className="appointment-list">
+                  {items.map((appointment) => {
+                    const day = appointment.appointment_date.slice(8, 10);
+                    const isOpen = openId === appointment.appointment_id;
+                    const canCancel = CANCELLABLE.has(appointment.status) && !hasStarted(appointment);
+                    return (
+                      <li key={appointment.appointment_id} className={`appointment-card ${DONE.has(appointment.status) ? 'is-done' : ''}`}>
+                        <span className="appointment-day" aria-label={`Ngày ${Number(day)}`}>{Number(day)}</span>
+                        <span className="appointment-time">{formatTime(appointment.appointment_time)}</span>
 
-                  <div className="appointment-body">
-                    <div className="appointment-title">
-                      <h3 className="appointment-doctor">{appointment.doctor_full_name}</h3>
-                      <span className={`appointment-status status-${appointment.status}`}>
-                        {APPOINTMENT_STATUS_LABEL[appointment.status] ?? appointment.status}
-                      </span>
-                      {CANCELLABLE.has(appointment.status) && isOverdue(appointment) && (
-                        <span className="appointment-status status-overdue">Đã quá hạn</span>
-                      )}
-                    </div>
-                    <p className="appointment-meta">
-                      <Clock size={14} />
-                      {formatTime(appointment.appointment_time)} · {appointment.duration_minutes} phút · {appointment.patient_full_name}
-                      {appointment.queue_number !== null && <> · STT <strong>{appointment.queue_number}</strong></>}
-                    </p>
-                  </div>
-
-                  <div className="appointment-actions">
-                    <button
-                      type="button"
-                      className="appointment-action"
-                      aria-expanded={isOpen}
-                      onClick={() => setOpenId(isOpen ? null : appointment.appointment_id)}
-                    >
-                      <span>{isOpen ? 'Thu gọn' : 'Chi tiết'}</span>
-                      {isOpen ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
-                    </button>
-                    {canCancel && cancelTargetId !== appointment.appointment_id && (
-                      <button
-                        type="button"
-                        className="appointment-action danger"
-                        onClick={() => openCancel(appointment.appointment_id)}
-                      >
-                        <X size={15} />
-                        <span>Huỷ</span>
-                      </button>
-                    )}
-                  </div>
-
-                  {canCancel && cancelTargetId === appointment.appointment_id && (
-                    <div className="appointment-cancel-form">
-                      <label className="form-label" htmlFor={`cancel-reason-${appointment.appointment_id}`}>
-                        Lý do huỷ lịch hẹn
-                      </label>
-                      <input
-                        id={`cancel-reason-${appointment.appointment_id}`}
-                        className="form-input"
-                        type="text"
-                        placeholder="Ví dụ: Bận đột xuất"
-                        value={cancelReason}
-                        onChange={(event) => setCancelReason(event.target.value)}
-                        disabled={busyId === appointment.appointment_id}
-                      />
-                      <div className="appointment-cancel-actions">
-                        <button
-                          type="button"
-                          className="btn btn-outline"
-                          onClick={() => setCancelTargetId(null)}
-                          disabled={busyId === appointment.appointment_id}
-                        >
-                          Giữ lịch
-                        </button>
-                        <button
-                          type="button"
-                          className="btn btn-danger"
-                          onClick={() => handleCancel(appointment.appointment_id, cancelReason.trim())}
-                          disabled={busyId === appointment.appointment_id}
-                        >
-                          {busyId === appointment.appointment_id ? (
-                            <Loader2 className="spin" size={16} />
-                          ) : (
-                            <X size={16} />
+                        <div className="appointment-body">
+                          <h3 className="appointment-doctor">{appointment.doctor_full_name}</h3>
+                          <span className={`appointment-status status-${appointment.status}`}>
+                            {APPOINTMENT_STATUS_LABEL[appointment.status] ?? appointment.status}
+                          </span>
+                          {CANCELLABLE.has(appointment.status) && isOverdue(appointment) && (
+                            <span className="appointment-status status-overdue">Đã quá hạn</span>
                           )}
-                          <span>Xác nhận huỷ</span>
-                        </button>
-                      </div>
-                    </div>
-                  )}
+                          <span className="appointment-meta">
+                            {appointment.duration_minutes} phút
+                            {appointment.queue_number !== null && <> · STT <strong>{appointment.queue_number}</strong></>}
+                            {multiPatient && <> · {appointment.patient_full_name}</>}
+                          </span>
+                        </div>
 
-                  {isOpen && (
-                    <AppointmentDetail
-                      appointmentId={appointment.appointment_id}
-                      onChanged={(message) => {
-                        setOpenId(null);
-                        setNotice(message);
-                        reload();
-                      }}
-                    />
-                  )}
-                </li>
-              );
-            })}
-          </ul>
+                        <div className="appointment-actions">
+                          <button
+                            type="button"
+                            className="appointment-action"
+                            aria-expanded={isOpen}
+                            onClick={() => setOpenId(isOpen ? null : appointment.appointment_id)}
+                          >
+                            <span>{isOpen ? 'Thu gọn' : 'Chi tiết'}</span>
+                            {isOpen ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
+                          </button>
+                          {canCancel && cancelTargetId !== appointment.appointment_id && (
+                            <button
+                              type="button"
+                              className="appointment-action danger"
+                              aria-label="Huỷ lịch"
+                              title="Huỷ lịch"
+                              onClick={() => openCancel(appointment.appointment_id)}
+                            >
+                              <X size={15} />
+                            </button>
+                          )}
+                        </div>
+
+                        {canCancel && cancelTargetId === appointment.appointment_id && (
+                          <div className="appointment-cancel-form">
+                            <label className="form-label" htmlFor={`cancel-reason-${appointment.appointment_id}`}>
+                              Lý do huỷ lịch hẹn
+                            </label>
+                            <input
+                              id={`cancel-reason-${appointment.appointment_id}`}
+                              className="form-input"
+                              type="text"
+                              placeholder="Ví dụ: Bận đột xuất"
+                              value={cancelReason}
+                              onChange={(event) => setCancelReason(event.target.value)}
+                              disabled={busyId === appointment.appointment_id}
+                            />
+                            <div className="appointment-cancel-actions">
+                              <button
+                                type="button"
+                                className="btn btn-outline"
+                                onClick={() => setCancelTargetId(null)}
+                                disabled={busyId === appointment.appointment_id}
+                              >
+                                Giữ lịch
+                              </button>
+                              <button
+                                type="button"
+                                className="btn btn-danger"
+                                onClick={() => handleCancel(appointment.appointment_id, cancelReason.trim())}
+                                disabled={busyId === appointment.appointment_id}
+                              >
+                                {busyId === appointment.appointment_id ? (
+                                  <Loader2 className="spin" size={16} />
+                                ) : (
+                                  <X size={16} />
+                                )}
+                                <span>Xác nhận huỷ</span>
+                              </button>
+                            </div>
+                          </div>
+                        )}
+
+                        {isOpen && (
+                          <AppointmentDetail
+                            appointmentId={appointment.appointment_id}
+                            onChanged={(message) => {
+                              setOpenId(null);
+                              setNotice(message);
+                              reload();
+                            }}
+                          />
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </section>
+            ))}
+          </>
         )}
       </main>
 
