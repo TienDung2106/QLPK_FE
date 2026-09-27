@@ -19,6 +19,7 @@ import {
 import type { AppointmentListItem } from '../../api/types';
 import { APPOINTMENT_STATUS, APPOINTMENT_STATUS_LABEL } from '../../api/types';
 import { AppointmentDetail } from './AppointmentDetail';
+import { AppointmentHeatmap } from './AppointmentHeatmap';
 import './MyAppointmentsPage.css';
 
 /** Trạng thái mà bệnh nhân còn huỷ được. Sau khi đã vào khám thì không còn là việc của họ. */
@@ -142,14 +143,16 @@ export const MyAppointmentsPage = () => {
     reload();
   };
 
-  // gom theo tháng như activity của GitHub; backend trả mới nhất trước nên các tháng nối tiếp nhau
-  const months = appointments.reduce<{ month: string; items: AppointmentListItem[] }[]>((groups, appointment) => {
-    const month = appointment.appointment_date.slice(0, 7);
-    const last = groups[groups.length - 1];
-    if (last?.month === month) last.items.push(appointment);
-    else groups.push({ month, items: [appointment] });
-    return groups;
-  }, []);
+  // gom theo tháng như activity của GitHub, ngày sớm trước; backend trả mới nhất trước nên sắp lại
+  const months = [...appointments]
+    .sort((a, b) => `${a.appointment_date}T${a.appointment_time}`.localeCompare(`${b.appointment_date}T${b.appointment_time}`))
+    .reduce<{ month: string; items: AppointmentListItem[] }[]>((groups, appointment) => {
+      const month = appointment.appointment_date.slice(0, 7);
+      const last = groups[groups.length - 1];
+      if (last?.month === month) last.items.push(appointment);
+      else groups.push({ month, items: [appointment] });
+      return groups;
+    }, []);
   // chỉ nêu tên bệnh nhân khi có lịch đặt hộ người khác
   const multiPatient = new Set(appointments.map((appointment) => appointment.patient_id)).size > 1;
 
@@ -172,6 +175,8 @@ export const MyAppointmentsPage = () => {
             <span>Đặt lịch mới</span>
           </button>
         </div>
+
+        <AppointmentHeatmap refreshKey={reloadToken} />
 
         {error && (
           <div className="account-alert error" role="alert">

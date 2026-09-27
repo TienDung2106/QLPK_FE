@@ -389,3 +389,153 @@
     margin-bottom: 0.5rem;
   }
 }
+
+/* ---------- Lịch khám cả năm, dạng ô vuông như contributions của GitHub ---------- */
+
+.heatmap-card {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  background: var(--bg-card);
+}
+
+.heatmap-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.heatmap-summary {
+  margin: 0 0 0.6rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.heatmap-summary strong {
+  color: var(--text-heading);
+}
+
+/* Màn hẹp thì cuộn ngang như GitHub, không bóp ô. */
+.heatmap-scroll {
+  min-width: 0;
+  overflow-x: auto;
+  padding-bottom: 0.25rem;
+}
+
+/* 53 cột tuần giãn theo khung; hẹp quá 11px thì cuộn thay vì bóp ô. */
+.heatmap-months,
+.heatmap-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--weeks), minmax(11px, 1fr));
+  gap: 3px;
+}
+
+.heatmap-months {
+  margin: 0 0 4px 26px;
+  font-size: 0.66rem;
+  color: var(--text-muted);
+}
+
+.heatmap-months span {
+  grid-row: 1;
+  white-space: nowrap;
+}
+
+.heatmap-body {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  gap: 4px;
+}
+
+.heatmap-weekdays {
+  display: grid;
+  grid-template-rows: repeat(7, 1fr);
+  gap: 3px;
+  font-size: 0.62rem;
+  color: var(--text-muted);
+}
+
+.heatmap-weekdays span {
+  display: flex;
+  align-items: center;
+}
+
+.heatmap-grid {
+  grid-template-rows: repeat(7, auto);
+  grid-auto-flow: column;
+}
+
+.heatmap-cell {
+  display: inline-block;
+  width: 11px;
+  height: 11px;
+  border-radius: 2px;
+}
+
+.heatmap-grid .heatmap-cell {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+}
+
+/* Cùng tông xanh thương hiệu; mức 3 là từ 3 lịch một ngày trở lên. */
+.heatmap-cell.level-0 { background: #ebedf0; }
+.heatmap-cell.level-1 { background: #93c5fd; }
+.heatmap-cell.level-2 { background: #3b82f6; }
+.heatmap-cell.level-3 { background: var(--primary-dark); }
+
+.heatmap-legend {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 3px;
+  margin-top: 0.5rem;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.heatmap-years {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  flex-shrink: 0;
+}
+
+.heatmap-years button {
+  width: 76px;
+  padding: 0.4rem 0.6rem;
+  border: none;
+  border-radius: var(--radius-md);
+  background: none;
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-align: left;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.heatmap-years button:hover {
+  background: var(--bg-subtle);
+}
+
+.heatmap-years button[aria-pressed='true'] {
+  background: var(--primary);
+  color: var(--text-white);
+}
+
+@media (max-width: 640px) {
+  .heatmap-card {
+    flex-direction: column-reverse;
+  }
+
+  .heatmap-years {
+    flex-direction: row;
+  }
+
+  .heatmap-years button {
+    width: auto;
+  }
+}
