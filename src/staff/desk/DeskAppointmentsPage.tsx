@@ -5,12 +5,12 @@ import { CalendarPlus, DoorOpen, RefreshCw } from 'lucide-react';
 import { apiExportStaffAppointments, apiSearchStaffAppointments, apiStaffCheckIn } from '../../api/functions/desk';
 import { ExportButton } from '../components/ExportButton';
 import type { CheckInResult } from '../../api/types';
-import { useAction, useApiQuery } from '../hooks';
+import { useAction, useApiQuery, useDebounced } from '../hooks';
 import { formatDate, formatPercent, formatTime, todayIso } from '../format';
 import { APPOINTMENT_STATUS, labelOf } from '../labels';
 import { useToast } from '../components/toastContext';
 import { DoctorSelect } from '../components/pickers';
-import { Alert, Button, Field, FilterTabs, PageHeader, Pagination, Panel, StatusBadge, TableState } from '../components/ui';
+import { Alert, Button, Field, FilterTabs, PageHeader, Pagination, Panel, SearchInput, StatusBadge, TableState } from '../components/ui';
 
 const STATUS_TABS = [
   { value: '', label: 'Tất cả' },
@@ -35,7 +35,9 @@ const DeskAppointmentsPage = () => {
   const [toDate, setToDate] = useState(todayIso());
   const [doctorId, setDoctorId] = useState<number | null>(null);
   const [status, setStatus] = useState('');
+  const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
+  const debouncedSearch = useDebounced(search.trim());
   const [code, setCode] = useState('');
   const [checkIn, setCheckIn] = useState<CheckInResult | null>(null);
   const [checkInError, setCheckInError] = useState<string | null>(null);
@@ -43,14 +45,15 @@ const DeskAppointmentsPage = () => {
   const query = useApiQuery(
     () =>
       apiSearchStaffAppointments({
-        from_date: fromDate || undefined,
-        to_date: toDate || undefined,
+        from_date: debouncedSearch ? undefined : fromDate || undefined,
+        to_date: debouncedSearch ? undefined : toDate || undefined,
         doctor_id: doctorId ?? undefined,
         status: status || undefined,
+        search: debouncedSearch || undefined,
         page_number: page,
         page_size: 25,
       }),
-    [fromDate, toDate, doctorId, status, page],
+    [fromDate, toDate, doctorId, status, debouncedSearch, page],
   );
 
   const submitCheckIn = async (event: FormEvent) => {
@@ -83,10 +86,11 @@ const DeskAppointmentsPage = () => {
             <ExportButton
               download={() =>
                 apiExportStaffAppointments({
-                  from_date: fromDate || undefined,
-                  to_date: toDate || undefined,
+                  from_date: debouncedSearch ? undefined : fromDate || undefined,
+                  to_date: debouncedSearch ? undefined : toDate || undefined,
                   doctor_id: doctorId ?? undefined,
                   status: status || undefined,
+                  search: debouncedSearch || undefined,
                 })
               }
               fileName="lich-hen.xlsx"
@@ -125,11 +129,17 @@ const DeskAppointmentsPage = () => {
 
       <section className="st-panel" style={{ marginTop: '1rem' }}>
         <div className="st-toolbar">
+          <SearchInput
+            value={search}
+            onChange={(value) => { setSearch(value); setPage(1); }}
+            placeholder="Tìm tên bệnh nhân hoặc mã nhận phòng"
+          />
+          {debouncedSearch && <span className="st-hint">Đang tìm trên mọi ngày</span>}
           <Field label="Từ ngày">
-            {(id) => <input id={id} type="date" className="st-input" value={fromDate} onChange={(e) => { setFromDate(e.target.value); setPage(1); }} />}
+            {(id) => <input id={id} type="date" className="st-input" value={fromDate} disabled={!!debouncedSearch} onChange={(e) => { setFromDate(e.target.value); setPage(1); }} />}
           </Field>
           <Field label="Đến ngày">
-            {(id) => <input id={id} type="date" className="st-input" value={toDate} onChange={(e) => { setToDate(e.target.value); setPage(1); }} />}
+            {(id) => <input id={id} type="date" className="st-input" value={toDate} disabled={!!debouncedSearch} onChange={(e) => { setToDate(e.target.value); setPage(1); }} />}
           </Field>
           <div style={{ minWidth: 220 }}>
             <DoctorSelect allowAll compact value={doctorId} onChange={(value) => { setDoctorId(value); setPage(1); }} />
@@ -158,8 +168,8 @@ const DeskAppointmentsPage = () => {
                 error={query.error}
                 isEmpty={items.length === 0}
                 onRetry={query.reload}
-                emptyTitle="Không có lịch hẹn"
-                emptyText="Không có lịch hẹn nào khớp khoảng ngày và bộ lọc."
+                emptyTitle={debouncedSearch ? 'Không tìm thấy lịch hẹn' : 'Không có lịch hẹn'}
+                emptyText={debouncedSearch ? 'Kiểm tra lại tên hoặc mã nhận phòng và các bộ lọc.' : 'Không có lịch hẹn nào khớp khoảng ngày và bộ lọc.'}
               />
               {items.map((item) => (
                 <tr key={item.appointment_id} className="st-row-link" onClick={() => navigate(`/thu-ngan/lich-hen/${item.appointment_id}`)}>

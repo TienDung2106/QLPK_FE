@@ -29,6 +29,7 @@ export interface AppointmentQuery extends PageQuery {
   from_date?: string;
   to_date?: string;
   status?: string;
+  search?: string;
 }
 
 export interface AppointmentServicePayload {
