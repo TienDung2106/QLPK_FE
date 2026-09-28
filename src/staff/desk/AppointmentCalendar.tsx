@@ -37,6 +37,10 @@ export default function AppointmentCalendar({ month, onMonthChange, fromDate, to
   const counts = new Map(known ? query.data!.map((day) => [day.date, day.count]) : []);
   const total = [...counts].reduce((sum, [date, count]) => sum + (date.startsWith(month) ? count : 0), 0);
   const selectedDate = !searching && fromDate === toDate ? fromDate : '';
+  // Tháng hiện tại: bỏ các ngày đã qua để hôm nay nằm ở hàng đầu, mắt không lạc sang ngày cũ.
+  const days = monthDays(year, monthNumber);
+  const todayIndex = days.indexOf(today);
+  const cells = todayIndex < 0 ? days : days.slice(todayIndex - (todayIndex % 7)).map((date) => (date && date < today ? null : date));
   const tabDate = [focusedDate, selectedDate, today].find((date) => date.startsWith(month)) || `${month}-01`;
 
   useEffect(() => {
@@ -56,7 +60,7 @@ export default function AppointmentCalendar({ month, onMonthChange, fromDate, to
     if (targetYear < MIN_CALENDAR_YEAR || targetYear > MAX_CALENDAR_YEAR) return;
     const button = root.current?.querySelector<HTMLButtonElement>(`[data-calendar-date="${target}"]`);
     if (button) button.focus();
-    else {
+    else if (target.slice(0, 7) !== month) {
       pendingFocus.current = target;
       setFocusedDate(target);
       onMonthChange(target.slice(0, 7));
@@ -73,7 +77,7 @@ export default function AppointmentCalendar({ month, onMonthChange, fromDate, to
       </div>
       <div className="st-calendar-weekdays" aria-hidden="true">{WEEKDAYS.map((day) => <span key={day}>{day}</span>)}</div>
       <div className="st-calendar-days" role="group" aria-label={`Tháng ${monthNumber} năm ${year}`} aria-busy={query.loading}>
-        {monthDays(year, monthNumber).map((date, index) => {
+        {cells.map((date, index) => {
           if (!date) return <span key={`blank-${index}`} aria-hidden="true" />;
           const count = counts.get(date) ?? 0;
           const selected = !searching && !!fromDate && !!toDate && date >= fromDate && date <= toDate;

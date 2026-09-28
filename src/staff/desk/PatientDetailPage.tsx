@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { CalendarPlus, Link2, Save } from 'lucide-react';
 import { apiGetDeskPatient, apiLinkPatientAccount, apiRequestLinkPatientCode, apiUpdateDeskPatient } from '../../api/functions/desk';
+import useAuth from '../../hooks/useAuth';
+import { PERMISSION } from '../permissions';
 import { useAction, useApiQuery } from '../hooks';
 import { formatDate, formatDateTime, formatTime } from '../format';
 import { APPOINTMENT_STATUS, labelOf, PATIENT_CREATED_VIA_LABEL, PATIENT_RELATIONSHIP_LABEL, textOf } from '../labels';
@@ -16,6 +18,8 @@ const PatientDetailPage = () => {
   const navigate = useNavigate();
   const toast = useToast();
   const { run, isPending } = useAction();
+  // Admin chỉ xem; sửa hồ sơ và liên kết tài khoản là việc của lễ tân.
+  const canEdit = useAuth().hasPermission(PERMISSION.PatientsEdit);
   const query = useApiQuery(() => apiGetDeskPatient(patientId), [patientId]);
   const patient = query.data;
   const [form, setForm] = useState<PatientFormValue>(emptyPatientForm);
@@ -118,7 +122,7 @@ const PatientDetailPage = () => {
         }
         actions={
           <>
-            {!patient.account_claimed && (
+            {canEdit && !patient.account_claimed && (
               <Button
                 icon={<Link2 size={16} />}
                 onClick={() => {
@@ -136,9 +140,11 @@ const PatientDetailPage = () => {
             <Button icon={<CalendarPlus size={16} />} onClick={() => navigate('/thu-ngan/dat-lich')}>
               Đặt lịch
             </Button>
-            <Button variant="primary" icon={<Save size={16} />} loading={isPending('save')} disabled={!dirty} onClick={save}>
-              Lưu hồ sơ
-            </Button>
+            {canEdit && (
+              <Button variant="primary" icon={<Save size={16} />} loading={isPending('save')} disabled={!dirty} onClick={save}>
+                Lưu hồ sơ
+              </Button>
+            )}
           </>
         }
       />
@@ -152,14 +158,16 @@ const PatientDetailPage = () => {
 
       <div className="st-grid-main">
         <Panel title="Hồ sơ" subtitle={dirty ? 'Có thay đổi chưa lưu' : undefined}>
-          <PatientFields
-            registering={false}
-            value={form}
-            onChange={(value) => {
-              setForm(value);
-              setDirty(true);
-            }}
-          />
+          <fieldset disabled={!canEdit} style={{ border: 'none', padding: 0, margin: 0, minWidth: 0 }}>
+            <PatientFields
+              registering={false}
+              value={form}
+              onChange={(value) => {
+                setForm(value);
+                setDirty(true);
+              }}
+            />
+          </fieldset>
         </Panel>
 
         <div className="st-stack">

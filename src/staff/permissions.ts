@@ -12,6 +12,7 @@ export const PERMISSION = {
   ExaminationsPerform: 'examinations.perform',
   ReportsView: 'reports.view',
   PatientsManage: 'patients.manage',
+  PatientsEdit: 'patients.edit',
   DoctorTimeOffReportOwn: 'doctor_time_off.report_own',
   StaffTimeOffReportOwn: 'staff_time_off.report_own',
   DoctorSchedulesManage: 'doctor_schedules.manage',
