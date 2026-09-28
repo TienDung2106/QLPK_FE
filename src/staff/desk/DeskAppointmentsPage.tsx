@@ -174,6 +174,7 @@ const DeskAppointmentsPage = () => {
                     <th title="Cấp khi nhận phòng, theo thứ tự đến">STT</th>
                     <th>Ngày giờ</th>
                     <th>Bệnh nhân</th>
+                    <th title="Bệnh nhân đưa mã này khi đến quầy">Mã nhận phòng</th>
                     <th>Bác sĩ</th>
                     <th className="st-num">Giảm giá</th>
                     <th>Trạng thái</th>
@@ -181,7 +182,7 @@ const DeskAppointmentsPage = () => {
                 </thead>
                 <tbody>
                   <TableState
-                    columns={6}
+                    columns={7}
                     loading={query.loading}
                     error={query.error}
                     isEmpty={items.length === 0}
@@ -201,6 +202,9 @@ const DeskAppointmentsPage = () => {
                       <td>
                         <div className="st-cell-main">{item.patient_full_name}</div>
                         <div className="st-cell-sub">#{item.appointment_id}</div>
+                      </td>
+                      <td className="st-nowrap" style={{ fontFamily: 'ui-monospace, monospace', letterSpacing: '0.05em' }}>
+                        {item.check_in_code ?? '—'}
                       </td>
                       <td>{item.doctor_full_name}</td>
                       <td className="st-num">{item.discount_percent > 0 ? formatPercent(item.discount_percent) : '—'}</td>

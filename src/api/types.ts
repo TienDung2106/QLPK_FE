@@ -207,6 +207,8 @@ export interface AppointmentListItem {
   /** Bệnh nhân tự ghi lúc đặt lịch. */
   reason_for_visit?: string | null;
   queue_number: number | null;
+  /** Mã nhận phòng — chỉ có ở danh sách của quầy (/api/staff/appointments). */
+  check_in_code?: string | null;
   discount_percent: number;
   created_at: string;
 }
