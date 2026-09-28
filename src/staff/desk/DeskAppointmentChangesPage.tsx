@@ -1,17 +1,14 @@
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { CheckCheck, History } from 'lucide-react';
-import {
-  apiMarkAllAppointmentChangesSeen,
-  apiMarkAppointmentChangeSeen,
-  apiSearchAppointmentChanges,
-} from '../../api/functions/desk';
+import { CheckCheck, ChevronDown, ChevronRight, History } from 'lucide-react';
+import { apiMarkAllAppointmentChangesSeen, apiMarkAppointmentChangeSeen, apiSearchAppointmentChanges } from '../../api/functions/desk';
 import type { AppointmentChange, AppointmentSnapshot } from '../../api/staffTypes';
-import { useAction, useApiQuery } from '../hooks';
+import { useAction, useApiQuery, useDebounced } from '../hooks';
 import { formatDate, formatDateTime, formatMoney, formatTime } from '../format';
 import { APPOINTMENT_STATUS, labelOf } from '../labels';
 import { useToast } from '../components/toastContext';
-import { Alert, Button, EmptyState, FilterTabs, PageHeader, Pagination, Panel, StatusBadge } from '../components/ui';
+import { DoctorSelect } from '../components/pickers';
+import { Alert, Badge, Button, EmptyState, Field, FilterTabs, PageHeader, Pagination, SearchInput, StatusBadge } from '../components/ui';
 
 const TABS = [
   { value: 'unseen', label: 'Chưa xem' },
@@ -27,17 +24,18 @@ const ROWS: { label: string; read: (snapshot: AppointmentSnapshot) => string }[]
   {
     label: 'Dịch vụ',
     read: (snapshot) =>
-      snapshot.services.map((line) => (line.quantity > 1 ? `${line.service_name} ×${line.quantity}` : line.service_name)).join(', ') ||
-      '—',
+      snapshot.services.map((line) => (line.quantity > 1 ? `${line.service_name} ×${line.quantity}` : line.service_name)).join(', ') || '—',
   },
   { label: 'Thời lượng', read: (snapshot) => `${snapshot.duration_minutes} phút` },
   {
     label: 'Chi phí',
-    read: (snapshot) =>
-      formatMoney(snapshot.total_amount) + (snapshot.discount_percent > 0 ? ` (giảm ${snapshot.discount_percent}%)` : ''),
+    read: (snapshot) => formatMoney(snapshot.total_amount) + (snapshot.discount_percent > 0 ? ` (giảm ${snapshot.discount_percent}%)` : ''),
   },
   { label: 'Lý do khám', read: (snapshot) => snapshot.reason_for_visit || '—' },
 ];
+
+/** 'dd/mm HH:mm' cho cột tóm tắt. */
+const shortSlot = (snapshot: AppointmentSnapshot) => `${formatDate(snapshot.appointment_date).slice(0, 5)} ${formatTime(snapshot.appointment_time)}`;
 
 /** Báo cho badge ở menu đếm lại ngay, không đợi chu kỳ. */
 const notifySeen = () => window.dispatchEvent(new Event('appointment-changes-seen'));
@@ -49,15 +47,38 @@ const DeskAppointmentChangesPage = () => {
   const [tab, setTab] = useState('unseen');
   const [pageNumber, setPageNumber] = useState(1);
 
+  const [search, setSearch] = useState('');
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
+  const [doctorId, setDoctorId] = useState<number | null>(null);
+  const [openId, setOpenId] = useState<number | null>(null);
+  const debouncedSearch = useDebounced(search.trim());
+
   const query = useApiQuery(
-    () => apiSearchAppointmentChanges({ unseen_only: tab === 'unseen', page_number: pageNumber, page_size: 20 }),
-    [tab, pageNumber],
+    () =>
+      apiSearchAppointmentChanges({
+        unseen_only: tab === 'unseen',
+        search: debouncedSearch || undefined,
+        from_date: fromDate || undefined,
+        to_date: toDate || undefined,
+        doctor_id: doctorId ?? undefined,
+        page_number: pageNumber,
+        page_size: 20,
+      }),
+    [tab, debouncedSearch, fromDate, toDate, doctorId, pageNumber],
   );
+  const filtered = !!(debouncedSearch || fromDate || toDate || doctorId);
+
+  /** Đổi bộ lọc thì về trang 1. */
+  const filter =
+    <T,>(set: (value: T) => void) =>
+    (value: T) => {
+      set(value);
+      setPageNumber(1);
+    };
 
   const markSeen = async (change: AppointmentChange) => {
-    const result = await run(`seen-${change.appointment_change_log_id}`, () =>
-      apiMarkAppointmentChangeSeen(change.appointment_change_log_id),
-    );
+    const result = await run(`seen-${change.appointment_change_log_id}`, () => apiMarkAppointmentChangeSeen(change.appointment_change_log_id));
     if (!result.ok) {
       toast.error(result.error);
       return;
@@ -94,80 +115,142 @@ const DeskAppointmentChangesPage = () => {
         }
       />
 
-      <FilterTabs
-        label="Lọc theo đã xem"
-        options={TABS}
-        value={tab}
-        onChange={(value) => {
-          setTab(value);
-          setPageNumber(1);
-        }}
-      />
-
-      {query.error && <Alert tone="danger">{query.error}</Alert>}
-
-      {!query.loading && items.length === 0 ? (
-        <EmptyState
-          icon={<History size={32} strokeWidth={1.6} />}
-          title={tab === 'unseen' ? 'Không có lịch nào mới bị sửa' : 'Chưa có lần sửa nào'}
-        />
-      ) : (
-        <div className="st-change-list">
-          {items.map((change) => (
-            <Panel
-              key={change.appointment_change_log_id}
-              title={
-                <>
-                  {change.patient_full_name} <StatusBadge value={labelOf(APPOINTMENT_STATUS, change.status)} />
-                </>
-              }
-              subtitle={`Bác sĩ ${change.doctor_full_name} · sửa lúc ${formatDateTime(change.changed_at)}${
-                change.seen_at ? ` · ${change.seen_by_full_name ?? 'quầy'} đã xem ${formatDateTime(change.seen_at)}` : ''
-              }`}
-              actions={
-                <>
-                  <Link className="st-btn st-btn-ghost st-btn-sm" to={`/thu-ngan/lich-hen/${change.appointment_id}`}>
-                    Mở lịch hẹn
-                  </Link>
-                  {!change.seen_at && (
-                    <Button
-                      size="sm"
-                      variant="primary"
-                      loading={isPending(`seen-${change.appointment_change_log_id}`)}
-                      onClick={() => markSeen(change)}
-                    >
-                      Đã xem
-                    </Button>
-                  )}
-                </>
-              }
+      <section className="st-panel">
+        <div className="st-toolbar">
+          <SearchInput value={search} onChange={filter(setSearch)} placeholder="Tìm tên bệnh nhân" />
+          <Field label="Sửa từ ngày">
+            {(id) => <input id={id} type="date" className="st-input" value={fromDate} onChange={(e) => filter(setFromDate)(e.target.value)} />}
+          </Field>
+          <Field label="Đến ngày">
+            {(id) => <input id={id} type="date" className="st-input" value={toDate} onChange={(e) => filter(setToDate)(e.target.value)} />}
+          </Field>
+          <div style={{ minWidth: 220 }}>
+            <DoctorSelect allowAll compact value={doctorId} onChange={filter(setDoctorId)} />
+          </div>
+          {filtered && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setSearch('');
+                setFromDate('');
+                setToDate('');
+                setDoctorId(null);
+                setPageNumber(1);
+              }}
             >
-              <table className="st-change-table">
-                <thead>
-                  <tr>
-                    <th scope="col" />
-                    <th scope="col">Cũ</th>
-                    <th scope="col">Mới</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {ROWS.map((row) => {
-                    const before = row.read(change.before);
-                    const after = row.read(change.after);
-                    return (
-                      <tr key={row.label} className={before !== after ? 'is-changed' : undefined}>
-                        <th scope="row">{row.label}</th>
-                        <td>{before}</td>
-                        <td>{after}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </Panel>
-          ))}
+              Xoá lọc
+            </Button>
+          )}
         </div>
-      )}
+        <div className="st-toolbar" style={{ borderRadius: 0 }}>
+          <FilterTabs label="Lọc theo đã xem" options={TABS} value={tab} onChange={filter(setTab)} />
+        </div>
+
+        {query.error && <Alert tone="danger">{query.error}</Alert>}
+
+        {!query.loading && items.length === 0 ? (
+          <EmptyState
+            icon={<History size={32} strokeWidth={1.6} />}
+            title={filtered ? 'Không có lần sửa nào khớp bộ lọc' : tab === 'unseen' ? 'Không có lịch nào mới bị sửa' : 'Chưa có lần sửa nào'}
+          />
+        ) : (
+          <div className="st-table-wrap">
+            <table className="st-table">
+              <thead>
+                <tr>
+                  <th style={{ width: 28 }} />
+                  <th>Bệnh nhân</th>
+                  <th>Bác sĩ</th>
+                  <th>Đã sửa</th>
+                  <th>Sửa lúc</th>
+                  <th />
+                </tr>
+              </thead>
+              <tbody>
+                {items.map((change) => {
+                  const id = change.appointment_change_log_id;
+                  const open = openId === id;
+                  const diffs = ROWS.map((row) => ({ ...row, before: row.read(change.before), after: row.read(change.after) }));
+                  const changed = diffs.filter((row) => row.before !== row.after);
+                  const moved = changed.find((row) => row.label === 'Ngày giờ');
+                  return (
+                    <Fragment key={id}>
+                      <tr className="st-row-link" aria-expanded={open} onClick={() => setOpenId(open ? null : id)}>
+                        <td>{open ? <ChevronDown size={16} /> : <ChevronRight size={16} />}</td>
+                        <td>
+                          <div className="st-cell-main">
+                            {change.patient_full_name} <StatusBadge value={labelOf(APPOINTMENT_STATUS, change.status)} />
+                          </div>
+                          {change.seen_at && (
+                            <div className="st-cell-sub">
+                              {change.seen_by_full_name ?? 'Quầy'} đã xem {formatDateTime(change.seen_at)}
+                            </div>
+                          )}
+                        </td>
+                        <td>{change.doctor_full_name}</td>
+                        <td>
+                          {moved && (
+                            <div className="st-cell-main">
+                              {shortSlot(change.before)} → {shortSlot(change.after)}
+                            </div>
+                          )}
+                          <div className="st-chip-row" style={{ gap: 4 }}>
+                            {changed
+                              .filter((row) => row !== moved)
+                              .map((row) => (
+                                <Badge key={row.label} tone="warning">
+                                  {row.label}
+                                </Badge>
+                              ))}
+                            {changed.length === 0 && <span className="st-muted">Không đổi</span>}
+                          </div>
+                        </td>
+                        <td className="st-nowrap">{formatDateTime(change.changed_at)}</td>
+                        <td className="st-num st-nowrap" onClick={(event) => event.stopPropagation()}>
+                          <Link className="st-btn st-btn-ghost st-btn-sm" to={`/thu-ngan/lich-hen/${change.appointment_id}`}>
+                            Mở lịch hẹn
+                          </Link>
+                          {!change.seen_at && (
+                            <Button size="sm" variant="primary" loading={isPending(`seen-${id}`)} onClick={() => markSeen(change)}>
+                              Đã xem
+                            </Button>
+                          )}
+                        </td>
+                      </tr>
+                      {open && (
+                        <tr>
+                          <td />
+                          <td colSpan={5}>
+                            <table className="st-change-table">
+                              <thead>
+                                <tr>
+                                  <th scope="col" />
+                                  <th scope="col">Cũ</th>
+                                  <th scope="col">Mới</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {diffs.map((row) => (
+                                  <tr key={row.label} className={row.before !== row.after ? 'is-changed' : undefined}>
+                                    <th scope="row">{row.label}</th>
+                                    <td>{row.before}</td>
+                                    <td>{row.after}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </td>
+                        </tr>
+                      )}
+                    </Fragment>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
 
       <Pagination page={query.data} onPage={setPageNumber} />
     </>

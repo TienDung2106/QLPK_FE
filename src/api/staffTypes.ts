@@ -54,6 +54,12 @@ export interface AppointmentChange {
 
 export interface AppointmentChangeQuery extends PageQuery {
   unseen_only?: boolean;
+  doctor_id?: number;
+  /** Ngày sửa (giờ phòng khám), 'yyyy-MM-dd', tính cả hai đầu. */
+  from_date?: string;
+  to_date?: string;
+  /** Tên bệnh nhân. */
+  search?: string;
 }
 
 export interface AppointmentQuery extends PageQuery {
