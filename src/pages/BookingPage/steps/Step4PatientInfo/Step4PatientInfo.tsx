@@ -20,6 +20,8 @@ interface Step4PatientInfoProps {
   /** Có thì nút Quay lại / Tiếp tục được đưa sang cột tóm tắt bên phải. */
   actionsSlot?: HTMLElement | null;
   onNextStep: () => void;
+  /** Sửa lịch: hồ sơ đã gắn với lịch, chỉ hiện đúng hồ sơ đó và không cho đổi. */
+  lockPatient?: boolean;
 }
 
 const RELATIONSHIP_LABEL: Record<string, string> = {
@@ -81,6 +83,7 @@ export const Step4PatientInfo: React.FC<Step4PatientInfoProps> = ({
   onPrevStep,
   actionsSlot,
   onNextStep,
+  lockPatient,
 }) => {
   const [profiles, setProfiles] = useState<PatientProfile[]>([]);
   const [loading, setLoading] = useState(true);
@@ -119,10 +122,15 @@ export const Step4PatientInfo: React.FC<Step4PatientInfoProps> = ({
         setProfiles(result.data);
 
         // Hồ sơ đầu tiên là hồ sơ sinh ra cùng tài khoản lúc đăng ký — chọn sẵn nó, để
-        // người đặt cho chính mình không phải thao tác gì thêm.
-        const first = result.data[0];
-        if (first && selectedPatientId === null) {
-          onSelectPatient(first.patient_id, toPatientInfo(first));
+        // người đặt cho chính mình không phải thao tác gì thêm. Sửa lịch thì nạp thông tin của
+        // đúng hồ sơ đã gắn với lịch.
+        const target = lockPatient
+          ? result.data.find((profile) => profile.patient_id === selectedPatientId)
+          : selectedPatientId === null
+            ? result.data[0]
+            : undefined;
+        if (target) {
+          onSelectPatient(target.patient_id, toPatientInfo(target));
         }
       }
 
@@ -172,7 +180,7 @@ export const Step4PatientInfo: React.FC<Step4PatientInfoProps> = ({
 
         {/* Một tài khoản có thể giữ nhiều hồ sơ; mỗi lịch hẹn gắn với đúng một hồ sơ. */}
         <div className="step4-radio-target-group">
-          {profiles.map((profile) => (
+          {(lockPatient ? profiles.filter((profile) => profile.patient_id === selectedPatientId) : profiles).map((profile) => (
             <label key={profile.patient_id} className="step4-radio-label">
               <input
                 type="radio"

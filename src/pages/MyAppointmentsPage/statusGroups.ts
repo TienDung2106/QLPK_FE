@@ -16,3 +16,15 @@ export const groupOf = (status: string): StatusGroup => GROUPS.find((group) => g
 export const countByGroup = (items: AppointmentListItem[]) =>
   GROUPS.map((group) => ({ group, count: items.filter((item) => groupOf(item.status) === group).length }))
     .filter(({ count }) => count > 0);
+
+/** Trạng thái bệnh nhân còn tự sửa lịch được, giống các trạng thái còn tự huỷ được. */
+const PATIENT_EDITABLE = ['pending', 'pending_approval', 'confirmed'];
+
+/**
+ * Nút "Sửa lịch" hiện khi lịch còn sửa được và chưa tới giờ. Hạn số giờ trước khám do server kiểm và
+ * báo lỗi như khi huỷ; lịch đang chờ trả lời dời lịch thì trả lời trước.
+ */
+export const canPatientEdit = (appointment: AppointmentListItem & { awaiting_reschedule_response?: boolean }) =>
+  PATIENT_EDITABLE.includes(appointment.status) &&
+  new Date(`${appointment.appointment_date}T${appointment.appointment_time}`) > new Date() &&
+  !appointment.awaiting_reschedule_response;

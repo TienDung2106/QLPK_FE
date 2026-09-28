@@ -32,6 +32,7 @@ const DoctorWorkingHoursPage = lazy(() => import('./doctor/DoctorWorkingHoursPag
 // Lễ tân
 const DeskAppointmentsPage = lazy(() => import('./desk/DeskAppointmentsPage'));
 const DeskAppointmentDetailPage = lazy(() => import('./desk/DeskAppointmentDetailPage'));
+const DeskAppointmentChangesPage = lazy(() => import('./desk/DeskAppointmentChangesPage'));
 const DeskBookingPage = lazy(() => import('./desk/DeskBookingPage'));
 const PatientsPage = lazy(() => import('./desk/PatientsPage'));
 const PatientDetailPage = lazy(() => import('./desk/PatientDetailPage'));
@@ -93,6 +94,7 @@ export function staffRoutes() {
         path="/thu-ngan/lich-hen/:appointmentId"
         element={guard([P.AppointmentsManage], <DeskAppointmentDetailPage />)}
       />
+      <Route path="/thu-ngan/lich-thay-doi" element={guard([P.AppointmentsManage], <DeskAppointmentChangesPage />)} />
       <Route path="/thu-ngan/dat-lich" element={guard([P.AppointmentsManage], <DeskBookingPage />)} />
       <Route path="/thu-ngan/benh-nhan" element={guard([P.PatientsManage], <PatientsPage />)} />
       <Route path="/thu-ngan/benh-nhan/:patientId" element={guard([P.PatientsManage], <PatientDetailPage />)} />

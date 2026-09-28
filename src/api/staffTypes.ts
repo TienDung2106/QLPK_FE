@@ -24,6 +24,38 @@ export interface StaffAppointment extends Appointment {
   awaiting_reschedule_response: boolean;
 }
 
+/** Ảnh chụp phần bệnh nhân sửa được trên lịch, trước hoặc sau một lần sửa. */
+export interface AppointmentSnapshot {
+  /** 'yyyy-MM-dd'. */
+  appointment_date: string;
+  /** 'HH:mm:ss'. */
+  appointment_time: string;
+  duration_minutes: number;
+  services: { service_name: string; quantity: number; unit_price: number }[];
+  discount_percent: number;
+  total_amount: number;
+  reason_for_visit: string | null;
+}
+
+/** GET /api/staff/appointment-changes — một lần bệnh nhân tự sửa lịch, cũ → mới. */
+export interface AppointmentChange {
+  appointment_change_log_id: number;
+  appointment_id: number;
+  patient_full_name: string;
+  doctor_full_name: string;
+  /** Trạng thái hiện tại của lịch. */
+  status: string;
+  changed_at: string;
+  before: AppointmentSnapshot;
+  after: AppointmentSnapshot;
+  seen_at: string | null;
+  seen_by_full_name: string | null;
+}
+
+export interface AppointmentChangeQuery extends PageQuery {
+  unseen_only?: boolean;
+}
+
 export interface AppointmentQuery extends PageQuery {
   doctor_id?: number;
   from_date?: string;

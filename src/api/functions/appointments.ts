@@ -51,20 +51,23 @@ export const apiAcceptReschedule = (appointmentId: number) =>
 export const apiChooseRescheduleSlot = (appointmentId: number, newDate: string, newTime: string) =>
   PostData<Appointment>(url.patientAppointmentAction(appointmentId, 'choose-slot'), { new_date: newDate, new_time: newTime });
 
+export interface UpdateAppointmentPayload {
+  services: { service_id: number; quantity: number }[];
+  /** 'yyyy-MM-dd'; cùng new_time, bỏ cả hai thì giữ ca cũ. */
+  new_date?: string;
+  /** 'HH:mm:ss'. */
+  new_time?: string;
+  /** Bỏ thì giữ lý do cũ, chuỗi rỗng là xoá. */
+  reason_for_visit?: string;
+}
+
 /**
- * Thay danh sách dịch vụ của lịch. Không gửi giờ thì giữ giờ cũ; 409 `slot_taken` nghĩa là thời
- * lượng mới không còn vừa giờ cũ, gửi lại kèm một giờ trống khác của cùng bác sĩ.
+ * Sửa lịch như luồng đặt: dịch vụ, ngày ca (cùng bác sĩ), lý do. Cần captcha như đặt lịch.
+ * 409 `slot_taken` là ca không còn đủ chỗ; 409 `cancellation_window_closed` là đã quá hạn sửa.
  */
-export const apiUpdateAppointmentServices = (
-  appointmentId: number,
-  services: { service_id: number; quantity: number }[],
-  newDate?: string,
-  newTime?: string,
-) =>
-  PutData<Appointment>(url.patientAppointmentAction(appointmentId, 'services'), {
-    services,
-    new_date: newDate,
-    new_time: newTime,
+export const apiUpdateAppointment = (appointmentId: number, payload: UpdateAppointmentPayload, captchaToken: string | null) =>
+  PutData<Appointment>(url.patientAppointmentAction(appointmentId, 'services'), payload, {
+    headers: captchaToken ? { 'X-Captcha-Token': captchaToken } : undefined,
   });
 
 

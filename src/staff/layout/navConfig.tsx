@@ -13,8 +13,10 @@ import {
   Stethoscope,
   Users,
   UserCog,
+  History,
 } from 'lucide-react';
 import { PERMISSION } from '../permissions';
+import { AppointmentChangesBadge } from '../components/AppointmentChangesBadge';
 
 export interface NavItem {
   to: string;
@@ -23,6 +25,8 @@ export interface NavItem {
   permission: string;
   /** Chỉ sáng khi đúng đường dẫn, không sáng cho trang con. */
   end?: boolean;
+  /** Số đếm cạnh nhãn, component tự nạp. */
+  badge?: ReactNode;
 }
 
 export interface NavSection {
@@ -66,6 +70,13 @@ export const NAV_SECTIONS: NavSection[] = [
     base: '/thu-ngan',
     items: [
       { to: '/thu-ngan', label: 'Lịch hẹn', icon: <CalendarDays size={ICON} />, permission: PERMISSION.AppointmentsManage, end: true },
+      {
+        to: '/thu-ngan/lich-thay-doi',
+        label: 'Lịch bệnh nhân sửa',
+        icon: <History size={ICON} />,
+        permission: PERMISSION.AppointmentsManage,
+        badge: <AppointmentChangesBadge />,
+      },
       { to: '/thu-ngan/dat-lich', label: 'Đặt lịch / Vãng lai', icon: <CalendarPlus size={ICON} />, permission: PERMISSION.AppointmentsManage },
       { to: '/thu-ngan/benh-nhan', label: 'Bệnh nhân', icon: <Users size={ICON} />, permission: PERMISSION.PatientsManage },
       { to: '/thu-ngan/lich-nghi', label: 'Lịch nghỉ bác sĩ', icon: <CalendarClock size={ICON} />, permission: PERMISSION.AppointmentsManage },

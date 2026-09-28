@@ -6,6 +6,10 @@ interface BookingStepperProps {
   currentStep: number;
   onStepClick?: (step: number) => void;
   onBackToHome?: () => void;
+  /** Tiêu đề trang; sửa lịch dùng "Sửa lịch hẹn". */
+  title?: string;
+  /** Bước không cho bấm quay lại, ví dụ bước chọn bác sĩ khi sửa lịch. */
+  lockedSteps?: number[];
 }
 
 const STEPS = [
@@ -20,13 +24,15 @@ export const BookingStepper: React.FC<BookingStepperProps> = ({
   currentStep,
   onStepClick,
   onBackToHome,
+  title = 'Đặt lịch khám',
+  lockedSteps = [],
 }) => {
   return (
     <div className="booking-stepper-bar">
       <div className="container stepper-inner">
         {/* Left: title + breadcrumb */}
         <div className="stepper-left">
-          <h1 className="stepper-page-title">Đặt lịch khám</h1>
+          <h1 className="stepper-page-title">{title}</h1>
           <div className="stepper-breadcrumb">
             <button
               type="button"
@@ -36,7 +42,7 @@ export const BookingStepper: React.FC<BookingStepperProps> = ({
               Trang chủ
             </button>
             <span className="breadcrumb-sep">/</span>
-            <span className="breadcrumb-current">Đặt lịch khám</span>
+            <span className="breadcrumb-current">{title}</span>
           </div>
         </div>
 
@@ -44,6 +50,7 @@ export const BookingStepper: React.FC<BookingStepperProps> = ({
         <div className="stepper-steps-track">
           {STEPS.map((step, index) => {
             const isDone = currentStep > step.number;
+            const canGoBack = isDone && !lockedSteps.includes(step.number);
             const isActive = currentStep === step.number;
             const isConnectorActive = currentStep >= step.number;
 
@@ -52,8 +59,8 @@ export const BookingStepper: React.FC<BookingStepperProps> = ({
                 {/* Step bubble */}
                 <div
                   className={`stepper-step ${isDone ? 'step-done' : ''} ${isActive ? 'step-active' : ''}`}
-                  onClick={() => isDone && onStepClick?.(step.number)}
-                  role={isDone ? 'button' : undefined}
+                  onClick={() => canGoBack && onStepClick?.(step.number)}
+                  role={canGoBack ? 'button' : undefined}
                 >
                   <div className="step-bubble">
                     {isDone ? <Check size={14} strokeWidth={2.5} /> : step.number}

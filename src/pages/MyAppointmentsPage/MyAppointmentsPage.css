@@ -672,53 +672,7 @@
   }
 }
 
-/* ---------- Sửa dịch vụ trên lịch đã đặt ---------- */
-
-.service-edit-open {
+.appointment-edit-open {
   margin-left: 0.6rem;
   vertical-align: middle;
-}
-
-.service-edit {
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-  max-width: 560px;
-}
-
-.service-edit-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-  max-height: 280px;
-  margin: 0;
-  padding: 0;
-  overflow-y: auto;
-  list-style: none;
-}
-
-.service-edit-list label {
-  display: flex;
-  align-items: center;
-  gap: 0.55rem;
-  padding: 0.45rem 0.6rem;
-  border: 1px solid var(--border-light);
-  border-radius: var(--radius-md);
-  font-size: 0.88rem;
-  cursor: pointer;
-}
-
-.service-edit-name {
-  flex: 1;
-  min-width: 0;
-}
-
-.service-edit-meta,
-.service-edit-summary {
-  color: var(--text-muted);
-  font-size: 0.85rem;
-}
-
-.service-edit-summary {
-  margin: 0;
 }

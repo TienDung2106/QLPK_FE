@@ -3,6 +3,7 @@ import { Briefcase, ChevronDown, Info, Check, GraduationCap, Loader2, AlertCircl
 import type { BookingDoctor } from '../../../../types/booking';
 import { apiGetDoctors } from '../../../../api/functions/doctors';
 import type { DoctorListItem } from '../../../../api/types';
+import { DOCTOR_FALLBACK_AVATAR as FALLBACK_AVATAR, toBookingDoctor } from '../../bookingFormat';
 import { WorkingDays } from '../../../../components/WorkingDays/WorkingDays';
 import './Step1Doctor.css';
 import { fallbackTo } from '../../../../utils/imageFallback';
@@ -13,22 +14,6 @@ interface Step1DoctorProps {
   onNextStep: () => void;
 }
 
-const FALLBACK_AVATAR =
-  'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=300&q=80';
-
-/** DoctorListItem của API → hình dạng luồng đặt lịch đang dùng. */
-function toBookingDoctor(doctor: DoctorListItem): BookingDoctor {
-  return {
-    id: `doc-${doctor.doctor_id}`,
-    doctorId: doctor.doctor_id,
-    name: doctor.full_name,
-    specialty: doctor.specialty_name,
-    specialtyId: doctor.specialty_id,
-    experienceYears: doctor.years_of_experience,
-    degree: doctor.degree ?? undefined,
-    avatar: doctor.avatar_url ?? FALLBACK_AVATAR,
-  };
-}
 
 export const Step1Doctor: React.FC<Step1DoctorProps> = ({
   selectedDoctor,

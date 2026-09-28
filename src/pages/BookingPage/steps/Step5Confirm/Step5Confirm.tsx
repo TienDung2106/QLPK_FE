@@ -26,6 +26,8 @@ interface Step5ConfirmProps {
   /** Nhận sẵn token đã đổi với backend; null khi người dùng chưa qua được CAPTCHA. */
   onConfirmBooking: (captchaToken: string) => void;
   onCaptchaError: (message: string) => void;
+  /** 'edit' khi bệnh nhân sửa lịch đã đặt: chỉ đổi chữ, luồng xác nhận giữ nguyên. */
+  mode?: 'book' | 'edit';
 }
 
 const FALLBACK_AVATAR =
@@ -51,6 +53,7 @@ export const Step5Confirm: React.FC<Step5ConfirmProps> = ({
   onPrevStep,
   onConfirmBooking,
   onCaptchaError,
+  mode = 'book',
 }) => {
   const [agreedTerms, setAgreedTerms] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
@@ -85,11 +88,13 @@ export const Step5Confirm: React.FC<Step5ConfirmProps> = ({
   return (
     <div className="step5-container">
       {/* ── Main Step Heading ── */}
-      <h2 className="step5-main-heading">BƯỚC 5: XÁC NHẬN &amp; THANH TOÁN</h2>
+      <h2 className="step5-main-heading">
+        {mode === 'edit' ? 'BƯỚC 5: XÁC NHẬN SỬA LỊCH' : 'BƯỚC 5: XÁC NHẬN & THANH TOÁN'}
+      </h2>
 
       {/* ── Sub-heading Callout Banner ── */}
       <div className="step5-callout-banner">
-        <p>Vui lòng kiểm tra lại toàn bộ thông tin trước khi xác nhận đặt lịch.</p>
+        <p>Vui lòng kiểm tra lại toàn bộ thông tin trước khi xác nhận {mode === 'edit' ? 'sửa lịch' : 'đặt lịch'}.</p>
       </div>
 
       {error && (
@@ -342,7 +347,11 @@ export const Step5Confirm: React.FC<Step5ConfirmProps> = ({
             disabled={!agreedTerms || !captcha.solved || submitting}
           >
             {submitting ? <Loader2 className="spin" size={15} /> : <Lock size={15} />}
-            <span>{submitting ? 'Đang đặt lịch...' : 'Xác nhận đặt lịch'}</span>
+            <span>
+              {mode === 'edit'
+                ? submitting ? 'Đang lưu...' : 'Xác nhận sửa lịch'
+                : submitting ? 'Đang đặt lịch...' : 'Xác nhận đặt lịch'}
+            </span>
           </button>
           <span className="step5-security-text">Thông tin được bảo mật mã hóa đầu cuối</span>
         </div>

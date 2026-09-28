@@ -85,6 +85,7 @@ export const StaffLayout = () => {
                   >
                     {item.icon}
                     {item.label}
+                    {item.badge}
                   </NavLink>
                 ))}
               </div>

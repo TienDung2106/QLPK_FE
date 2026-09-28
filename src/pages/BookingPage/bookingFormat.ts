@@ -5,6 +5,26 @@
  * (thứ backend nhận) với 'dd/MM/yyyy' (thứ người dùng đọc) là lỗi rất dễ mắc.
  */
 
+import type { DoctorListItem } from '../../api/types';
+import type { BookingDoctor } from '../../types/booking';
+
+export const DOCTOR_FALLBACK_AVATAR =
+  'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=300&q=80';
+
+/** DoctorListItem của API → hình dạng luồng đặt lịch đang dùng. */
+export function toBookingDoctor(doctor: DoctorListItem): BookingDoctor {
+  return {
+    id: `doc-${doctor.doctor_id}`,
+    doctorId: doctor.doctor_id,
+    name: doctor.full_name,
+    specialty: doctor.specialty_name,
+    specialtyId: doctor.specialty_id,
+    experienceYears: doctor.years_of_experience,
+    degree: doctor.degree ?? undefined,
+    avatar: doctor.avatar_url ?? DOCTOR_FALLBACK_AVATAR,
+  };
+}
+
 const WEEKDAY_LABELS = ['Chủ nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'];
 
 /** Giảm giá chỉ áp cho combo từ chừng này dịch vụ khác nhau (DiscountService.MinComboServices). */

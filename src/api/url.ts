@@ -97,6 +97,10 @@ const url = {
   staffAppointmentAction: (appointmentId: number, action: string) =>
     `${root}/staff/appointments/${appointmentId}/${action}`,
   staffWalkIns: `${root}/staff/walk-ins`,
+  staffAppointmentChanges: `${root}/staff/appointment-changes`,
+  staffAppointmentChangesUnseenCount: `${root}/staff/appointment-changes/unseen-count`,
+  staffAppointmentChangesSeenAll: `${root}/staff/appointment-changes/seen-all`,
+  staffAppointmentChangeSeen: (changeLogId: number) => `${root}/staff/appointment-changes/${changeLogId}/seen`,
   staffCheckIn: `${root}/staff/appointments/check-in`,
   staffDoctorTimeOff: (doctorId: number) => `${root}/staff/doctors/${doctorId}/time-off`,
   staffDoctorTimeOffById: (doctorId: number, timeOffId: number) => `${root}/staff/doctors/${doctorId}/time-off/${timeOffId}`,

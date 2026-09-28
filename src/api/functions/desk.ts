@@ -5,6 +5,8 @@ import type { AlternativesQuery } from './doctors';
 import type {
   ApplyDiscountPayload,
   ApplyDiscountResult,
+  AppointmentChange,
+  AppointmentChangeQuery,
   AppointmentQuery,
   AppointmentCalendarQuery,
   AppointmentDayCount,
@@ -41,6 +43,18 @@ export const apiExportStaffAppointments = (query: AppointmentQuery = {}) =>
 
 export const apiGetStaffAppointment = (appointmentId: number) =>
   GetData<StaffAppointment>(url.staffAppointmentById(appointmentId));
+
+/* Lịch bệnh nhân tự sửa — cũ → mới; "đã xem" dùng chung cho cả quầy */
+
+export const apiSearchAppointmentChanges = (query: AppointmentChangeQuery = {}) =>
+  GetData<PagedResponse<AppointmentChange>>(url.staffAppointmentChanges, query);
+
+export const apiCountUnseenAppointmentChanges = () => GetData<number>(url.staffAppointmentChangesUnseenCount);
+
+export const apiMarkAppointmentChangeSeen = (changeLogId: number) =>
+  PostData<void>(url.staffAppointmentChangeSeen(changeLogId));
+
+export const apiMarkAllAppointmentChangesSeen = () => PostData<void>(url.staffAppointmentChangesSeenAll);
 
 /** 201 xong hẳn, 202 khi mức giảm vượt ngưỡng và phải chờ duyệt. */
 export const apiBookOnBehalf = (payload: BookOnBehalfPayload) =>

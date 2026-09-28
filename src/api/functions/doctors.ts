@@ -22,8 +22,13 @@ export const apiGetDoctors = (query: DoctorQuery = {}) =>
  * Các ca của một bác sĩ trong đúng một ngày, kèm mức đầy. `date` dạng 'yyyy-MM-dd'.
  * `durationMinutes` lấy từ báo giá: ca nào không đủ phút cho lượt khám sẽ báo `is_available = false`.
  */
-export const apiGetDoctorSlots = (doctorId: number, date: string, durationMinutes?: number) =>
-  GetData<DoctorAvailability>(url.doctorAvailableSlots(doctorId), { date, duration_minutes: durationMinutes });
+/** excludeAppointmentId: lịch đang sửa, để ca của chính nó không hiện là kín. */
+export const apiGetDoctorSlots = (doctorId: number, date: string, durationMinutes?: number, excludeAppointmentId?: number) =>
+  GetData<DoctorAvailability>(url.doctorAvailableSlots(doctorId), {
+    date,
+    duration_minutes: durationMinutes,
+    exclude_appointment_id: excludeAppointmentId,
+  });
 
 export interface AlternativesQuery {
   specialty_id: number;
@@ -40,5 +45,9 @@ export const apiGetDoctorAlternatives = (query: AlternativesQuery) =>
   GetData<DoctorAvailability[]>(url.doctorAlternatives, query);
 
 /** Cả tháng chứa `month` ('yyyy-MM-dd' bất kỳ trong tháng): ngày còn ca nhận được lượt khám, kín, nghỉ. */
-export const apiGetDoctorCalendar = (doctorId: number, month: string, durationMinutes?: number) =>
-  GetData<DoctorCalendar>(url.doctorCalendar(doctorId), { month, duration_minutes: durationMinutes });
+export const apiGetDoctorCalendar = (doctorId: number, month: string, durationMinutes?: number, excludeAppointmentId?: number) =>
+  GetData<DoctorCalendar>(url.doctorCalendar(doctorId), {
+    month,
+    duration_minutes: durationMinutes,
+    exclude_appointment_id: excludeAppointmentId,
+  });

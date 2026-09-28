@@ -1800,3 +1800,66 @@ button.st-stat:hover {
   box-shadow: var(--st-focus);
 }
 
+
+/* ---------------------------------------------------------------- Lịch bệnh nhân sửa */
+
+.st-rail-count {
+  min-width: 18px;
+  height: 18px;
+  margin-left: auto;
+  padding: 0 5px;
+  border-radius: var(--radius-pill);
+  background: var(--st-danger);
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+}
+
+.st-change-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  margin-top: 1rem;
+}
+
+.st-change-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+.st-change-table th,
+.st-change-table td {
+  padding: 0.45rem 0.6rem;
+  border-bottom: 1px solid var(--st-line);
+  text-align: left;
+  vertical-align: top;
+}
+
+.st-change-table thead th {
+  color: var(--st-text-3);
+  font-weight: 600;
+}
+
+.st-change-table tbody th {
+  width: 120px;
+  color: var(--st-text-3);
+  font-weight: 500;
+}
+
+.st-change-table td {
+  width: 45%;
+}
+
+/* dòng đổi: cột mới tô nổi, cột cũ gạch mờ để mắt đi thẳng vào chỗ khác */
+.st-change-table tr.is-changed td:first-of-type {
+  color: var(--st-text-3);
+  text-decoration: line-through;
+}
+
+.st-change-table tr.is-changed td:last-of-type {
+  background: var(--st-warning-soft);
+  font-weight: 600;
+}

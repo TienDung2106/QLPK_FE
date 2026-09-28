@@ -36,7 +36,10 @@ interface Step3DateTimeProps {
   /** Có thì nút Quay lại / Tiếp tục được đưa sang cột tóm tắt bên phải. */
   actionsSlot?: HTMLElement | null;
   onNextStep: () => void;
+  /** Không có thì ẩn nút đổi bác sĩ (sửa lịch giữ nguyên bác sĩ). */
   onChangeDoctor?: () => void;
+  /** Lịch đang sửa: không tính tải của nó để ca hiện tại không hiện là kín. */
+  excludeAppointmentId?: number;
 }
 
 const FALLBACK_AVATAR =
@@ -76,6 +79,7 @@ export const Step3DateTime: React.FC<Step3DateTimeProps> = ({
   actionsSlot,
   onNextStep,
   onChangeDoctor,
+  excludeAppointmentId,
 }) => {
   const today = todayIso();
   const [year, month] = selectedDate
@@ -98,7 +102,7 @@ export const Step3DateTime: React.FC<Step3DateTimeProps> = ({
     }
     let cancelled = false;
     const month = `${viewYear}-${String(viewMonth).padStart(2, '0')}-01`;
-    apiGetDoctorCalendar(selectedDoctor.doctorId, month, durationMinutes).then((result) => {
+    apiGetDoctorCalendar(selectedDoctor.doctorId, month, durationMinutes, excludeAppointmentId).then((result) => {
       if (!cancelled) {
         setMonthDays(Object.fromEntries((result.data?.days ?? []).map((day) => [day.date, day])));
       }
@@ -106,7 +110,7 @@ export const Step3DateTime: React.FC<Step3DateTimeProps> = ({
     return () => {
       cancelled = true;
     };
-  }, [selectedDoctor, viewYear, viewMonth, durationMinutes]);
+  }, [selectedDoctor, viewYear, viewMonth, durationMinutes, excludeAppointmentId]);
 
   useEffect(() => {
     if (!selectedDoctor || !selectedDate) {
@@ -119,7 +123,7 @@ export const Step3DateTime: React.FC<Step3DateTimeProps> = ({
       setLoading(true);
       setError(null);
 
-      const result = await apiGetDoctorSlots(selectedDoctor.doctorId, selectedDate, durationMinutes);
+      const result = await apiGetDoctorSlots(selectedDoctor.doctorId, selectedDate, durationMinutes, excludeAppointmentId);
 
       if (cancelled) {
         return;
@@ -140,7 +144,7 @@ export const Step3DateTime: React.FC<Step3DateTimeProps> = ({
     return () => {
       cancelled = true;
     };
-  }, [selectedDoctor, selectedDate, durationMinutes]);
+  }, [selectedDoctor, selectedDate, durationMinutes, excludeAppointmentId]);
 
   // Một lượt khám dài hơn một ca sẽ nuốt luôn ca kế tiếp, nên bày ca đó thành thẻ riêng chỉ tố bệnh
   // nhân bấm vào một chỗ đã bị chiếm. Mỗi chuỗi chỉ để lại ca mở đầu, thành ra cả buổi gọn vào một thẻ.
@@ -304,9 +308,11 @@ export const Step3DateTime: React.FC<Step3DateTimeProps> = ({
             </div>
           </div>
         </div>
-        <button type="button" className="btn-change-doctor" onClick={onChangeDoctor}>
-          Đổi bác sĩ
-        </button>
+        {onChangeDoctor && (
+          <button type="button" className="btn-change-doctor" onClick={onChangeDoctor}>
+            Đổi bác sĩ
+          </button>
+        )}
       </div>
 
       {/* ── 2 Column Grid: Calendar & Time Slots ── */}
