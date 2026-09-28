@@ -71,7 +71,6 @@ const url = {
   adminDoctorScheduleById: (doctorId: number, scheduleId: number) => `${root}/admin/doctors/${doctorId}/schedules/${scheduleId}`,
   adminDoctorScheduleStatus: (doctorId: number, scheduleId: number) =>
     `${root}/admin/doctors/${doctorId}/schedules/${scheduleId}/status`,
-  adminClinicProfile: `${root}/admin/clinic/profile`,
   adminClinicHolidays: `${root}/admin/clinic/holidays`,
   adminClinicHolidayById: (holidayId: number) => `${root}/admin/clinic/holidays/${holidayId}`,
   adminClinicSettings: `${root}/admin/clinic/settings`,

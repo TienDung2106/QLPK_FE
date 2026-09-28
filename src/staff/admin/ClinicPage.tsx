@@ -1,126 +1,17 @@
 import { useState } from 'react';
-import { CalendarPlus, Pencil, Save } from 'lucide-react';
+import { CalendarPlus, Pencil } from 'lucide-react';
 import {
   apiCreateHoliday,
-  apiGetClinicProfile,
   apiSearchHolidays,
-  apiUpdateClinicProfile,
   apiUpdateHoliday,
   apiWithdrawHoliday,
 } from '../../api/functions/admin';
-import type { ClinicHoliday, ClinicProfile, ClinicProfilePayload } from '../../api/staffTypes';
+import type { ClinicHoliday } from '../../api/staffTypes';
 import { useAction, useApiQuery } from '../hooks';
-import { formatDate, formatDateTime, nullIfBlank, todayIso } from '../format';
+import { formatDate, todayIso } from '../format';
 import { DAY_OF_WEEK_LABEL, isoDayOfWeek } from '../labels';
 import { useToast } from '../components/toastContext';
 import { Alert, Badge, Button, ConfirmDialog, EmptyState, Field, PageHeader, Panel, Sheet, TableSkeleton } from '../components/ui';
-
-type ProfileForm = Record<keyof ClinicProfilePayload, string>;
-
-const toProfileForm = (profile: ClinicProfile): ProfileForm => ({
-  clinic_name: profile.clinic_name,
-  tax_code: profile.tax_code ?? '',
-  address: profile.address,
-  phone_number: profile.phone_number,
-  email: profile.email ?? '',
-  logo_url: profile.logo_url ?? '',
-  business_hours_note: profile.business_hours_note ?? '',
-});
-
-const ProfilePanel = () => {
-  const toast = useToast();
-  const { run, isPending } = useAction();
-  const query = useApiQuery(apiGetClinicProfile, []);
-  const [form, setForm] = useState<ProfileForm | null>(null);
-  const [seen, setSeen] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  // Nạp form từ dữ liệu server trong lượt render, mỗi lần server trả bản mới.
-  if (query.data && query.data.updated_at !== seen) {
-    setSeen(query.data.updated_at);
-    setForm(toProfileForm(query.data));
-  }
-
-  const set = (key: keyof ProfileForm) => (event: { target: { value: string } }) =>
-    setForm((current) => (current ? { ...current, [key]: event.target.value } : current));
-
-  const save = async () => {
-    if (!form) {
-      return;
-    }
-    if (!form.clinic_name.trim() || !form.address.trim() || !form.phone_number.trim()) {
-      setError('Tên phòng khám, địa chỉ và số điện thoại là bắt buộc.');
-      return;
-    }
-    setError(null);
-    const result = await run('profile', () =>
-      apiUpdateClinicProfile({
-        clinic_name: form.clinic_name.trim(),
-        tax_code: nullIfBlank(form.tax_code),
-        address: form.address.trim(),
-        phone_number: form.phone_number.trim(),
-        email: nullIfBlank(form.email),
-        logo_url: nullIfBlank(form.logo_url),
-        business_hours_note: nullIfBlank(form.business_hours_note),
-      }),
-    );
-    if (!result.ok || !result.data) {
-      setError(result.error);
-      return;
-    }
-    query.setData(result.data);
-    toast.success('Đã lưu thông tin phòng khám.');
-  };
-
-  return (
-    <Panel
-      title="Thông tin phòng khám"
-      subtitle={query.data ? `Thông tin liên hệ · sửa lần cuối ${formatDateTime(query.data.updated_at)}` : 'Thông tin liên hệ'}
-      actions={
-        form && (
-          <Button variant="primary" size="sm" icon={<Save size={14} />} loading={isPending('profile')} onClick={save}>
-            Lưu
-          </Button>
-        )
-      }
-    >
-      {query.error && <Alert tone="danger">{query.error}</Alert>}
-      {error && <Alert tone="danger" className="st-alert-gap">{error}</Alert>}
-      {!form ? (
-        query.loading && (
-          <div className="st-stack">
-            <span className="st-skel" style={{ width: '60%' }} />
-            <span className="st-skel" style={{ width: '85%' }} />
-          </div>
-        )
-      ) : (
-        <div className="st-form-grid">
-          <Field label="Tên phòng khám" required className="st-span-2">
-            {(id) => <input id={id} className="st-input" maxLength={200} value={form.clinic_name} onChange={set('clinic_name')} />}
-          </Field>
-          <Field label="Địa chỉ" required className="st-span-2">
-            {(id) => <input id={id} className="st-input" maxLength={500} value={form.address} onChange={set('address')} />}
-          </Field>
-          <Field label="Số điện thoại" required>
-            {(id) => <input id={id} type="tel" className="st-input" maxLength={15} value={form.phone_number} onChange={set('phone_number')} />}
-          </Field>
-          <Field label="Email">
-            {(id) => <input id={id} type="email" className="st-input" maxLength={150} value={form.email} onChange={set('email')} />}
-          </Field>
-          <Field label="Mã số thuế">
-            {(id) => <input id={id} className="st-input st-mono" maxLength={30} value={form.tax_code} onChange={set('tax_code')} />}
-          </Field>
-          <Field label="Đường dẫn logo">
-            {(id) => <input id={id} type="url" className="st-input" maxLength={500} placeholder="https://…" value={form.logo_url} onChange={set('logo_url')} />}
-          </Field>
-          <Field label="Giờ mở cửa" className="st-span-2" hint="Ví dụ: Thứ Hai – Thứ Bảy, 8:00 – 20:00">
-            {(id) => <input id={id} className="st-input" value={form.business_hours_note} onChange={set('business_hours_note')} />}
-          </Field>
-        </div>
-      )}
-    </Panel>
-  );
-};
 
 interface HolidayForm {
   holiday_date: string;
@@ -305,14 +196,11 @@ const HolidaysPanel = () => {
   );
 };
 
-/** Phòng khám như một đơn vị: thông tin liên hệ và những ngày đóng cửa. */
+/** Những ngày cả phòng khám đóng cửa. */
 const ClinicPage = () => (
   <>
-    <PageHeader title="Phòng khám" description="Thông tin phòng khám và lịch nghỉ lễ của cả phòng khám." />
-    <div className="st-stack">
-      <ProfilePanel />
-      <HolidaysPanel />
-    </div>
+    <PageHeader title="Phòng khám" description="Lịch nghỉ lễ của cả phòng khám." />
+    <HolidaysPanel />
   </>
 );
 

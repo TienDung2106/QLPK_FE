@@ -483,20 +483,6 @@ export interface FollowUpPayload {
 
 /* ---------------------------------------------------------------- Admin: clinic */
 
-export interface ClinicProfile {
-  clinic_name: string;
-  tax_code: string | null;
-  address: string;
-  phone_number: string;
-  email: string | null;
-  logo_url: string | null;
-  business_hours_note: string | null;
-  updated_by: number | null;
-  updated_at: string;
-}
-
-export type ClinicProfilePayload = Omit<ClinicProfile, 'updated_by' | 'updated_at'>;
-
 export interface ClinicHoliday {
   clinic_holiday_id: number;
   holiday_date: string;

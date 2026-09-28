@@ -9,8 +9,6 @@ import type {
   ClinicHoliday,
   ClinicHolidayPayload,
   ClinicHolidayQuery,
-  ClinicProfile,
-  ClinicProfilePayload,
   DoctorSchedule,
   DoctorSchedulePayload,
   DoctorScheduleQuery,
@@ -108,11 +106,6 @@ export const apiSetDoctorScheduleStatus = (doctorId: number, scheduleId: number,
   PatchData<DoctorSchedule>(url.adminDoctorScheduleStatus(doctorId, scheduleId), { is_active: isActive });
 
 /* Phòng khám — settings.manage */
-
-export const apiGetClinicProfile = () => GetData<ClinicProfile>(url.adminClinicProfile);
-
-export const apiUpdateClinicProfile = (payload: ClinicProfilePayload) =>
-  PutData<ClinicProfile>(url.adminClinicProfile, payload);
 
 export const apiSearchHolidays = (query: ClinicHolidayQuery = {}) =>
   GetData<ClinicHoliday[]>(url.adminClinicHolidays, query);
