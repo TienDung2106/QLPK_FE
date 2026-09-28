@@ -30,8 +30,8 @@ export interface BookingQuoteLine {
  * Báo giá giỏ dịch vụ: tạm tính, voucher tốt nhất được tự áp (chỉ một), tổng tiền, số phút
  * lượt khám chiếm trong ca và mức voucher kế tiếp. Server tính lại y hệt khi đặt lịch.
  */
-export const apiGetBookingQuote = (services: BookingQuoteLine[], patientId?: number | null) =>
-  PostData<BookingQuote>(url.bookingQuote, { services, patient_id: patientId ?? undefined });
+export const apiGetBookingQuote = (services: BookingQuoteLine[], patientId?: number | null, appointmentId?: number) =>
+  PostData<BookingQuote>(url.bookingQuote, { services, patient_id: patientId ?? undefined, appointment_id: appointmentId });
 
 /** Voucher đang chạy, mức chi tiêu thấp nhất trước. Chỉ để xem — hệ thống tự áp mã tốt nhất. */
 export const apiGetBookingPromotions = (patientId?: number | null) =>

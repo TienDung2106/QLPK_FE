@@ -42,7 +42,7 @@ const url = {
   patientAppointmentById: (appointmentId: number) => `${root}/patient/appointments/${appointmentId}`,
   cancelAppointment: (appointmentId: number) => `${root}/patient/appointments/${appointmentId}/cancel`,
   patientAppointmentAttachments: (appointmentId: number) => `${root}/patient/appointments/${appointmentId}/attachments`,
-  patientAppointmentAction: (appointmentId: number, action: 'accept-reschedule' | 'choose-slot') =>
+  patientAppointmentAction: (appointmentId: number, action: 'accept-reschedule' | 'choose-slot' | 'services') =>
     `${root}/patient/appointments/${appointmentId}/${action}`,
 
   // Thông báo — mọi tài khoản đã đăng nhập, kể cả nhân viên, dù nằm dưới /patient.

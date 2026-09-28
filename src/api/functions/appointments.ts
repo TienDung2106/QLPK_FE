@@ -1,4 +1,4 @@
-import { GetData, PostData, PostWithCaptcha } from '../helpers';
+import { GetData, PostData, PostWithCaptcha, PutData } from '../helpers';
 import url from '../url';
 import type { Appointment, AppointmentAttachment, AppointmentListItem, PagedResponse } from '../types';
 
@@ -50,6 +50,22 @@ export const apiAcceptReschedule = (appointmentId: number) =>
 /** Không hợp giờ phòng khám đề xuất: tự chọn một khung giờ trống khác, cùng bác sĩ. */
 export const apiChooseRescheduleSlot = (appointmentId: number, newDate: string, newTime: string) =>
   PostData<Appointment>(url.patientAppointmentAction(appointmentId, 'choose-slot'), { new_date: newDate, new_time: newTime });
+
+/**
+ * Thay danh sách dịch vụ của lịch. Không gửi giờ thì giữ giờ cũ; 409 `slot_taken` nghĩa là thời
+ * lượng mới không còn vừa giờ cũ, gửi lại kèm một giờ trống khác của cùng bác sĩ.
+ */
+export const apiUpdateAppointmentServices = (
+  appointmentId: number,
+  services: { service_id: number; quantity: number }[],
+  newDate?: string,
+  newTime?: string,
+) =>
+  PutData<Appointment>(url.patientAppointmentAction(appointmentId, 'services'), {
+    services,
+    new_date: newDate,
+    new_time: newTime,
+  });
 
 
 /** Gửi ảnh vùng da kèm lịch hẹn vừa đặt (JPEG/PNG/WebP, tối đa 5 ảnh, mỗi ảnh 5 MB). */
